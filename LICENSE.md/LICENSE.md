@@ -1,10 +1,11 @@
-REPOSITORY LICENSE 
+# REPOSITORY LICENSE 
 
 Copyright holder
 The copyright holder is Craig Duncan, of Perth, Western Australia.
 Copyright © 2017-2020, Craig Duncan www.craigduncan.com.au; http://github.com/craigduncanlab All rights reserved.
 
 Repository License
+
 Repository URL: https://github.com/craigduncanlab/mpress ("Repository")
 
 The copyright holder's programs located in the Repository (software) at any time are disclosed on the following terms and conditions.
