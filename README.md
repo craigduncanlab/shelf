@@ -1,10 +1,10 @@
-# Powerdock (2020 beta)
+# M-Press (2020 beta, fork of powerdock)
 
 (c) Craig Duncan 2017-2020.  Make a request if you wish to use, demonstrate or assist with this project.
 
 # Project folder structure
 
-The Powerdock app uses these folders (create if not included)
+The *mpress* app uses these folders (create if not included)
 
 src: contains Java source files
 
