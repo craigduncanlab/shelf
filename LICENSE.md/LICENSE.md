@@ -2,31 +2,20 @@ REPOSITORY LICENSE
 
 Copyright holder
 The copyright holder is Craig Duncan, of Perth, Western Australia.
-Copyright © 2018-2020, Craig Duncan www.craigduncan.com.au; http://github.com/craigduncanlab All rights reserved.
+Copyright © 2017-2020, Craig Duncan www.craigduncan.com.au; http://github.com/craigduncanlab All rights reserved.
 
 Repository License
-Repository URL: https://github.com/craigduncanlab/spatial-text-editor-v1 ("Repository")
+Repository URL: https://github.com/craigduncanlab/mpress ("Repository")
 
 The copyright holder's programs located in the Repository (software) at any time are disclosed on the following terms and conditions.
 
 Purpose
-The software is disclosed to provide information about the copyright holder's work, and for the limited educational purpose of encouraging visual teaching applications. That does not mean it is a work in the public domain. Contributions, sharing and suggestions for improvements to the software are encouraged, on these terms. Use for public or educational purposes is likely to be approved, but prior written notice and agreement from the copyright holder must first be obtained.
+The software is not in the public domain - copyright is retained by Craig Duncan.
 
-Terms
-You may use and modify the source code and any derived software or program on the following terms:
-
-You must retain this notice in the source code, or provide a working link to the Repository which contains it, and in documents that accompany any executable version of the software.
-
-Non-commercial use and variation of the software on private personal computing devices is approved.
-
-You may not use this software for commercial purposes or permit it to be used by any person or organisation for commercial gain without prior written agreement from the copyright holder.
-
-Neither the name, identity, content of the software, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-References to the Repository, the copyright holder and the general purpose of this software are permitted for training or educational purposes.
+Please direct requests for use (private, educational), or collaboration, to the author.  Commercial use is prohibited at this time.
 
 This software is provided by the copyright holder(s) and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
 
 If the software is removed from the Repository, these terms continue to apply to any copy of the software, or any part of it, from the time it was copied from the Repository or otherwise accessed by any person.
 
-Last updated 30 January 2020.
+Last updated 10 August 2020.
