@@ -64,41 +64,9 @@ int HparentIndex=0;
 //TO DO: rename.  These mean the embedded node positions (within a layer of child nodes)
 double childNodeX = 0.0;
 double childNodeY = 0.0;
+// Visibility
+Boolean visible = true;
 
-//As of 26.4.18 - Make this node hold its own text, title (for now use docnotes as node text)
-//consequences: the concept of a 'clause' can be replaced by 
-//a) nodeCat to hold node category b) docnotes here to hold the text itself. 
-
-/* 3.5.18 - introduce possibility of data link (parent).  
-i.e. separation of 
-(a) structure of related concent: child nodes for navigation/association
-(b) links for association (mirroring/styling) of data from another node.
-should this be all content, or just text?
-in effect, this node can carry a pointer to a parent node that will override specific contents
-a 'persistent' override will always override (i.e. box is just a shell: points to master copy somewhere?).
-i.e. the shell is subordinate/dependant: a 'linked box'.  How to show?
-Linked boxes content (displayNode) not directly editable, but can they open the parent data node?
-an 'apply once' will just refresh the static data (which elements of node?).
-(this is no different to a 'copy data' option for a selected target?)
-a 'refresh' option can reproduce nodes and refresh them from parent data links AT THAT TIME.
-if there is a parent link, when can local (static) data change?
-if data links at are node level, then opening a node will display the parent node content...
-----
-Maybe the 'displayNode', that is currently inside a StageManager (on Open) is not the only Node 'layer'
-i.e. there can be a contentNode and a display node inside a StageManager...
-(a parent data link, and static content/child data link?).
-The StageManager (node viewer) can decide which of these has priority at any time?
-i.e. you can switch on a data override, so that a node will display a parent OR a node can be edited as if it is independent.
-i.e. your GUI can help decide what state a node is on - follower node, or independent node.
-follower nodes are helpful for showing data, but when in follower mode, we say not editable.
-i.e.'userView' state is GUI level for layout.
-the 'dataMode' is follower or editable.  You can set to 'follower', then copy once, then go to editable.
-or you can leave it in follower mode.
-{This is really a user-level, flexible pointer system}.
-nb - if we store 'userView' in the node itself (rather than the StageManager), then even when the GUI recreates the scene, it can find the last setting for "UserView" and reinstate that as well.
-this way, we can pre-save the views for presentations.
-
-*/
 //empty constructor no arguments
 public ClauseContainer() {
 
@@ -240,6 +208,16 @@ public double getChildNodeX() {
 
 public double getChildNodeY() {
 	return this.childNodeY;
+}
+
+// Visibility
+
+public void setVisible(Boolean setVis) {
+	this.visible=setVis;
+}
+
+public Boolean getVisible() {
+	return this.visible;
 }
 
 // ---- FOLLOWER MODE AND DATA

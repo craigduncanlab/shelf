@@ -539,6 +539,7 @@ private void updateOpenNodeView() {
         headingTextArea.setText(getDisplayNode().getHeading());
         mdTextArea.setText(getDisplayNode().getMD()); //update the markdown text
         inputTextArea.setText(getDisplayNode().getNotes());
+        visibleCheck.setSelected(getDisplayNode().getVisible()); //check box
         outputTextArea.setText(getDisplayNode().getOutputText()); //output node contents
         //RHS
         htmlEditor.setHtmlText(getDisplayNode().getHTML());
@@ -1097,7 +1098,7 @@ EventHandler<MouseEvent> mouseEnterEventHandler =
         public void handle(MouseEvent t) {
             //SpriteBox currentSprite = ((SpriteBox)(t.getSource()));
             //TO DO: check if mouse is dragging/pressed
-            System.out.println("Detected mouse drag - Stage Manager Group"+StageManager.this.getSpriteGroup().toString());
+            //System.out.println("Detected mouse drag - Stage Manager Group"+StageManager.this.getSpriteGroup().toString());
             //t.consume();//check
         }
     };

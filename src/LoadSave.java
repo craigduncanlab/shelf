@@ -239,6 +239,7 @@ public void Close() {
 }
 
 //This is a separate Loader stage.  Can run it off menu selector or keystrokes.
+// Currently used for loading markdown files
 private Stage makeStage() {
         this.myStage= new Stage();
         this.myStage.setTitle("Open File");
@@ -260,13 +261,24 @@ private Stage makeStage() {
                       if (last.equals(".md")==true) {
                         TemplateUtil myUtil = new TemplateUtil();
                         String contents = myUtil.getFileText(file);
+                        //Recents myR = new Recents();
+                        //myR.updateRecents(file.getName());
                         Parser myParser=new Parser();
-                        ClauseContainer newNode=myParser.parseMDfile(contents);
-                        if (newNode!=null) {
-                          LoadSave.this.targetSM.OpenNewNodeNow(newNode,LoadSave.this.targetSM); 
-                          //Recents myR = new Recents();
-                          //myR.updateRecents(file.getName());
+                        // Split the MD file
+                        ArrayList<String> blocklist= myParser.splitMDfile(contents);
+                        int length = blocklist.size();
+                        //System.out.println(length);
+                        //System.exit(0);
+                        if (length>0) {
+                          Iterator<String> iter = blocklist.iterator(); 
+                            while (iter.hasNext()) {
+                                ClauseContainer newNode=myParser.parseMDfile(iter.next());
+                                if (newNode!=null) {
+                                  LoadSave.this.targetSM.OpenNewNodeNow(newNode,LoadSave.this.targetSM);
+                                }
+                           } //end while
                         }
+                        
                         System.out.println("Finished parse in 'open button' makeStage");
                         LoadSave.this.ListOfFiles();// print out current directory
                       }
