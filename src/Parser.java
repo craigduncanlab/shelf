@@ -57,17 +57,15 @@ public ArrayList<String> splitMDfile(String input) {
 				//Scanner scanner2= new Scanner(thisRow).useDelimiter("#");
 				
 				System.out.println(nl+") "+thisRow);
-				if (thisRow.length()<2) {
+				if (thisRow.length()<3) {
 					fileindex.add(1);
 				}
 				else {
 					String firstpart = thisRow.substring(0,2);
+					String visFlag = thisRow.substring(0,3);
 					System.out.println(nl+") "+firstpart);
 					switch (firstpart) {
 	            		case "# ":  
-		            		fileindex.add(0);
-		                	break;
-	                    case "#-":  
 		            		fileindex.add(0);
 		                	break;
 	                    default:  
@@ -184,27 +182,22 @@ public ClauseContainer parseMDblock(String input) {
 				else {
 					String firstpart = thisRow.substring(0,2);
 					Boolean singlelinenote = thisRow.contains("*/");
+					if (thisRow.length()>2) {
+						String visFlag = thisRow.substring(0,3);
+						if (visFlag.equals("# -")) {
+		            		visibility=false;
+		            	}
+		            }
 					System.out.println(nl+") "+firstpart);
 					switch (firstpart) {
 	            		case "# ":  
 		            		if (brackets==0) {
-		            			visibility=true;
 		            			fileindex.add(0);
 		            			label=thisRow;
-		                    }
-		                    else {
-		                    	fileindex.add(2); //notes
-		                    }
-		                    break;
-	                    case "#-":  
-		                    if (brackets==0) {
-		            			visibility=false;
-		            			fileindex.add(0);
-		            			label=thisRow;
-		                    }
-		                    else {
-		                    	fileindex.add(2); //notes
-		                    }
+		            		}
+		            		else if (brackets==1) {
+			                    	fileindex.add(2); //notes
+			                    }
 		                    break;
 	                    case "//":  
 		                    if (brackets==0) {
@@ -219,7 +212,7 @@ public ClauseContainer parseMDblock(String input) {
 		                    	brackets=1;
 		                    }
 		                    fileindex.add(2); //notes
-	                    	break;
+		                    break;
 	                    case "*/":  
 		                    if (brackets==1) {
 		                    	brackets=0;
@@ -271,7 +264,8 @@ public ClauseContainer parseMDblock(String input) {
 			nl=0;
 			while (scanner2.hasNextLine()) {
 				String thisLine=scanner2.nextLine();
-
+				System.out.println("Line: "+thisLine);
+				System.out.println("File index:"+fileindex.get(nl));
 				if (fileindex.get(nl)==0 || fileindex.get(nl)==1) {
 					mdStream.append(thisLine);
 					mdStream.append("\n"); //EOL
@@ -302,9 +296,9 @@ public ClauseContainer parseMDblock(String input) {
 		if (label.length()<1) {
 			label="Default";
 		}
-		String label1=label.replace("#",""); //remove hash but leave minus sign?
-		//String label2=label1.replace("#-","");
-		ClauseContainer newNode=new ClauseContainer(label1,contents,notes);
+		String label1=label.replace("# -",""); //remove hash but leave minus sign?
+		String label2=label1.replace("# ","");
+		ClauseContainer newNode=new ClauseContainer(label2,contents,notes);
 		//At present visibility reflects the last markdown # code detected in file.
 		newNode.setVisible(visibility);
 		return newNode;

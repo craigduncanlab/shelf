@@ -1,4 +1,4 @@
-#- Demo 
+# -Demo 
 
 This is a demonstration markdown file that can be loaded into the editor.
 
@@ -36,7 +36,7 @@ Each box is reduced to a single hashed heading when opened in the editor, plus i
 Filtering out the notes lines should be easy.
 
 
-#- Final markdown
+# -Final markdown
 
 This should be the third box in the display.
 
