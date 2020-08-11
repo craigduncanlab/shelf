@@ -14,16 +14,18 @@ This is a re-purposing of standard markdown to make it easier to work on compone
 
 ## Lower level heading
 
-/* Multi-line notes that appear with each block, in the 'Notes' section of the editor. 
+``` Multi-line notes that appear with each block, in the 'Notes' section of the editor. 
 
 Second line.
 
-*/
+```
 
 Alternatively, you can format the multi-line notes as code e.g. 
 ```
 Multi-line notes in a code section.
 ```
+
+``` Single line ```
 
 # Box 2
 
@@ -44,10 +46,10 @@ Your presentation layout is relatively easy.
 
 You can type it up as if it is a script.
 
-/*
+```
 By including additional meta-data inside the markdown, you can then ingest it and do things with it, not just render it on screen.
 
 If you have data-related markdown, then it can be ingested as a separate type of box in the editor.
-*/
+```
 
 

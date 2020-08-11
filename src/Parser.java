@@ -155,6 +155,8 @@ public ClauseContainer parseMDblock(String input) {
 		StringBuffer mdStream = new StringBuffer();
 		StringBuffer notesStream = new StringBuffer();
 		Boolean visibility=true;
+		Boolean codeLine=false;
+		Boolean singlecodeline=false;
 		String label = "";
 		int nl=0;
 		try {
@@ -166,6 +168,8 @@ public ClauseContainer parseMDblock(String input) {
 			
 			int brackets=0;
 			while (scanner1.hasNextLine()) {
+				codeLine=false;
+				singlecodeline = false;
 				//Array currentNotes[] = new Array(2);
 				String thisRow=scanner1.nextLine();
 				//Scanner scanner2= new Scanner(thisRow).useDelimiter("#");
@@ -182,10 +186,17 @@ public ClauseContainer parseMDblock(String input) {
 				else {
 					String firstpart = thisRow.substring(0,2);
 					Boolean singlelinenote = thisRow.contains("*/");
+					if (thisRow.length()>5) {
+						String endpart = thisRow.substring(3,thisRow.length());
+						singlecodeline = endpart.contains("```");
+					}
 					if (thisRow.length()>2) {
 						String visFlag = thisRow.substring(0,3);
 						if (visFlag.equals("# -")) {
 		            		visibility=false;
+		            	}
+		            	if (visFlag.equals("```")) {
+		            		codeLine=true;
 		            	}
 		            }
 					System.out.println(nl+") "+firstpart);
@@ -207,7 +218,28 @@ public ClauseContainer parseMDblock(String input) {
 		                    	fileindex.add(2); //notes
 		                    }
 		            		break;
-	                    case "/*":  
+	                    case "``":  
+		                    if (brackets==0 && codeLine==true) {
+		                    	brackets=1;
+		                    	fileindex.add(2); //notes
+		                    }
+		                    
+	                        else if (brackets==1 && codeLine==true) {
+		                    	brackets=0;
+		                    	fileindex.add(3); //end notes
+		                    }
+
+		                    else if (brackets==0 && singlecodeline==true) {
+		                    	brackets=0;
+		                    	fileindex.add(3); //end notes
+		                    }
+
+		                    else if (codeLine==false) {
+		                    	fileindex.add(1); //md
+		                    }
+		                    break;
+
+		                case "/*":  
 		                    if (brackets==0 && singlelinenote==false) {
 		                    	brackets=1;
 		                    }
@@ -273,8 +305,9 @@ public ClauseContainer parseMDblock(String input) {
 				//notes line
 				if (fileindex.get(nl)==2 || fileindex.get(nl)==3) {
 					String replacement = thisLine.replace("/*","");
-					String replacement2 = replacement.replace("*/","");
-					notesStream.append(replacement2);
+					String replacement2 = replacement.replace("```","");
+					String replacement3 = replacement2.replace("*/","");
+					notesStream.append(replacement3);
 					notesStream.append("\n"); //EOL
 				}
 				//advance if ok
