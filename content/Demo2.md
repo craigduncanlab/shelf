@@ -6,7 +6,8 @@ The minus sign next to the heading hash #- means 'not visible'.
 
 This is 'stateful markdown'.
 
-// In-line notes for notes that appear near the markdown text but by default do not appear in Export md.
+```In-line notes for notes that appear near the markdown text but by default do not appear in Export md.
+```
 
 The visual editor means that someone does not need to 'know' markdown to get the idea, and they can still convert their work to markdown if needed.
 

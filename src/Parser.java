@@ -37,6 +37,8 @@ Parsing algo:
 
 */
 
+//called externally to split up an MD file into separate blocks
+
 public ArrayList<String> splitMDfile(String input) {
 	ArrayList<Integer> fileindex = new ArrayList<Integer>();
 	StringBuffer currentblock = new StringBuffer();
@@ -149,12 +151,18 @@ public ArrayList<String> splitMDfile(String input) {
 			return newBlocks;
 }
 
-//single document test
+//called externally to work on contents of an individual Markdown block
 public ClauseContainer parseMDblock(String input) {
+	ArrayList<Integer> fileindex = makeMDfileindex(input);
+	ClauseContainer newNode = MDfileFilter(fileindex,input);
+	return newNode;
+}
+
+//make an index (like an R vector) to determine nature of each line of markdown file
+public ArrayList<Integer> makeMDfileindex(String input) {
 		ArrayList<Integer> fileindex = new ArrayList<Integer>();
-		StringBuffer mdStream = new StringBuffer();
-		StringBuffer notesStream = new StringBuffer();
-		Boolean visibility=true;
+		
+		Boolean visibility=true; //TO DO: fix visibility state after index prepared?
 		Boolean codeLine=false;
 		Boolean singlecodeline=false;
 		String label = "";
@@ -221,17 +229,17 @@ public ClauseContainer parseMDblock(String input) {
 	                    case "``":  
 		                    if (brackets==0 && codeLine==true) {
 		                    	brackets=1;
-		                    	fileindex.add(2); //notes
+		                    	fileindex.add(4); //code notes
 		                    }
 		                    
 	                        else if (brackets==1 && codeLine==true) {
 		                    	brackets=0;
-		                    	fileindex.add(3); //end notes
+		                    	fileindex.add(5); //end code notes
 		                    }
 
 		                    else if (brackets==0 && singlecodeline==true) {
 		                    	brackets=0;
-		                    	fileindex.add(3); //end notes
+		                    	fileindex.add(5); //end code notes
 		                    }
 
 		                    else if (codeLine==false) {
@@ -286,7 +294,16 @@ public ClauseContainer parseMDblock(String input) {
 				System.out.println("Max : "+max+" nl: "+nl);
 			}
 			//System.exit(0);
-			try {
+			return fileindex;
+		} // end class
+
+
+//process/filter a markdown file using the prepared index of line content types
+public ClauseContainer MDfileFilter(ArrayList<Integer> fileindex,String input) {
+		StringBuffer mdStream = new StringBuffer();
+		StringBuffer notesStream = new StringBuffer();
+		StringBuffer codenotesStream = new StringBuffer();
+		try {
 				Scanner scanner2 = new Scanner(input); //default delimiter is EOL?
 				if (scanner2==null) {
 					System.out.println("No MD block content");
@@ -294,6 +311,7 @@ public ClauseContainer parseMDblock(String input) {
 				}
 			
 			nl=0;
+			String label="";
 			while (scanner2.hasNextLine()) {
 				String thisLine=scanner2.nextLine();
 				System.out.println("Line: "+thisLine);
@@ -309,6 +327,13 @@ public ClauseContainer parseMDblock(String input) {
 					String replacement3 = replacement2.replace("*/","");
 					notesStream.append(replacement3);
 					notesStream.append("\n"); //EOL
+				}
+
+				//code notes line
+				if (fileindex.get(nl)==4 || fileindex.get(nl)==5) {
+					String replacement2 = thisLine.replace("```","");
+					codenotesStream.append(replacement2);
+					codenotesStream.append("\n"); //EOL
 				}
 				//advance if ok
 				if (nl<max) {
@@ -326,11 +351,13 @@ public ClauseContainer parseMDblock(String input) {
 		//finish
 		String notes = notesStream.toString();
 		String contents = mdStream.toString();
+		String codes = codenotesStream.toString();
 		if (label.length()<1) {
 			label="Default";
 		}
 		String label1=label.replace("# -",""); //remove hash but leave minus sign?
 		String label2=label1.replace("# ","");
+		//omits in-line coded notes for now
 		ClauseContainer newNode=new ClauseContainer(label2,contents,notes);
 		//At present visibility reflects the last markdown # code detected in file.
 		newNode.setVisible(visibility);
