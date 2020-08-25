@@ -21,7 +21,7 @@ Config myConfig = new Config();
 String recentfolder = myConfig.getRecentsFolder();
 ArrayList<String> recentfiles = new ArrayList<String>();  //10 recent items  
 String outputfile = "recents";     
-StageManager targetSM = new StageManager();
+MainStage targetSM = new MainStage();
 EventHandler<ActionEvent> RecentFilesHandler;
 Menu myRecent = new Menu("Open Recent");
 String menufilename="";
@@ -34,7 +34,7 @@ public Recents() {
 }
 
 //constructor with stage
-public Recents(StageManager target, LoadSave loader) {
+public Recents(MainStage target, LoadSave loader) {
 	//this.RecentFilesHandler = myEventHandler;
 	this.myLS=loader;
 	this.targetSM = target;
@@ -73,11 +73,11 @@ public Menu getRecentMenu() {
 	return makeRecentMenu();
 }
 
-private StageManager getTarget() {
+private MainStage getTarget() {
 	return this.targetSM;
 }
 
-private StageManager getFilename() {
+private MainStage getFilename() {
 	return this.targetSM;
 }
 
@@ -90,7 +90,7 @@ private void openFile(String filename) {
 		//System.out.println("Created:"+newNode.toString());
 		//System.out.println(newNode.toString());
 		//this.myLS.simpleOpen(newNode);
-		this.targetSM.OpenNewNodeNow(newNode, this.targetSM); //TO DO: WhiteBoard
+		this.targetSM.OpenNewNodeNow(newNode); //TO DO: WhiteBoard
 	}
 }
 

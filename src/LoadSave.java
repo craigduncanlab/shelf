@@ -79,7 +79,7 @@ Pane spritePane;
 Scene localScene;
 TextArea inputTextArea = new TextArea();
 //target Stage information
-StageManager targetSM = new StageManager();
+MainStage targetSM = new MainStage();
 WhiteBoard defaultWhiteBoard = new WhiteBoard();
 //current dialogue
 Stage myStage;
@@ -96,8 +96,8 @@ public LoadSave () {
 }
 
 //constructor with Stage
-public LoadSave (StageManager mySM) {
-  this.targetSM=mySM;
+public LoadSave (MainStage myMS) {
+  this.targetSM=myMS;
   this.desktop = Desktop.getDesktop();
 }
 
@@ -148,7 +148,7 @@ private VBox vertSetup(HBox myhbox) {
 	return myvbox;
 }
 
-public void makeSave(StageManager targetSM, ClauseContainer myNode) {
+public void makeSave(MainStage targetSM, ClauseContainer myNode) {
 	this.targetSM = targetSM; //store for later
 	this.targetNode = myNode; //store for later
 	//make this dialogue
@@ -164,20 +164,22 @@ public void saveName(ClauseContainer myNode) {
   System.out.println("Save template completed");
 }
 
-public void makeLoad(StageManager targetSM) {
-	this.targetSM = targetSM; //store for later
+//Make the new stage e.g. called from OpenTempl in Main, passing Stage_WS as argument
+// This creates a new Load stage dialogue
+// It does not 'close' the stage, and requires a separate 'close event' loop
+public void makeLoad() {
+	//this.targetSM = targetSM; //store for later.  Not used?
 	//this.targetNode = null; //store for later
 	//make this dialogue
 	//makeDialogue("Load Template",1);
   //FileChooser newFC = new FileChooser();
-  Stage myChooser = makeStage();
-  myChooser.show();
+  Stage myChooserStage = makeStage();  // this is not attached to Stage_WS at all?
+  myChooserStage.show();
 }
 
 public void simpleOpen(ClauseContainer myNode) {
   System.out.println(myNode.toString());
-  System.out.println(this.targetSM.toString());
-  this.targetSM.OpenNewNodeNow(myNode, this.targetSM); //TO DO: make this open up in whiteboard.  Should be triggered as if double click on a red box.  i.e. changes focus.
+  this.targetSM.OpenNewNodeNow(myNode); //TO DO: make this open up in whiteboard.  Should be triggered as if double click on a red box.  i.e. changes focus.
 }
 
 // args is redundant input argument to List: String args[]
@@ -240,6 +242,7 @@ public void Close() {
 
 //This is a separate Loader stage.  Can run it off menu selector or keystrokes.
 // Currently used for loading markdown files
+//It is opened up as a prompt on the Stage_WS, and then adds nodes/boxes to the Stage_WS.
 private Stage makeStage() {
         this.myStage= new Stage();
         this.myStage.setTitle("Open File");
@@ -274,16 +277,18 @@ private Stage makeStage() {
                             while (iter.hasNext()) {
                                 ClauseContainer newNode=myParser.parseMDfile(iter.next());
                                 if (newNode!=null) {
-                                  LoadSave.this.targetSM.OpenNewNodeNow(newNode,LoadSave.this.targetSM);
+                                  System.out.println("Starting iteration of lines in MD");
+                                  System.out.println(LoadSave.this.targetSM);
+                                  LoadSave.this.targetSM.OpenNewNodeNow(newNode);
                                 }
                            } //end while
-                        }
+                        } //end if
                         
                         System.out.println("Finished parse in 'open button' makeStage");
                         LoadSave.this.ListOfFiles();// print out current directory
                       }
-                    }
-                }
+                    } //end if
+                } //end new defn of event handler
             });
  
         openMultipleButton.setOnAction(
@@ -313,7 +318,6 @@ private Stage makeStage() {
         final Pane rootGroup = new VBox(12);
         rootGroup.getChildren().addAll(inputGridPane);
         rootGroup.setPadding(new Insets(12, 12, 12, 12));
- 
         this.myStage.setScene(new Scene(rootGroup));
         return this.myStage;
     }
@@ -358,14 +362,16 @@ EventHandler<ActionEvent> clickSave =
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-	        //
-	        StageManager myStage=LoadSave.this.targetSM.getCurrentFocus();
+	        //TO DO: just save entire MD file?
+	        /*
+          BookMetaStage myStage=LoadSave.this.targetSM.getCurrentFocus();
 	        ClauseContainer thisNode = LoadSave.this.targetNode;
 	        String filename=inputTextArea.getText();
 	        TemplateUtil myUtil = new TemplateUtil();
 	        myUtil.saveTemplateSingle(thisNode,filename);
           myUtil.saveTidyTemplate(thisNode,filename);
 	        System.out.println("Save template completed");
+          */
 	        LoadSave.this.Close();
           }
       };

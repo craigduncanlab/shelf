@@ -62,7 +62,7 @@ Boolean visited=false;
 int VparentIndex=0; //to hold the parentindex value after BFS
 int HparentIndex=0;
 //TO DO: rename.  These mean the embedded node positions (within a layer of child nodes)
-double childNodeX = 0.0;
+double childNodeX = 0.0; //default?
 double childNodeY = 0.0;
 // Visibility
 Boolean visible = true;
@@ -124,15 +124,16 @@ public ClauseContainer(NodeCategory nodecat, ClauseContainer parentNode, String 
 //nb if a child of the master data node (visually represented as Stage_WS)
 //checks current docnum for this stage and advances it.
 //TO DO: advance docnumber based on category.
-public ClauseContainer (NodeCategory nodecat, ClauseContainer parentNode) {
-	int docNum = nodecat.advanceDocCount();
-   
-    setNC(nodecat);
+public ClauseContainer (ClauseContainer parentNode) {
+	//int docNum = default.advanceDocCount();
+   	int docNum = 0;
+   	NodeCategory defaultNC = new NodeCategory("default",33,"darkblue");
+    setNC(defaultNC);
     //
-    String docname=nodecat.getCategory()+docNum;
+    String docname=defaultNC.getCategory()+docNum;
     String htmltext=defaultHTML();
     updateText(htmltext,docname,"heading","","output");
-    setType(nodecat.getCategory());
+    setType(defaultNC.getCategory());
     setAuthorName("Craig");
     dataLinkParent = new ClauseContainer();
     setParentNode(parentNode);
@@ -197,16 +198,16 @@ public void setUserView(String myView) {
 	this.userNodeView=myView;
 }
 
-public void setChildNodeXY(double cnx, double cny) {
+public void setXY(double cnx, double cny) {
 	this.childNodeX=cnx;
 	this.childNodeY=cny;
 }
 
-public double getChildNodeX() {
+public double getX() {
 	return this.childNodeX;
 }
 
-public double getChildNodeY() {
+public double getY() {
 	return this.childNodeY;
 }
 

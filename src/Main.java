@@ -79,23 +79,23 @@ public class Main extends Application {
     SpriteManager mySpriteManager;
     ControlsManager myControlsManager = new ControlsManager();
     //
-    StageManager ParentStageSM;//= new StageManager();
+    BookMetaStage ParentStageSM;//= new BookMetaStage();
     Stage ParentStage;
     //Main Stage (Workspace window) that owns all other Stages
-    StageManager Stage_WS;
+    MainStage Stage_WS;
     //Text Output windows (no edits)
-    StageManager Stage_Output;
+    BookMetaStage Stage_Output;
     
     //Extracted Definitions window (text)
     Stage defsTextStage;
     ScrollPane defsTextStage_root;
     //Toolbar
-    StageManager Stage_Toolbar;
+    BookMetaStage Stage_Toolbar;
     Stage toolbarStage = null;
     Group toolbarGroup = null;
     Scene toolbarScene = null;   
     //Clause editor
-    StageManager Stage_EDITNODEPROP;
+    BookMetaStage Stage_EDITNODEPROP;
     TextArea labelEdit;
     TextArea headingEdit;
     TextArea textEdit;
@@ -135,7 +135,7 @@ public class Main extends Application {
     ArrayList<NodeCategory> nodeCatList;
 
     //To hold Stage with open node that is current
-    StageManager OpenNodeStage;  
+    BookMetaStage OpenNodeStage;  
     ClauseContainer NodeTarget;
     //to hold Master Node for project i.e. data
     ClauseContainer masterNode = new ClauseContainer();
@@ -148,60 +148,10 @@ public static void main(String[] args) {
         launch(args);
   }
 
-//-- Using instances of WordTool objects ---
-
-private String getTextfromFile(String fname) {
-    WordTool myTool = new WordTool();
-    return myTool.getFileAsString(fname);
-}
-
-private String getMostCommon(String fname) {
-    WordTool myTool = new WordTool();
-    return myTool.getCommonWordsFromFile(fname);
-}
-
-private void printStatsfromFile(String fname) {
-    WordTool myTool = new WordTool();
-    myTool.printCountFromFile(fname);
-}
-
-private ClauseContainer grabDefinitionsFile(String fname) {
-    WordTool myTool = new WordTool();
-    String data = myTool.getFileAsString(fname);
-    ClauseContainer defbox = myTool.doDefTextSearch(data);
-    return defbox;
-}
-
-private ClauseContainer NodeFromDefinitionsSampleText(String mydata) {
-    WordTool myTool = new WordTool();
-    ClauseContainer defbox = myTool.doDefTextSearch(mydata);
-    return defbox;
-} 
-
-//return a ClauseContainer object with clauses after using text document as input
-
-private ClauseContainer NodeFromClausesSampleText(String mydata) {
-    WordTool myTool = new WordTool();
-    //TO DO: add options for different clause extractions
-    ClauseContainer clauseCarton = myTool.ClauseImport(mydata);
-    return clauseCarton;
-} 
-
-/* Convert String into a Node with contained clauses */
-
-private ClauseContainer NodeFromStatuteSampleText(String mydata) {
-    WordTool myTool = new WordTool();
-    //TO DO: add options for different clause extractions
-    if (mydata==null) {
-        System.out.println("Problem with sampling text for extraction");
-    }
-    ClauseContainer clauseCarton = myTool.StatuteSectionImport(mydata);
-    return clauseCarton;
-} 
 
 //---EVENT HANDLER FUNCTIONS
 
-private void toggleView(StageManager mySM) {
+private void toggleView(BookMetaStage mySM) {
              
     mySM.toggleStage();
     OpenNodeStage=mySM;
@@ -228,7 +178,6 @@ switch(clickcount) {
         moveAlertFromBoxtoBox(getCurrentSprite(),currentSprite);
         System.out.println("One click");
         //change stage focus with just one click on spritebox (but node still closed)
-        OpenNodeStage=currentSprite.getStageLocation();
         //refreshNodeViewScene();
         break;
     case 2:
@@ -238,7 +187,6 @@ switch(clickcount) {
         
         //Dbl Click action options depending on box type
        
-        OpenNodeStage=currentSprite.getStageLocation();
         //only open if not already open (TO DO: reset when all children closed)
         //prevent closing until all children closed
         //close all children when node closed.
@@ -250,21 +198,6 @@ switch(clickcount) {
         break;
 }
 }     
-
-private String getMatched(String data) {
-    WordTool myTool = new WordTool();
-    ClauseContainer defbox = myTool.doDefTextSearch(data);
-    return defbox.getClauseAndText();
-                
-}
-
-//used by event handler
-private String getCommonWordsNow(String data) {
-    WordTool myTool = new WordTool();
-    return myTool.getCommonWordsFromString(data);
-}
-
-/* Make menuBar for workspace */
 
 private MenuBar makeMenuBar() {
         
@@ -294,24 +227,13 @@ private MenuBar makeMenuBar() {
             OutputWork,
             PrintTree,exit);
         
-        
-        //--- MENU NEW
-        /*
-        Menu menuNew = new Menu("New");
-        MenuItem newNode = new MenuItem("Box");
-        newNode.setOnAction(newNodeMaker);
-        menuNew.getItems().addAll(newNode);
-        */
-
         //--- MENU CONCEPTS
         Menu menuConcept = new Menu("Block");
         MenuItem newNode = new MenuItem("New Block");
         newNode.setOnAction(newNodeMaker);
-        MenuItem conceptMove = new MenuItem("Move To Target");
-        conceptMove.setOnAction(MoveBoxtoTarget);
         MenuItem conceptDelete = new MenuItem("Delete Selected");
         conceptDelete.setOnAction(deleteCurrentSprite);
-        menuConcept.getItems().addAll(newNode,conceptMove,conceptDelete);
+        menuConcept.getItems().addAll(newNode,conceptDelete);
 
         //--- OUTPUT MENU ---
         Menu menuOutput = new Menu("Output");
@@ -327,52 +249,20 @@ private MenuBar makeMenuBar() {
         });
         
          // --- TEXT MENU ---
-        Menu menuInputText = new Menu("Input Text");
         MenuItem FileOpen = new MenuItem("FileOpen");
-        MenuItem WordCount = new MenuItem("WordCount");
-        MenuItem InputFile = new MenuItem("InputFile");
-        MenuItem GetDefText = new MenuItem("GetDefText");
-        MenuItem GetDefs = new MenuItem("GetDefs");
-        MenuItem GetClauses = new MenuItem("GetClauses");
-        MenuItem GetSections = new MenuItem("GetSections");
-        MenuItem NodeFromSelection = new MenuItem("Selection->ChildNode");
-
-        MenuItem DictTempl = new MenuItem("DictionaryTemplate");
-        MenuItem DictTemplCounts =  new MenuItem("DictionaryTemplateCounts");
-        MenuItem AustliiCounts =  new MenuItem("AustliiCounts");
-        MenuItem AustliiFirmCounts = new MenuItem("AustliiFirmCounts");
-        
-        WordCount.setOnAction(updateWordCounts); //argument is an EventHandler with ActionEvent object
-        GetDefText.setOnAction(extractDefinitions);
-        GetDefs.setOnAction(makeDefBoxesFromText);
-        GetClauses.setOnAction(makeClauseBoxesFromText);
-        GetSections.setOnAction(makeBoxesFromStatuteText);
-        NodeFromSelection.setOnAction(makeSelectedChildNode);
         SaveName.setOnAction(saveDocName);
         SaveTempl.setOnAction(saveTemplate);
         OpenTempl.setOnAction(openTemplate);
-        SaveAllTempl.setOnAction(saveAll);
-        DictTempl.setOnAction(makeDictNode);
-        DictTemplCounts.setOnAction(makeDictCountsNode);
-        AustliiCounts.setOnAction(countAustliiDictionary);
-        AustliiFirmCounts.setOnAction(countAustliiFirms);
-
-        menuInputText.getItems().addAll(
-            WordCount,GetDefText,GetDefs,GetClauses,GetSections,DictTempl,DictTemplCounts,AustliiCounts,AustliiFirmCounts,NodeFromSelection);
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile, menuConcept, menuInputText, menuOutput);     
+        menuBar.getMenus().addAll(menuFile, menuConcept);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
          @Override
          public void handle(MouseEvent mouseEvent) {
             System.out.println("MenuBar click detected! " + mouseEvent.getSource());
-            //OpenNodeStage=Stage_WS.getCurrentFocus(); //update focus after click
-            System.out.println("MB Open Node, Viewer :"+OpenNodeStage.toString());
-            System.out.println("MB Viewer :"+Stage_WS.getCurrentFocus());
-            //mouseEvent.consume(); //consume this event - so menu works or not?
-            //TO DO: proceed but ignore it for change of focus purposes?
+            
             refreshRecentMenu();
              }
         });
@@ -405,27 +295,27 @@ Currently this looks at all Sprite Boxes globally (regardless of viewer/location
 */
 private void moveAlertFromBoxtoBox(SpriteBox hadFocus, SpriteBox mySprite) {
 
-    if (this.myTracker==null) {
-            System.out.println("MyTRK is null move alert");
+    if (Stage_WS.getActiveSprite()==null) {
+            System.out.println("ActiveSprite is null move alert");
             System.exit(0);
         }
-    this.myTracker.setActiveSprite(mySprite);
+    Stage_WS.setActiveSprite(mySprite);
     }
  
 
 //general method to store currentSprite
 
 private void setCurrentSprite(SpriteBox mySprite) {
-    if (this.myTracker==null) {
-            System.out.println("MyTRK is null set current sprite");
+    if (Stage_WS.getActiveSprite()==null) {
+            System.out.println("ActiveSprite is null set current sprite");
             System.exit(0);
         }
-    this.myTracker.setActiveSprite(mySprite);
+    Stage_WS.setActiveSprite(mySprite);
 }
 
 private SpriteBox getCurrentSprite() {
     //return this.activeSprite;
-    return myTracker.getCurrentSprite();  
+    return Stage_WS.getActiveSprite();  
 }
 
 /*
@@ -437,7 +327,7 @@ The node viewer will then be responsible for display of child nodes (e.g. boxes)
 e.g. targetStage.OpenNewNodeNow? or targetStage.PlaceNodeNow...needs work
 */
 
-private void placeSpriteOnStage(SpriteBox mySprite, StageManager targetStage) {
+private void placeSpriteOnStage(SpriteBox mySprite, BookMetaStage targetStage) {
     
     setCurrentSprite(mySprite); 
     targetStage.addNewSpriteToStage(mySprite); 
@@ -445,7 +335,7 @@ private void placeSpriteOnStage(SpriteBox mySprite, StageManager targetStage) {
 
 //This is a move not a copy.  
 
-private void placeCurrentSpriteOnStage(StageManager targetStage) {
+private void placeCurrentSpriteOnStage(BookMetaStage targetStage) {
     SpriteBox currentSprite = getCurrentSprite(); //not based on the button
     if (currentSprite !=null) {
         currentSprite.endAlert(); 
@@ -454,41 +344,6 @@ private void placeCurrentSpriteOnStage(StageManager targetStage) {
     deleteSpriteGUI(currentSprite);
     currentSprite.unsetParentNode(); //To DO: let node/viewer handle this.
     targetStage.addNewSpriteToStage(currentSprite);
-}
-
-//Set current selected Sprite's node as data link parent. 
-//REDUNDANT.  WAS USED BY EVENT HANDLER 
-
-private void setCurrentSpriteDataParent() {
-    SpriteBox currentSprite = getCurrentSprite(); //not based on the button
-    if (currentSprite !=null) {
-        currentSprite.endAlert(); 
-        System.out.println("Ended alert current:"+currentSprite.toString());
-    }
-    OpenNodeStage=Stage_WS.getCurrentFocus();
-    System.out.println("Stage that is to have follower set:"+OpenNodeStage.toString());
-    System.out.println("Source sprite for parent data:"+currentSprite.toString());
-    OpenNodeStage.setFollow(currentSprite);
-    if (OpenNodeStage.getDisplayNode().isFollower()==false) {
-        System.out.println ("Error in setting follower status for:"+OpenNodeStage.toString());
-    }
-}
-
-//Does this merely require copying the Data Node and calling node-based SM function?
-
-public void copySpriteToDestination(SpriteBox mySprite, StageManager myStageMan) {
-            
-            System.out.println("Sprite to copy:"+mySprite.toString());
-            SpriteBox b = mySprite.clone(); //clone event handlers or add?
-            System.out.println("Sprite clone:"+b.toString());
-            myStageMan.showStage();
-            placeSpriteOnStage(b, myStageMan);  
-}
-
-public void copyCurrentSpriteToDestination(StageManager myStageMan) {
-            
-            SpriteBox mySprite = getCurrentSprite();
-            copySpriteToDestination(mySprite,myStageMan); 
 }
 
 /* Method to remove current SpriteBox and contents 
@@ -526,16 +381,15 @@ private void saveDocTree(ClauseContainer saveNode) {
         primaryStage.setTitle("Powerdock App");
         primaryStage.hide();
         
-        ParentStageSM = new StageManager();
+        ParentStageSM = new BookMetaStage();
         ParentStage = new Stage();
         ParentStageSM.setStage(ParentStage);
         ParentStageSM.setTitle("Powerdock");
 
         //master Node for save all workspace
-        masterNode.updateText("<html><body></body></html>","workspace","workspace(saved)","input","output");
+        //masterNode.updateText("<html><body></body></html>","workspace","workspace(saved)","input","output");
         System.out.println("masterNode created.");
-        //general application nodes
-        NodeCategory NC_WS = new NodeCategory ("workspace",99,"white");
+        
         //nodeCatList = makeLawWorldCategories(); <---optional, to restore NodeCats
         //
         MenuBar myMenu = makeMenuBar();
@@ -544,7 +398,8 @@ private void saveDocTree(ClauseContainer saveNode) {
             System.out.println("MyTRK is null start application");
             System.exit(0);
         }
-        Stage_WS = new StageManager(this.myTracker,"Workspace", NC_WS, masterNode, myMenu, PressBoxEventHandler, DragBoxEventHandler);  //sets up GUI for view
+        //The main Stage for Workspace.  
+        Stage_WS = new MainStage("Workspace", myMenu);  //sets up GUI for view
         
         if (this.Stage_WS==null) {
             System.out.println("Stage_WS is null start application");
@@ -555,16 +410,18 @@ private void saveDocTree(ClauseContainer saveNode) {
         }
         
 
-        /* Setup a general text Output Stage (for workspace?) */
-        Stage_Output = new StageManager(Stage_WS,"Output");
+        /* Setup a general text Output Stage (for workspace?) 
+        Stage_Output = new BookMetaStage(Stage_WS,"Output");
         Stage_Output.setupTextOutputWindow();
+        */
 
         //Temporary: demonstration nodes at start
-        Stage_WS.setCurrentFocus(Stage_WS);
-        OpenNodeStage = Stage_WS.getCurrentFocus();
+        //Stage_WS.setCurrentFocus(Stage_WS);
+        //OpenNodeStage = Stage_WS.getCurrentFocus();
     }
 
-    /* Event handler added to box with clause content */
+    /* Event handler added to box with clause content 
+    This is added to each stage created, so can be called from there*/
 
     EventHandler<MouseEvent> PressBoxEventHandler = 
         new EventHandler<MouseEvent>() {
@@ -619,36 +476,6 @@ private void saveDocTree(ClauseContainer saveNode) {
             }
         };
 
-    /* 
-    Method enables you to copy or move in these easy steps:
-    (1) Click on a box to make it active (red).
-    (2) Click to target stage (not on a box).
-    (3) Select move to target {TO DO: Shortcut key}
-
-    This works because the sprite with the red alert (current sprite) doesn't lose focus
-    even when a click to a new stage (but not a box) changes the focus. 
-    */
-
-    EventHandler<ActionEvent> MoveBoxtoTarget = 
-        new EventHandler<ActionEvent>() {
- 
-        @Override
-        public void handle(ActionEvent t) {
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            placeCurrentSpriteOnStage(OpenNodeStage); 
-            }
-    };
-
-    EventHandler<ActionEvent> CopytoTarget = 
-        new EventHandler<ActionEvent>() {
- 
-        @Override
-        public void handle(ActionEvent t) {
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            copyCurrentSpriteToDestination(OpenNodeStage);
-        }
-    };
-
     EventHandler<ActionEvent> OpenNodeViewNow = 
         new EventHandler<ActionEvent>() {
  
@@ -660,14 +487,14 @@ private void saveDocTree(ClauseContainer saveNode) {
     };
 
     //Open a new stage in all cases (a kind of refresh)
-
+    //This stage opens up as a sub-stage of the MainStage
     public void OpenRedNodeNow (SpriteBox currentSprite) { 
         if (this.myTracker==null) {
             System.out.println("MyTRK is null openrednodenow");
             System.exit(0);
         }
-
-        OpenNodeStage = new StageManager(this.myTracker, Stage_WS, currentSprite, PressBoxEventHandler, DragBoxEventHandler); 
+        ClauseContainer currentNode = currentSprite.getBoxNode();
+        OpenNodeStage = new BookMetaStage(Stage_WS, currentNode, PressBoxEventHandler, DragBoxEventHandler); 
 
      }
 
@@ -680,16 +507,13 @@ private void saveDocTree(ClauseContainer saveNode) {
             @Override
             public void handle(ActionEvent t) {
                 //create a new node
-                NodeCategory NC_default = new NodeCategory("default",33,"darkblue");
                 //find current node
-                OpenNodeStage=Stage_WS.getCurrentFocus();
                 ClauseContainer parentNode = OpenNodeStage.getDisplayNode();
                 //new node with category and currentNode as parent
-                ClauseContainer newDataNode = new ClauseContainer(NC_default,parentNode);
+                ClauseContainer newDataNode = new ClauseContainer(parentNode);
                 
                 //place a COPY (REF) of node in the relevant open node.  Testing...
-                OpenNodeStage=Stage_WS.getCurrentFocus(); //update focus id.
-                OpenNodeStage.OpenNewNodeNow(newDataNode,Stage_WS); // check they both update
+                Stage_WS.OpenNewNodeNow(newDataNode); // check they both update
                 /* place a NEW object in the relevant open node... */
                 //OpenNodeStage.OpenNewNodeNow(new ClauseContainer(myCat),Stage_WS);
                     System.out.println("Nodes ");
@@ -697,190 +521,15 @@ private void saveDocTree(ClauseContainer saveNode) {
             }
     };
         
-     
-    //printClauseList
-        EventHandler<ActionEvent> printClauseList = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-             //textmakerTextArea.setText("This is where list of clauses will appear");
-             Stage_WS.getDisplayNode().doPrintIteration();
-             String output=Stage_WS.getDisplayNode().getClauseAndText();
-             Stage_Output.setOutputText(output);
-            }
-        };
-
-    //Make boxes for imported definitions
-
-    EventHandler<ActionEvent> makeDefBoxesFromText = 
-    new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            String sample = OpenNodeStage.getInputText();
-            //TO DO: add node to openstage
-            //To do: call this from inside StageManager instance
-            ClauseContainer nodeSample = NodeFromDefinitionsSampleText(sample);
-            //handle data node updates through the Stage object
-            OpenNodeStage.addOpenNodeChildren(nodeSample);
-        }
-    };
-
-     //Make boxes for imported clauses
-
-    EventHandler<ActionEvent> makeClauseBoxesFromText = 
-    new EventHandler<ActionEvent>() {
-        @Override 
-
-        public void handle(ActionEvent event) {
-        
-             //use the persistent Stage_WS instance to get the current stage (class variable)
-             OpenNodeStage = Stage_WS.getCurrentFocus();
-             String sample = OpenNodeStage.getInputText();
-             ClauseContainer nodeSample = NodeFromClausesSampleText(sample);
-             OpenNodeStage.addOpenNodeChildren(nodeSample);
-        }
-    };
-    
-
-     //Make boxes for imported statute clauses
-
-    EventHandler<ActionEvent> makeBoxesFromStatuteText = 
-    new EventHandler<ActionEvent>() {
-        @Override 
-
-        public void handle(ActionEvent event) {
-        //TO DO: get source of data
-        OpenNodeStage = Stage_WS.getCurrentFocus();
-        String sample = OpenNodeStage.getInputText();
-        if (sample.equals("")) {
-            System.out.println("No text to sample");
-        }
-        ClauseContainer nodeSample = NodeFromStatuteSampleText(sample);
-        OpenNodeStage.addOpenNodeChildren(nodeSample);
-        }
-    };
-    
-
-        //---- MORE EVENT HANDLERS ----
-
-        EventHandler<ActionEvent> OpenInputFile = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            System.out.println("Import button was pressed!");
-            }
-        };
-
-        //update word counts
-        EventHandler<ActionEvent> updateWordCounts = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            System.out.println("Word Count Button was pressed!");
-
-            //Update the import stage common words count text area
-            String gotcha = Main.this.textArea1.getText();
-            String newTA = Main.this.getCommonWordsNow(gotcha);
-        }
-    };
-    
-        /* Process the text in the input area of the current Node viewer 
-        (whether saved or not)
-        */
-
-        EventHandler<ActionEvent> extractDefinitions = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            System.out.println("Get Defs Text Button was pressed!");
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            String gotcha = OpenNodeStage.getInputText();
-            //System.out.println("Current input text:"+gotcha);
-            String newDefs = Main.this.getMatched(gotcha);
-            OpenNodeStage.setOutputText(newDefs); //output to current node viewer
-            }
-        };
-        
-        /*
-        Method to take selected text and create a child node in open Node viewer with it
-        Encapsulation:
-        Since text selection works on the Open Stage, it is possible to call a public function on that object
-        and make all functions private 
-        */
-
-        EventHandler<ActionEvent> makeSelectedChildNode = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            System.out.println("Make Node (From Selected Text) Button was pressed!");
-            if (Stage_WS.getCurrentFocus()==OpenNodeStage) {
-             System.out.println("Change of Viewer Focus OK in Main!");
-             System.out.println("SCN Viewer :"+OpenNodeStage.toString());
-             }
-             else {
-                System.out.println("Problem with change Viewer Focus");
-                System.out.println("Current OpenNode :"+ OpenNodeStage);
-                System.out.println("Stage WS Focus :"+ Stage_WS.getCurrentFocus());
-             }
-            OpenNodeStage.selectedAsChildNode();
-            }
-        };
-
-       
-        //to call function to make dictionary template as needed
-        EventHandler<ActionEvent> makeDictNode = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            FileSearch myFS = new FileSearch();
-            ClauseContainer dictNode = myFS.getDictionaryTemplate();
-            OpenNodeStage.OpenNewNodeNow(dictNode,Stage_WS);
-            }
-        };
-
-        //to call function to make dictionary template with counts as needed
-        EventHandler<ActionEvent> makeDictCountsNode = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            FileSearch myFS = new FileSearch();
-            String myfile = "1.html";
-            ClauseContainer dictNode = myFS.getDictionaryWithCounts(myfile,"dictionary.txt");
-            OpenNodeStage.OpenNewNodeNow(dictNode,Stage_WS);
-            }
-        };
-
-        //to call function to make dictionary template with counts as needed
-        EventHandler<ActionEvent> getFirmCounts = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            FileSearch myFS = new FileSearch();
-            String myfile = "1.html";
-            ClauseContainer dictNode = myFS.getDictionaryWithCounts(myfile,"firms.txt");
-            OpenNodeStage.OpenNewNodeNow(dictNode,Stage_WS);
-            }
-        };
-
-        //to load a new template to workspace
+        //to load a new template to workspace (e.g. from markdown)
         EventHandler<ActionEvent> openTemplate = 
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
             //use the persistent Stage_WS instance to get the current stage (class variable)
-            LoadSave myLS = new LoadSave();
-            myLS.makeLoad(Main.this.Stage_WS);
+            LoadSave myLS = new LoadSave(Stage_WS);
+            //myLS.makeLoad(Main.this.Stage_WS);
+            myLS.makeLoad(); //not attached to stage?
 
             if (Main.this.Stage_WS==null) {
                 System.out.println("Problem with passing Stage_WS to openTemplate");
@@ -895,13 +544,15 @@ private void saveDocTree(ClauseContainer saveNode) {
         public void handle(ActionEvent event) {
             //use the persistent Stage_WS instance to get the current stage (class variable)
             LoadSave myLS = new LoadSave();
-            ClauseContainer thisNode;
+            /*ClauseContainer thisNode;
                     if (Main.this.masterNode!=null) {
                         myLS.makeSave(Main.this.Stage_WS,Main.this.masterNode);
                     }
                     else {
                        myLS.Close();
                     }
+                
+                */
                 }
             };
 
@@ -912,7 +563,7 @@ private void saveDocTree(ClauseContainer saveNode) {
         public void handle(ActionEvent event) {
             if (Main.this.getCurrentSprite()!=null) {
                 ClauseContainer thisNode = Main.this.getCurrentSprite().getBoxNode();
-                Main.this.saveDocTree(thisNode);
+                //Main.this.saveDocTree(thisNode);
             }
             //use the persistent Stage_WS instance to get the current stage (class variable)
             /*
@@ -973,29 +624,4 @@ private void saveDocTree(ClauseContainer saveNode) {
                     }
                 }
             };
-
-        //to call function to make an austlii folder (.html) node with word counts inside
-        EventHandler<ActionEvent> countAustliiDictionary = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            FileSearch myFS = new FileSearch();
-            ClauseContainer austliiNode = myFS.getAustliiWithCounts("dictionary.txt");
-            OpenNodeStage.OpenNewNodeNow(austliiNode,Stage_WS);
-            }
-        };
-
-        EventHandler<ActionEvent> countAustliiFirms = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            OpenNodeStage = Stage_WS.getCurrentFocus();
-            FileSearch myFS = new FileSearch();
-            ClauseContainer austliiNode = myFS.getAustliiWithCounts("firms.txt");
-            OpenNodeStage.OpenNewNodeNow(austliiNode,Stage_WS);
-            }
-        };
 }
