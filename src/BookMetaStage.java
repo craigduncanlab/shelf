@@ -2,9 +2,13 @@
 
 //import utilities needed for Arrays lists etc
 import java.util.*;
+//file i/o
+import java.io.*;
+import java.io.File;
 //JavaFX
 import javafx.stage.Stage;
 import javafx.stage.Screen;
+import javafx.stage.FileChooser; //for choosing files
 //Screen positioning
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.Insets;
@@ -64,6 +68,11 @@ import javafx.scene.web.HTMLEditor;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+//Desktop etc and file chooser
+import java.awt.Desktop;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /* Stages will always be on top of the parent window.  This is important for layout
 Make sure the smaller windows are owned by the larger window that is always visible
@@ -110,12 +119,12 @@ int doccount=0; //document counter for this stage
 //As of 26.4.2018: make this the default area to hold the node's own text (for stages that display a frame that is also an open node).  Always editable.
 
 //This TextArea is the GUI display object for the nodes' docnotes String.  Edit button will update the node's (ClauseContainer) actual data
-TextArea docNameTextArea = new TextArea();
+TextArea filepathTextArea = new TextArea();
 TextArea mdTextArea = new TextArea();
 TextArea headingTextArea = new TextArea();
 TextArea inputTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
-Text parentBoxText;
+Text filepathText;
 Text headingBoxText;
 Text inputBoxText;
 Text visibleBlockText;
@@ -492,6 +501,61 @@ public MenuBar getMenuBar() {
     return this.localmenubar;
 }
 
+//FILE LOADERS
+public void mainFilepathLoader() {
+    final FileChooser fileChooser = new FileChooser();
+    Stage myStage = new Stage();
+    myStage.setTitle("Get Filepath");
+    File file = fileChooser.showOpenDialog(myStage);
+    if (file != null) {
+      processFilepath(file);
+    } 
+}
+
+private void processFilepath(File filepath){
+  //String filename=System.out.print(file.toString()); // this is full path
+    String name=filepath.getName();  //is this shortname?
+    String path=filepath.getPath();//System.out.println(filepath.toString());
+    //System.out.println(filepath.getPath());
+    //System.exit(0);
+    setLocalFilepath(path);
+}
+
+// a File object is really a filepath class
+//Desktop.browse() launches the local web browser.
+public void openWordDoc(String filepath) {
+   try {
+     if (Desktop.isDesktopSupported()) {
+       Desktop.getDesktop().open(new File(filepath));
+     }
+   } catch (IOException ioe) {
+     ioe.printStackTrace();
+  }
+}
+
+public void openThisDoc() {
+   String filepath = filepathTextArea.getText();
+   if (filepath.equals(null)) {
+    return;
+   }
+   try {
+     if (Desktop.isDesktopSupported()) {
+       Desktop.getDesktop().open(new File(filepath));
+     }
+   } catch (IOException ioe) {
+     ioe.printStackTrace();
+  }
+}
+
+//called by file chooser.  Obtains a filepath to store in current node
+//TO DO: call this from BookMetaStage?
+public void setLocalFilepath (String filepath){
+    ClauseContainer myData = getDisplayNode();
+    myData.setdocxfilepath(filepath);
+    //refresh
+    filepathTextArea.setText(getDisplayNode().getdocxfilepath());
+}
+
 /* --- BASIC GUI SETUP FOR OPEN NODE VIEWERS --- */
 private void updateOpenNodeView() {
     makeSceneForNodeEdit();
@@ -518,8 +582,8 @@ private void updateOpenNodeView() {
     /** Use this if you want to display path info:
         String pathText = "Path/file:"+parentSTR+"-->"+getDisplayNode().getDocName()+"(viewing)"; 
     */
-    String pathText = "Open concept:"+getDisplayNode().getDocName();
-    parentBoxText.setText(pathText);
+    String pathText = "Filepath:"+getDisplayNode().getdocxfilepath();
+    filepathText.setText(pathText);
     headingBoxText.setText("Heading:");
     inputBoxText.setText("Multi-line notes:");
     visibleBlockText.setText("Visibility:");
@@ -527,7 +591,7 @@ private void updateOpenNodeView() {
     mdHeadingText.setText("Markdown:");
     //REFRESHES ALL GUI DATA - EVEN IF NOT CURRENTLY VISIBLE
         //LHS
-        docNameTextArea.setText(getDisplayNode().getDocName());
+        filepathTextArea.setText(getDisplayNode().getdocxfilepath());
         headingTextArea.setText(getDisplayNode().getHeading());
         mdTextArea.setText(getDisplayNode().getMD()); //update the markdown text
         inputTextArea.setText(getDisplayNode().getNotes());
@@ -563,6 +627,7 @@ public void addWSNode(ClauseContainer myNode) {
 }
 
 //Method to update workspace appearance based on current node setting (usually root of project)
+/*
 public void setWSNode(ClauseContainer myNode) {
     this.displayNode = myNode;
     String myFileLabel = myNode.getDocName();
@@ -572,6 +637,7 @@ public void setWSNode(ClauseContainer myNode) {
     //resetSpriteorigin(); //not needed as in displayConceptSection
     displayConceptSection(); //update WS view with new child boxes only
 }
+*/
 
 public void openNodeInViewer(ClauseContainer myNode) {
 
@@ -898,7 +964,8 @@ private Scene makeSceneForBoxes(ScrollPane myPane) {
 private void refreshNodeViewScene() {
         inputTextArea.setText(getDisplayNode().getNotes());
         inputTextArea.setWrapText(true);
-        docNameTextArea.setText(getDisplayNode().getDocName());
+        //filepathTextArea.setText(getDisplayNode().getDocName());
+        filepathTextArea.setText(getDisplayNode().getdocxfilepath());
         headingTextArea.setText(getDisplayNode().getHeading());
         htmlEditor.setHtmlText(getDisplayNode().getHTML());
         //output node contents
@@ -960,7 +1027,7 @@ private void makeSceneForNodeEdit() {
         mdTextArea.setPrefRowCount(20); //for markdown.  Add to boxPane
         inputTextArea.setPrefRowCount(7); //for notes
         inputTextArea.setWrapText(true);
-        docNameTextArea.setPrefRowCount(1);
+        filepathTextArea.setPrefRowCount(1);
         outputTextArea.setPrefRowCount(1);
         //
         //add mdTextArea to BoxPane
@@ -977,18 +1044,28 @@ private void makeSceneForNodeEdit() {
         btnEditCancel.setText("Close");
         btnEditCancel.setTooltip(new Tooltip ("Press to Cancel current edits"));
         btnEditCancel.setOnAction(closeWindow);
-      
+        Button btnOpenWord = new Button();
+        btnOpenWord.setText("Open");
+        btnOpenWord.setTooltip(new Tooltip ("Opens in Default Application"));
+        btnOpenWord.setOnAction(OpenWordAction);
         HBox hboxButtons = new HBox(0,btnUpdate,btnEditCancel);
         //
-        parentBoxText = new Text();
+        filepathText = new Text();
         headingBoxText = new Text();
         inputBoxText = new Text();
         visibleBlockText = new Text();
         mdHeadingText = new Text();
         //set view option
-         HBox widebox;
-         VBox vertFrame;
-         HBox visiblebox = new HBox(0,visibleBlockText,visibleCheck);
+        HBox widebox;
+        VBox vertFrame;
+        HBox visiblebox = new HBox(0,visibleBlockText,visibleCheck);
+        Button btnBrowseFilepath = new Button();
+        btnBrowseFilepath.setText("Browse");
+        btnBrowseFilepath.setTooltip(new Tooltip ("Browse files to set"));
+        btnBrowseFilepath.setOnAction(fileChooseAction);
+       
+        HBox filepathBox = new HBox(0,filepathTextArea,btnBrowseFilepath,btnOpenWord);
+
         //handle null case
         if (getDisplayNode().getUserView()==null) {
             getDisplayNode().setUserView("all");
@@ -1008,14 +1085,14 @@ private void makeSceneForNodeEdit() {
             widebox.setPrefSize(dblwidth,winHeight);
         }
         else if(getDisplayNode().getUserView().equals("nodeboxesonly")) {
-            vertFrame = new VBox(0,docNameTextArea,mdHeadingText,mdTextArea,hboxButtons);
+            vertFrame = new VBox(0,filepathBox,mdHeadingText,mdTextArea,hboxButtons);
             vertFrame.setPrefSize(winWidth,winHeight);
             setTitle(getTitleText(" - Concepts View"));
             widebox = new HBox(0,vertFrame);
             widebox.setPrefSize(dblwidth,winHeight);
         }
             else {
-            vertFrame = new VBox(0,visiblebox,parentBoxText,docNameTextArea,headingBoxText,headingTextArea,mdHeadingText,mdTextArea,inputBoxText,inputTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,headingBoxText,headingTextArea,mdHeadingText,mdTextArea,inputBoxText,inputTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
             vertFrame.setPrefSize(winWidth,winHeight);
             widebox = new HBox(0,vertFrame,htmlEditor);
@@ -1122,7 +1199,7 @@ private void closeThisStage() {
 //also performs a save on shared parent.
 //TO DO: remove and just save each text box content to an SQL database.
 private void saveNodeText() {
-    //getDisplayNode().updateText(htmlEditor.getHtmlText(),docNameTextArea.getText(),headingTextArea.getText(),inputTextArea.getText(),outputTextArea.getText());
+    //getDisplayNode().updateText(htmlEditor.getHtmlText(),filepathTextArea.getText(),headingTextArea.getText(),inputTextArea.getText(),outputTextArea.getText());
     
     getDisplayNode().updateMDText(headingTextArea.getText(),mdTextArea.getText(),inputTextArea.getText());
     ClauseContainer fileNode=getDisplayNode().getUltimateParent();
@@ -1135,7 +1212,7 @@ private void saveNodeText() {
     //parentBox - should we insist on one?
     SpriteBox pntBox = getParentBox();
     if (pntBox!=null) {
-        pntBox.setLabel(docNameTextArea.getText());
+        pntBox.setLabel(filepathTextArea.getText());
     }
     //error checking - log.  Leave this to show error for attempts with follower nodes.
     if (getDisplayNode().getNotes().equals(inputTextArea.getText())) {
@@ -1165,6 +1242,24 @@ EventHandler<ActionEvent> UpdateNodeText =
         @Override 
         public void handle(ActionEvent event) {
             BookMetaStage.this.saveNodeText();
+            }
+        };
+
+EventHandler<ActionEvent> OpenWordAction = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            BookMetaStage.this.openThisDoc();
+            }
+        };
+
+
+//event handler to call file chooser
+EventHandler<ActionEvent> fileChooseAction = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            BookMetaStage.this.mainFilepathLoader();
             }
         };
 

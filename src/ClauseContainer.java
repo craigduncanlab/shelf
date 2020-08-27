@@ -14,6 +14,7 @@ private static final long serialVersionUID = -64702044414208496L;
 String ContainerType=""; 
 int numClauses=0; //this will hold number of clauses
 //NODE INPUT FIELDS
+String docxfilepath="";
 String docname=""; //to hold the container name or filename
 String docauthor=""; //to hold author name
 String docnotes=""; //to hold Document notes
@@ -117,6 +118,16 @@ public ClauseContainer(NodeCategory nodecat, ClauseContainer parentNode, String 
     dataLinkParent= new ClauseContainer(); //detached from main tree?
     setParentNode(parentNode);
     setUltimateParent(parentNode.getUltimateParent());
+}
+
+//return the meta info regarding filepath
+public String getdocxfilepath() {
+	return this.docxfilepath;
+}
+
+//store the meta info regarding filepath
+public void setdocxfilepath(String filep) {
+	this.docxfilepath = filep;
 }
 
 //constructor 2 - a default container based on category 

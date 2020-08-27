@@ -167,13 +167,52 @@ public void saveName(ClauseContainer myNode) {
 //Make the new stage e.g. called from OpenTempl in Main, passing Stage_WS as argument
 // This creates a new Load stage dialogue
 // It does not 'close' the stage, and requires a separate 'close event' loop
+
+/*
 public void makeLoad() {
 	//this.targetSM = targetSM; //store for later.  Not used?
 	//this.targetNode = null; //store for later
 	//make this dialogue
 	//makeDialogue("Load Template",1);
   //FileChooser newFC = new FileChooser();
-  Stage myChooserStage = makeStage();  // this is not attached to Stage_WS at all?
+  //Makes a custom button for the stage
+   final Button openButton = new Button("Open a Markdown File");
+         
+         openButton.setOnAction(
+            new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(final ActionEvent e) {
+                    final FileChooser fileChooser = new FileChooser();
+                    File file = fileChooser.showOpenDialog(LoadSave.this.myStage);
+                    if (file != null) {
+                      LoadSave.this.processMarkdown(file);
+                    } //end if
+                } //end new defn of event handler
+            });
+  Stage myChooserStage = makeLoaderStage(openButton);  // this is not attached to Stage_WS at all?
+  myChooserStage.show();
+}
+*/
+public void makeChooser() {
+  //this.targetSM = targetSM; //store for later.  Not used?
+  //this.targetNode = null; //store for later
+  //make this dialogue
+  //makeDialogue("Load Template",1);
+  //FileChooser newFC = new FileChooser();
+  //Makes a custom button for the stage
+   final Button openButton = new Button("Select Filepath");
+         final FileChooser fileChooser = new FileChooser();
+         openButton.setOnAction(
+            new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(final ActionEvent e) {
+                    File file = fileChooser.showOpenDialog(LoadSave.this.myStage);
+                    if (file != null) {
+                      //LoadSave.this.processFilepath(file);
+                    } //end if
+                } //end new defn of event handler
+            });
+  Stage myChooserStage = makeLoaderStage(openButton);  // this is not attached to Stage_WS at all?
   myChooserStage.show();
 }
 
@@ -240,56 +279,50 @@ public void Close() {
 	this.myStage.close();
 }
 
+
+/*
+public void processMarkdown(File file) {
+  //String filename=System.out.print(file.toString()); // this is full path
+    String last=file.getName();
+    last=last.substring(last.length() - 3);
+    if (last.equals(".md")==true) {
+      TemplateUtil myUtil = new TemplateUtil();
+      String contents = myUtil.getFileText(file);
+      //Recents myR = new Recents();
+      //myR.updateRecents(file.getName());
+      Parser myParser=new Parser();
+      // Split the MD file
+      ArrayList<String> blocklist= myParser.splitMDfile(contents);
+      int length = blocklist.size();
+      //System.out.println(length);
+      //System.exit(0);
+      if (length>0) {
+        Iterator<String> iter = blocklist.iterator(); 
+          while (iter.hasNext()) {
+              ClauseContainer newNode=myParser.parseMDfile(iter.next());
+              if (newNode!=null) {
+                System.out.println("Starting iteration of lines in MD");
+                System.out.println(LoadSave.this.targetSM);
+                LoadSave.this.targetSM.OpenNewNodeNow(newNode);
+              }
+         } //end while
+      } //end if
+      
+      System.out.println("Finished parse in 'open button' makeStage");
+      LoadSave.this.ListOfFiles();// print out current directory
+    }
+}
+*/
 //This is a separate Loader stage.  Can run it off menu selector or keystrokes.
-// Currently used for loading markdown files
+//Accepts button as input: currently used for loading markdown files
 //It is opened up as a prompt on the Stage_WS, and then adds nodes/boxes to the Stage_WS.
-private Stage makeStage() {
+//TO DO: add a close button
+private Stage makeLoaderStage(Button openButton) {
         this.myStage= new Stage();
         this.myStage.setTitle("Open File");
  
-        final FileChooser fileChooser = new FileChooser();
- 
-        final Button openButton = new Button("Open a Markdown File");
+        /*
         final Button openMultipleButton = new Button("Open Multiple MD");
- 
-        openButton.setOnAction(
-            new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(final ActionEvent e) {
-                    File file = fileChooser.showOpenDialog(LoadSave.this.myStage);
-                    if (file != null) {
-                      //String filename=System.out.print(file.toString()); // this is full path
-                      String last=file.getName();
-                      last=last.substring(last.length() - 3);
-                      if (last.equals(".md")==true) {
-                        TemplateUtil myUtil = new TemplateUtil();
-                        String contents = myUtil.getFileText(file);
-                        //Recents myR = new Recents();
-                        //myR.updateRecents(file.getName());
-                        Parser myParser=new Parser();
-                        // Split the MD file
-                        ArrayList<String> blocklist= myParser.splitMDfile(contents);
-                        int length = blocklist.size();
-                        //System.out.println(length);
-                        //System.exit(0);
-                        if (length>0) {
-                          Iterator<String> iter = blocklist.iterator(); 
-                            while (iter.hasNext()) {
-                                ClauseContainer newNode=myParser.parseMDfile(iter.next());
-                                if (newNode!=null) {
-                                  System.out.println("Starting iteration of lines in MD");
-                                  System.out.println(LoadSave.this.targetSM);
-                                  LoadSave.this.targetSM.OpenNewNodeNow(newNode);
-                                }
-                           } //end while
-                        } //end if
-                        
-                        System.out.println("Finished parse in 'open button' makeStage");
-                        LoadSave.this.ListOfFiles();// print out current directory
-                      }
-                    } //end if
-                } //end new defn of event handler
-            });
  
         openMultipleButton.setOnAction(
             new EventHandler<ActionEvent>() {
@@ -302,19 +335,19 @@ private Stage makeStage() {
                             openFile(file);
                         }
                     }
-                    */
+                    
                 }
             });
- 
+        */
  
         final GridPane inputGridPane = new GridPane();
  
         GridPane.setConstraints(openButton, 0, 0);
-        GridPane.setConstraints(openMultipleButton, 1, 0);
+        //GridPane.setConstraints(openMultipleButton, 1, 0);
         inputGridPane.setHgap(6);
         inputGridPane.setVgap(6);
-        inputGridPane.getChildren().addAll(openButton, openMultipleButton);
- 
+        //inputGridPane.getChildren().addAll(openButton, openMultipleButton);
+        inputGridPane.getChildren().addAll(openButton);
         final Pane rootGroup = new VBox(12);
         rootGroup.getChildren().addAll(inputGridPane);
         rootGroup.setPadding(new Insets(12, 12, 12, 12));

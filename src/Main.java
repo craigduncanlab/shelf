@@ -57,10 +57,19 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.*;
+import java.io.File;
+
 //File chooser
 import javafx.stage.FileChooser;
 //key events
 import javafx.scene.input.KeyEvent;
+//Desktop etc and file chooser
+import java.awt.Desktop;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 public class Main extends Application {
     //setup instance variables here.  Static if shared across class (i.e. static=same memory location used)
@@ -498,6 +507,17 @@ private void saveDocTree(ClauseContainer saveNode) {
 
      }
 
+    //FILE LOADERS
+    public void mainFileLoader() {
+         final FileChooser fileChooser = new FileChooser();
+        Stage myStage = new Stage();
+        myStage.setTitle("Open File");
+        File file = fileChooser.showOpenDialog(myStage);
+        if (file != null) {
+          Main.this.Stage_WS.processMarkdown(file);
+        } 
+    }
+   
 
     // --- EVENT HANDLERS
 
@@ -526,10 +546,28 @@ private void saveDocTree(ClauseContainer saveNode) {
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
+            Main.this.mainFileLoader();
             //use the persistent Stage_WS instance to get the current stage (class variable)
-            LoadSave myLS = new LoadSave(Stage_WS);
+            /*LoadSave myLS = new LoadSave(Main.this.Stage_WS);
             //myLS.makeLoad(Main.this.Stage_WS);
             myLS.makeLoad(); //not attached to stage?
+
+            if (Main.this.Stage_WS==null) {
+                System.out.println("Problem with passing Stage_WS to openTemplate");
+            }
+            */
+            }
+        };
+
+        //to load a new filepath
+        EventHandler<ActionEvent> getFilepath = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            //use the persistent Stage_WS instance to get the current stage (class variable)
+            LoadSave myUtil = new LoadSave(Main.this.Stage_WS);
+            //myLS.makeLoad(Main.this.Stage_WS);
+            myUtil.makeChooser(); //not attached to stage?
 
             if (Main.this.Stage_WS==null) {
                 System.out.println("Problem with passing Stage_WS to openTemplate");

@@ -65,6 +65,9 @@ import javafx.scene.web.HTMLEditor;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+//File i/o
+import java.io.*;
+import java.io.File;
 
 /* Stages will always be on top of the parent window.  This is important for layout
 Make sure the smaller windows are owned by the larger window that is always visible
@@ -193,6 +196,37 @@ public MainStage(String title, MenuBar myMenu) {
     //setWSNode(new ClauseContainer(myCategory,"The workspace is base node of project.","myWorkspace")); //data
 }
 
+
+public void processMarkdown(File file) {
+  //String filename=System.out.print(file.toString()); // this is full path
+    String last=file.getName();
+    last=last.substring(last.length() - 3);
+    if (last.equals(".md")==true) {
+      TemplateUtil myUtil = new TemplateUtil();
+      String contents = myUtil.getFileText(file);
+      //Recents myR = new Recents();
+      //myR.updateRecents(file.getName());
+      Parser myParser=new Parser();
+      // Split the MD file
+      ArrayList<String> blocklist= myParser.splitMDfile(contents);
+      int length = blocklist.size();
+      //System.out.println(length);
+      //System.exit(0);
+      if (length>0) {
+        Iterator<String> iter = blocklist.iterator(); 
+          while (iter.hasNext()) {
+              ClauseContainer newNode=myParser.parseMDfile(iter.next());
+              if (newNode!=null) {
+                System.out.println("Starting iteration of lines in MD");
+                OpenNewNodeNow(newNode);
+              }
+         } //end while
+      } //end if
+      
+      System.out.println("Finished parse in 'open button' makeStage");
+      //LoadSave.this.ListOfFiles();// print out current directory
+    }
+}
 
 public void setTargetByViewer(BookMetaStage mySM) {
     currentTarget = mySM.getDisplayNode();
