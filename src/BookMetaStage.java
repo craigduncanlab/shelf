@@ -5,6 +5,10 @@ import java.util.*;
 //file i/o
 import java.io.*;
 import java.io.File;
+//net function for browser links
+import java.net.URI;
+import java.net.URISyntaxException;
+
 //JavaFX
 import javafx.stage.Stage;
 import javafx.stage.Screen;
@@ -120,6 +124,7 @@ int doccount=0; //document counter for this stage
 
 //This TextArea is the GUI display object for the nodes' docnotes String.  Edit button will update the node's (ClauseContainer) actual data
 TextArea filepathTextArea = new TextArea();
+TextArea urlTextArea = new TextArea();
 TextArea mdTextArea = new TextArea();
 TextArea headingTextArea = new TextArea();
 TextArea inputTextArea = new TextArea();
@@ -129,6 +134,7 @@ Text headingBoxText;
 Text inputBoxText;
 Text visibleBlockText;
 Text mdHeadingText;
+Text urlText;
 //Store the common event handlers here for use
 EventHandler<MouseEvent> PressBox;
 EventHandler<MouseEvent> DragBox;
@@ -547,6 +553,38 @@ public void openThisDoc() {
   }
 }
 
+public void openThisURL() {
+   String upath = urlTextArea.getText();
+   String checkedURI;
+   if (upath.equals(null)) {
+    return;
+   }
+   String prefix = upath.substring(0,7);
+   String webcheck = upath.substring(0,3);
+   if (webcheck.equals("www")) {}
+   if (prefix.equals("http://")==false) {
+    System.out.println("Must include http:// at beginning of web URL");
+    checkedURI="http://"+upath;
+    urlTextArea.setText(checkedURI);
+    //udpatedisplay
+   }  
+   else {
+    System.out.println("http prefix ok web address");
+    checkedURI=upath;
+   }
+
+   try {
+     URI uri = new URI(checkedURI);
+     if (Desktop.isDesktopSupported()) {
+       Desktop.getDesktop().browse(uri);
+     }
+   } catch (IOException ioe) {
+      ioe.printStackTrace();
+    } catch (URISyntaxException use) {
+      use.printStackTrace();
+  }
+}
+
 //called by file chooser.  Obtains a filepath to store in current node
 //TO DO: call this from BookMetaStage?
 public void setLocalFilepath (String filepath){
@@ -554,6 +592,13 @@ public void setLocalFilepath (String filepath){
     myData.setdocxfilepath(filepath);
     //refresh
     filepathTextArea.setText(getDisplayNode().getdocxfilepath());
+}
+
+public void setLocalURL (String filepath){
+    ClauseContainer myData = getDisplayNode();
+    myData.seturlpath(filepath);
+    //refresh
+    urlTextArea.setText(getDisplayNode().geturlpath());
 }
 
 /* --- BASIC GUI SETUP FOR OPEN NODE VIEWERS --- */
@@ -584,6 +629,7 @@ private void updateOpenNodeView() {
     */
     String pathText = "Filepath:"+getDisplayNode().getdocxfilepath();
     filepathText.setText(pathText);
+    urlText.setText("URL path:");
     headingBoxText.setText("Heading:");
     inputBoxText.setText("Multi-line notes:");
     visibleBlockText.setText("Visibility:");
@@ -591,14 +637,17 @@ private void updateOpenNodeView() {
     mdHeadingText.setText("Markdown:");
     //REFRESHES ALL GUI DATA - EVEN IF NOT CURRENTLY VISIBLE
         //LHS
-        filepathTextArea.setText(getDisplayNode().getdocxfilepath());
-        headingTextArea.setText(getDisplayNode().getHeading());
-        mdTextArea.setText(getDisplayNode().getMD()); //update the markdown text
-        inputTextArea.setText(getDisplayNode().getNotes());
-        visibleCheck.setSelected(getDisplayNode().getVisible()); //check box
-        outputTextArea.setText(getDisplayNode().getOutputText()); //output node contents
+        ClauseContainer updateNode=getDisplayNode();
+
+        filepathTextArea.setText(updateNode.getdocxfilepath());
+        urlTextArea.setText(updateNode.geturlpath());
+        headingTextArea.setText(updateNode.getHeading());
+        mdTextArea.setText(updateNode.getMD()); //update the markdown text
+        inputTextArea.setText(updateNode.getNotes());
+        visibleCheck.setSelected(updateNode.getVisible()); //check box
+        outputTextArea.setText(updateNode.getOutputText()); //output node contents
         //RHS
-        htmlEditor.setHtmlText(getDisplayNode().getHTML());
+        htmlEditor.setHtmlText(updateNode.getHTML());
         
         displayConceptSection();
 
@@ -962,14 +1011,15 @@ private Scene makeSceneForBoxes(ScrollPane myPane) {
 /* Method to refresh GUI objects from underlying data (as saved) */
 
 private void refreshNodeViewScene() {
-        inputTextArea.setText(getDisplayNode().getNotes());
+        ClauseContainer updateNode = getDisplayNode();
+        inputTextArea.setText(updateNode.getNotes());
+        urlTextArea.setText(updateNode.geturlpath());
         inputTextArea.setWrapText(true);
-        //filepathTextArea.setText(getDisplayNode().getDocName());
-        filepathTextArea.setText(getDisplayNode().getdocxfilepath());
-        headingTextArea.setText(getDisplayNode().getHeading());
-        htmlEditor.setHtmlText(getDisplayNode().getHTML());
+        filepathTextArea.setText(updateNode.getdocxfilepath());
+        headingTextArea.setText(updateNode.getHeading());
+        htmlEditor.setHtmlText(updateNode.getHTML());
         //output node contents
-        outputTextArea.setText(getDisplayNode().getOutputText());
+        outputTextArea.setText(updateNode.getOutputText());
         //redisplay boxes
         Group newGroup = new Group(); //new GUI node to show only new content.
         swapSpriteGroup(newGroup); //store the new GUI node for later use
@@ -1028,6 +1078,7 @@ private void makeSceneForNodeEdit() {
         inputTextArea.setPrefRowCount(7); //for notes
         inputTextArea.setWrapText(true);
         filepathTextArea.setPrefRowCount(1);
+        urlTextArea.setPrefRowCount(1);
         outputTextArea.setPrefRowCount(1);
         //
         //add mdTextArea to BoxPane
@@ -1044,17 +1095,22 @@ private void makeSceneForNodeEdit() {
         btnEditCancel.setText("Close");
         btnEditCancel.setTooltip(new Tooltip ("Press to Cancel current edits"));
         btnEditCancel.setOnAction(closeWindow);
-        Button btnOpenWord = new Button();
-        btnOpenWord.setText("Open");
-        btnOpenWord.setTooltip(new Tooltip ("Opens in Default Application"));
-        btnOpenWord.setOnAction(OpenWordAction);
+        Button btnOpenDoc = new Button();
+        btnOpenDoc.setText("Open");
+        btnOpenDoc.setTooltip(new Tooltip ("Opens in Default Application"));
+        btnOpenDoc.setOnAction(OpenWordAction);
         HBox hboxButtons = new HBox(0,btnUpdate,btnEditCancel);
+        Button btnOpenURL = new Button();
+        btnOpenURL.setText("Open");
+        btnOpenURL.setTooltip(new Tooltip ("Opens in Default Application"));
+        btnOpenURL.setOnAction(OpenURLAction);
         //
         filepathText = new Text();
         headingBoxText = new Text();
         inputBoxText = new Text();
         visibleBlockText = new Text();
         mdHeadingText = new Text();
+        urlText = new Text();
         //set view option
         HBox widebox;
         VBox vertFrame;
@@ -1063,8 +1119,9 @@ private void makeSceneForNodeEdit() {
         btnBrowseFilepath.setText("Browse");
         btnBrowseFilepath.setTooltip(new Tooltip ("Browse files to set"));
         btnBrowseFilepath.setOnAction(fileChooseAction);
-       
-        HBox filepathBox = new HBox(0,filepathTextArea,btnBrowseFilepath,btnOpenWord);
+
+        HBox filepathBox = new HBox(0,filepathTextArea,btnBrowseFilepath,btnOpenDoc);
+        HBox urlpathBox = new HBox(0,urlTextArea,btnOpenURL);
 
         //handle null case
         if (getDisplayNode().getUserView()==null) {
@@ -1084,6 +1141,7 @@ private void makeSceneForNodeEdit() {
             widebox = new HBox(0,vertFrame);
             widebox.setPrefSize(dblwidth,winHeight);
         }
+
         else if(getDisplayNode().getUserView().equals("nodeboxesonly")) {
             vertFrame = new VBox(0,filepathBox,mdHeadingText,mdTextArea,hboxButtons);
             vertFrame.setPrefSize(winWidth,winHeight);
@@ -1091,8 +1149,9 @@ private void makeSceneForNodeEdit() {
             widebox = new HBox(0,vertFrame);
             widebox.setPrefSize(dblwidth,winHeight);
         }
+         //this is now the default?
             else {
-            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,headingBoxText,headingTextArea,mdHeadingText,mdTextArea,inputBoxText,inputTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,headingBoxText,headingTextArea,mdHeadingText,mdTextArea,inputBoxText,inputTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
             vertFrame.setPrefSize(winWidth,winHeight);
             widebox = new HBox(0,vertFrame,htmlEditor);
@@ -1250,6 +1309,14 @@ EventHandler<ActionEvent> OpenWordAction =
         @Override 
         public void handle(ActionEvent event) {
             BookMetaStage.this.openThisDoc();
+            }
+        };
+
+EventHandler<ActionEvent> OpenURLAction = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            BookMetaStage.this.openThisURL();
             }
         };
 

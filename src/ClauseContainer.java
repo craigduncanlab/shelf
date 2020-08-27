@@ -15,6 +15,7 @@ String ContainerType="";
 int numClauses=0; //this will hold number of clauses
 //NODE INPUT FIELDS
 String docxfilepath="";
+String urlpath = "";
 String docname=""; //to hold the container name or filename
 String docauthor=""; //to hold author name
 String docnotes=""; //to hold Document notes
@@ -128,6 +129,16 @@ public String getdocxfilepath() {
 //store the meta info regarding filepath
 public void setdocxfilepath(String filep) {
 	this.docxfilepath = filep;
+}
+
+//return the meta info regarding filepath
+public String geturlpath() {
+	return this.urlpath;
+}
+
+//store the meta info regarding filepath
+public void seturlpath(String up) {
+	this.urlpath = up;
 }
 
 //constructor 2 - a default container based on category 
