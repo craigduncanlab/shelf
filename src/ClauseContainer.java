@@ -122,12 +122,12 @@ public ClauseContainer(NodeCategory nodecat, ClauseContainer parentNode, String 
 }
 
 //return the meta info regarding filepath
-public String getdocxfilepath() {
+public String getdocfilepath() {
 	return this.docxfilepath;
 }
 
 //store the meta info regarding filepath
-public void setdocxfilepath(String filep) {
+public void setdocfilepath(String filep) {
 	this.docxfilepath = filep;
 }
 
@@ -231,6 +231,10 @@ public double getX() {
 
 public double getY() {
 	return this.childNodeY;
+}
+
+public void setY(double ypos) {
+	this.childNodeY=ypos;
 }
 
 // Visibility

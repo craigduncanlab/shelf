@@ -1,5 +1,5 @@
-//Parser.java (c) Craig Duncan 2020
-//A class to parse markdown files for the mpress/shelf application (input and output)
+//(c) Craig Duncan 2020
+//A class to parse markdown files for this application (input and output)
 import java.net.*;
 import java.io.*;
 import java.io.File;
@@ -36,6 +36,8 @@ Parsing algo:
 4. Store ClauseContainers in an array and return...
 
 */
+
+//called externally to split up an MD file into separate blocks
 
 public ArrayList<String> splitMDfile(String input) {
 	ArrayList<Integer> fileindex = new ArrayList<Integer>();
@@ -149,12 +151,23 @@ public ArrayList<String> splitMDfile(String input) {
 			return newBlocks;
 }
 
-//single document test
+//called externally to work on contents of an individual Markdown block
 public ClauseContainer parseMDblock(String input) {
+	ArrayList<Integer> fileindex = makeMDfileindex(input);
+	ClauseContainer newNode = MDfileFilter(fileindex,input);
+	return newNode;
+}
+
+//make an index (like an R vector) to determine nature of each line of markdown file
+public ArrayList<Integer> makeMDfileindex(String input) {
 		ArrayList<Integer> fileindex = new ArrayList<Integer>();
-		StringBuffer mdStream = new StringBuffer();
-		StringBuffer notesStream = new StringBuffer();
-		Boolean visibility=true;
+		
+		Boolean visibility=true; //TO DO: fix visibility state after index prepared?
+		Boolean codeLine=false;
+		Boolean urlLine=false;
+		Boolean filepathLine=false;
+		Boolean singlecodeline=false;
+		Boolean coord=false;
 		String label = "";
 		int nl=0;
 		try {
@@ -166,11 +179,17 @@ public ClauseContainer parseMDblock(String input) {
 			
 			int brackets=0;
 			while (scanner1.hasNextLine()) {
+				codeLine=false;
+				singlecodeline = false;
+				filepathLine=false;
+				urlLine=false;
+				coord=false;
 				//Array currentNotes[] = new Array(2);
 				String thisRow=scanner1.nextLine();
 				//Scanner scanner2= new Scanner(thisRow).useDelimiter("#");
 				
 				System.out.println(nl+") "+thisRow);
+				//short row
 				if (thisRow.length()<2) {
 					if (brackets==0) {
 						fileindex.add(1);
@@ -179,21 +198,50 @@ public ClauseContainer parseMDblock(String input) {
 						fileindex.add(2); //notes
 					}
 				}
+				//long row
 				else {
 					String firstpart = thisRow.substring(0,2);
 					Boolean singlelinenote = thisRow.contains("*/");
+					if (thisRow.length()>5) {
+						String endpart = thisRow.substring(3,thisRow.length());
+						singlecodeline = endpart.contains("```");
+					}
 					if (thisRow.length()>2) {
 						String visFlag = thisRow.substring(0,3);
 						if (visFlag.equals("# -")) {
 		            		visibility=false;
 		            	}
+		            	if (visFlag.equals("```")) {
+		            		codeLine=true;
+		            	}
+		            }
+		            if (thisRow.length()>5) {
+		            	String prefix=thisRow.substring(0,6);
+		            	String check=thisRow.substring(0,5);
+		            	System.out.println(thisRow);
+		            	if (prefix.equals("[url](")){
+		            		urlLine=true;
+		            		System.out.println(prefix);
+		            		
+		            	} 
+		            	else if (prefix.equals("[x,y](")) {
+		            		coord=true;
+		            		System.out.println(prefix);
+		            		
+		            	}
+		            }
+		            if (thisRow.length()>11) {
+		            	String prefix=thisRow.substring(0,11);
+		            	if (prefix.equals("[filepath](")){
+		            		filepathLine=true;
+		            	} 
 		            }
 					System.out.println(nl+") "+firstpart);
 					switch (firstpart) {
 	            		case "# ":  
 		            		if (brackets==0) {
 		            			fileindex.add(0);
-		            			label=thisRow;
+		            			label=thisRow; //not actually used here.  see MDfilefilter
 		            		}
 		            		else if (brackets==1) {
 			                    	fileindex.add(2); //notes
@@ -207,7 +255,28 @@ public ClauseContainer parseMDblock(String input) {
 		                    	fileindex.add(2); //notes
 		                    }
 		            		break;
-	                    case "/*":  
+	                    case "``":  
+		                    if (brackets==0 && codeLine==true) {
+		                    	brackets=1;
+		                    	fileindex.add(4); //code notes
+		                    }
+		                    
+	                        else if (brackets==1 && codeLine==true) {
+		                    	brackets=0;
+		                    	fileindex.add(5); //end code notes
+		                    }
+
+		                    else if (brackets==0 && singlecodeline==true) {
+		                    	brackets=0;
+		                    	fileindex.add(5); //end code notes
+		                    }
+
+		                    else if (codeLine==false) {
+		                    	fileindex.add(1); //md
+		                    }
+		                    break;
+
+		                case "/*":  
 		                    if (brackets==0 && singlelinenote==false) {
 		                    	brackets=1;
 		                    }
@@ -225,6 +294,15 @@ public ClauseContainer parseMDblock(String input) {
 	                    default:  
 	                    	if (brackets==1) {
 	                    		fileindex.add(2); //notes
+	                    	}
+	                    	else if(filepathLine==true) {
+	                    		fileindex.add(6); //6=filepath
+	                    	}
+	                    	else if(urlLine==true) {
+	                    		fileindex.add(7); //7=url path
+	                    	}
+	                    	else if(coord==true){
+	                    		fileindex.add(8);//8=coordinates
 	                    	}
 	                    	else {
 	                    		fileindex.add(1); //md
@@ -254,7 +332,22 @@ public ClauseContainer parseMDblock(String input) {
 				System.out.println("Max : "+max+" nl: "+nl);
 			}
 			//System.exit(0);
-			try {
+			return fileindex;
+		} // end class
+
+
+//process/filter a markdown file using the prepared index of line content types
+public ClauseContainer MDfileFilter(ArrayList<Integer> fileindex,String input) {
+		StringBuffer mdStream = new StringBuffer();
+		StringBuffer notesStream = new StringBuffer();
+		StringBuffer codenotesStream = new StringBuffer();
+		Integer nl;
+		String label="";
+		String urlString="";
+		String filepathString="";
+		double x=0.0;
+		double y=0.0;
+		try {
 				Scanner scanner2 = new Scanner(input); //default delimiter is EOL?
 				if (scanner2==null) {
 					System.out.println("No MD block content");
@@ -262,6 +355,7 @@ public ClauseContainer parseMDblock(String input) {
 				}
 			
 			nl=0;
+			//Integer max = 0; //this should be length of lines.
 			while (scanner2.hasNextLine()) {
 				String thisLine=scanner2.nextLine();
 				System.out.println("Line: "+thisLine);
@@ -270,17 +364,66 @@ public ClauseContainer parseMDblock(String input) {
 					mdStream.append(thisLine);
 					mdStream.append("\n"); //EOL
 				}
+				//heading or label
+				if (fileindex.get(nl)==0){
+					label=thisLine; //limit book label to first "# " + 10 characters
+				}
 				//notes line
 				if (fileindex.get(nl)==2 || fileindex.get(nl)==3) {
 					String replacement = thisLine.replace("/*","");
-					String replacement2 = replacement.replace("*/","");
-					notesStream.append(replacement2);
+					String replacement2 = replacement.replace("```","");
+					String replacement3 = replacement2.replace("*/","");
+					notesStream.append(replacement3);
 					notesStream.append("\n"); //EOL
 				}
+
+				//code notes line
+				if (fileindex.get(nl)==4 || fileindex.get(nl)==5) {
+					String replacement2 = thisLine.replace("```","");
+					codenotesStream.append(replacement2);
+					codenotesStream.append("\n"); //EOL
+				}
+				if(fileindex.get(nl)==5) {
+
+				}
+				//file path line
+				if(fileindex.get(nl)==6) {
+					String suffix=thisLine.substring(11,thisLine.length());
+		            filepathString=suffix.replace(")","");
+		            System.out.println(filepathString);
+				}
+				//url index line
+				if(fileindex.get(nl)==7) {
+					String suffix=thisLine.substring(6,thisLine.length());
+		            urlString=suffix.replace(")","");
+		            System.out.println(urlString);
+				}
+				//coordinates line
+				if(fileindex.get(nl)==8) {
+				  String restart=thisLine.replace("[x,y](","");
+				  String restart2=restart.replace(")","");
+				  String restart3=restart2.replace("]",",");
+				  Scanner scanner3= new Scanner(restart3).useDelimiter(",");
+				  String xcoord=scanner3.next();
+				  String ycoord=scanner3.next();
+				  System.out.println(xcoord+","+ycoord);
+				  x = Double.parseDouble(xcoord);
+				  y = Double.parseDouble(ycoord);
+				  System.out.println(x+","+y);
+				  if (x<0) {
+				  	x=0.0;
+				  }
+				  if(y<0) {
+				  	y=0;
+				  }
+				}
+				nl++;
 				//advance if ok
+				/*
 				if (nl<max) {
 					nl++;
 				}
+				*/
 				} //end while
 				scanner2.close();
 			}
@@ -291,16 +434,26 @@ public ClauseContainer parseMDblock(String input) {
 				return null;
 			}
 		//finish
+		
 		String notes = notesStream.toString();
 		String contents = mdStream.toString();
+		String codes = codenotesStream.toString();
 		if (label.length()<1) {
-			label="Default";
+			label="Default"; //for front of box.
+		}
+		//labels are wrapped.  Allow for 2 x 20 lines
+		if (label.length()>40) {
+			label=label.substring(0,40); //limit book label to first "# " + 10 characters
 		}
 		String label1=label.replace("# -",""); //remove hash but leave minus sign?
 		String label2=label1.replace("# ","");
-		ClauseContainer newNode=new ClauseContainer(label2,contents,notes);
+		//omits in-line coded notes for now
+		ClauseContainer newNode=new ClauseContainer(label2,contents,notes); //constructor: make new meta data with label of book
+		newNode.seturlpath(urlString);
+		newNode.setdocfilepath(filepathString);//filepath,urlpath,
+		newNode.setXY(x,y); //x,y  must be doubles
 		//At present visibility reflects the last markdown # code detected in file.
-		newNode.setVisible(visibility);
+		newNode.setVisible(true);
 		return newNode;
 		} //end method
 } //end class

@@ -591,9 +591,9 @@ public void openThisURL() {
 //TO DO: call this from BookMetaStage?
 public void setLocalFilepath (String filepath){
     ClauseContainer myData = getDisplayNode();
-    myData.setdocxfilepath(filepath);
+    myData.setdocfilepath(filepath);
     //refresh
-    filepathTextArea.setText(getDisplayNode().getdocxfilepath());
+    filepathTextArea.setText(getDisplayNode().getdocfilepath());
 }
 
 public void setLocalURL (String filepath){
@@ -629,7 +629,7 @@ private void updateOpenNodeView() {
     /** Use this if you want to display path info:
         String pathText = "Path/file:"+parentSTR+"-->"+getDisplayNode().getDocName()+"(viewing)"; 
     */
-    String pathText = "Filepath:"+getDisplayNode().getdocxfilepath();
+    String pathText = "Filepath:"+getDisplayNode().getdocfilepath();
     filepathText.setText(pathText);
     urlText.setText("URL path:");
     headingBoxText.setText("Heading:");
@@ -641,7 +641,7 @@ private void updateOpenNodeView() {
         //LHS
         ClauseContainer updateNode=getDisplayNode();
 
-        filepathTextArea.setText(updateNode.getdocxfilepath());
+        filepathTextArea.setText(updateNode.getdocfilepath());
         urlTextArea.setText(updateNode.geturlpath());
         headingTextArea.setText(updateNode.getHeading());
         mdTextArea.setText(updateNode.getMD()); //update the markdown text
@@ -1017,7 +1017,7 @@ private void refreshNodeViewScene() {
         inputTextArea.setText(updateNode.getNotes());
         urlTextArea.setText(updateNode.geturlpath());
         inputTextArea.setWrapText(true);
-        filepathTextArea.setText(updateNode.getdocxfilepath());
+        filepathTextArea.setText(updateNode.getdocfilepath());
         headingTextArea.setText(updateNode.getHeading());
         htmlEditor.setHtmlText(updateNode.getHTML());
         //output node contents

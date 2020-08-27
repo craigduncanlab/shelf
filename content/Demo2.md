@@ -1,5 +1,9 @@
 # -Demo 
 
+[filepath](/Users/craigduncan/Documents/2020_ComputerScience/NoisyGuts/56256.pdf)
+[url](www.abc.net.au)
+[x,y](623.0,420.0)
+
 This is a demonstration markdown file that can be loaded into the editor.
 
 The minus sign next to the heading hash #- means 'not visible'.
@@ -30,6 +34,8 @@ Multi-line notes in a code section.
 
 # Box 2
 
+[x,y](623.0,14.0)
+
 ## Subheading
 
 This will be captured as a separate box.
@@ -40,6 +46,8 @@ Filtering out the notes lines should be easy.
 
 
 # -Final markdown
+
+[x,y](120.0,7.0)
 
 This should be the third box in the display.
 

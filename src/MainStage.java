@@ -717,6 +717,37 @@ private String getTitleText(String myString) {
    
 }
 
+public double snapYtoShelf(double newTranslateY){
+    Integer shelf1 = 200;
+    Integer shelf2=2*shelf1;
+    Integer shelf3=3*shelf2;
+    Integer bookiconheight=150;
+    Integer offset1=20;
+    Integer overshoot=20;
+    Integer offset2=offset1+200;
+    Integer offset3=offset2+200;
+    Integer offset4=offset3+200;
+    /* --- SNAP TO GRID --- */
+    //if release points don't fit shelf range, simulate 'gravity' to shelf below
+    if (newTranslateY<=offset1+overshoot) {
+        System.out.println("Put on shelf 1");
+         newTranslateY=offset1;
+    }
+    else if (newTranslateY>offset1+overshoot && newTranslateY<=offset2) {
+        System.out.println("Put on shelf 2");
+         newTranslateY=offset2;
+    }
+    else if (newTranslateY>offset2+overshoot && newTranslateY<=offset3) {
+        System.out.println("Put on shelf 3");
+        newTranslateY=offset3;
+    }
+    else if (newTranslateY>offset3+overshoot) {
+        System.out.println("Put on shelf 4");
+        newTranslateY=offset4;
+    }
+    return newTranslateY;
+}
+
 /* New Local mouse event handler */
  EventHandler<KeyEvent> SpriteKeyHandler = new EventHandler<KeyEvent>() {
     @Override
@@ -755,33 +786,8 @@ EventHandler<MouseEvent> DragBox =
                     //System.out.println("shelf 1 Y"+MainStage.this.shelf1_Y);
                     System.out.println("release position: x "+newTranslateX+" y "+newTranslateY);
                     //shelf parameters
-                    Integer shelf1 = 200;
-                    Integer shelf2=2*shelf1;
-                    Integer shelf3=3*shelf2;
-                    Integer bookiconheight=150;
-                    Integer offset1=20;
-                    Integer overshoot=20;
-                    Integer offset2=offset1+200;
-                    Integer offset3=offset2+200;
-                    Integer offset4=offset3+200;
-                    //if release points don't fit shelf range, simulate 'gravity' to shelf below
-                    if (newTranslateY<=offset1+overshoot) {
-                        System.out.println("Put on shelf 1");
-                         newTranslateY=offset1;
-                    }
-                    else if (newTranslateY>offset1+overshoot && newTranslateY<=offset2) {
-                        System.out.println("Put on shelf 2");
-                         newTranslateY=offset2;
-                    }
-                    else if (newTranslateY>offset2+overshoot && newTranslateY<=offset3) {
-                        System.out.println("Put on shelf 3");
-                        newTranslateY=offset3;
-                    }
-                    else if (newTranslateY>offset3+overshoot) {
-                        System.out.println("Put on shelf 4");
-                        newTranslateY=offset4;
-                    }
-                    
+                                       
+                    newTranslateY=MainStage.this.snapYtoShelf(newTranslateY);
                     //System.exit(0);
                     currentSprite.setTranslateX(newTranslateX);
                     currentSprite.setTranslateY(newTranslateY);
@@ -1051,18 +1057,21 @@ private Group makeWorkspaceTree() {
         line.setStartY(50.0); 
         line.setEndX(250.0+lm); 
         line.setEndY(800.0); 
-        Line line2 = new Line(); 
-        //line thickness?
-        //Setting the properties to a line 
-        line2.setStartX(750.0+lm); 
+        Line line2 = new Line();  //line thickness?
+        line2.setStartX(500.0+lm); 
         line2.setStartY(50.0); 
-        line2.setEndX(750.0+lm); 
+        line2.setEndX(500.0+lm); 
         line2.setEndY(800.0); 
+        Line line3 = new Line();  //line thickness?
+        line3.setStartX(750.0+lm); 
+        line3.setStartY(50.0); 
+        line3.setEndX(750.0+lm); 
+        line3.setEndY(800.0); 
         
         //add the Border Pane and branches to root Group 
         myGroup_root.getChildren().addAll(myBP);
         //putting lines first means they appear at back
-        myGroup_root.getChildren().addAll(line,line2,shelf1,shelf2,shelf3,shelf4); //line and shelf 1
+        myGroup_root.getChildren().addAll(line,line2,line3,shelf1,shelf2,shelf3,shelf4); //line and shelf 1
         //store the root node for future use
         setSceneRoot(myGroup_root); //store 
         //for box placement within the Scene - attach them to the correct Node.
@@ -1251,6 +1260,10 @@ public SpriteBox getActiveSprite() {
 
 private void addNodeToView (ClauseContainer myNode) {
     //SpriteBox b = makeBoxWithNode(myNode); //relies on Main, event handlers x
+    double ypos=myNode.getY();
+    ypos=snapYtoShelf(ypos);
+    myNode.setY(ypos);
+
     SpriteBox b = new SpriteBox(PressBox,DragBox,myNode);
     addSpriteToStage(b); //differs from Main 
     if (b==null) {
