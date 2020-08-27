@@ -566,11 +566,13 @@ public void openThisURL() {
     System.out.println("Must include http:// at beginning of web URL");
     checkedURI="http://"+upath;
     urlTextArea.setText(checkedURI);
+    setLocalURL(checkedURI);
     //udpatedisplay
    }  
    else {
     System.out.println("http prefix ok web address");
     checkedURI=upath;
+    setLocalURL(checkedURI);
    }
 
    try {
