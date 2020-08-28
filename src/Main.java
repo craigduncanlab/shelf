@@ -150,6 +150,8 @@ public class Main extends Application {
     ClauseContainer masterNode = new ClauseContainer();
     //
     WhiteBoard mainWhiteBoard = new WhiteBoard();
+    //File input/output
+    File currentOpenFile;
 
 
 //main launches from Application class
@@ -216,7 +218,7 @@ private MenuBar makeMenuBar() {
         Menu menuFile = new Menu("File");
         //setFileMenu(menuFile);
         MenuItem OpenTempl = new MenuItem("Open MD document");
-        MenuItem SaveName = new MenuItem("Save (selected)");
+        MenuItem SaveName = new MenuItem("Save (current bookshelf)");
         MenuItem SaveTempl = new MenuItem("Save As (selected)");
         MenuItem SaveAllTempl = new MenuItem("Save All");
         MenuItem OutputWork = new MenuItem("Output as Text");
@@ -259,8 +261,8 @@ private MenuBar makeMenuBar() {
         
          // --- TEXT MENU ---
         MenuItem FileOpen = new MenuItem("FileOpen");
-        SaveName.setOnAction(saveDocName);
-        SaveTempl.setOnAction(saveTemplate);
+        SaveName.setOnAction(saveTemplate);
+        SaveTempl.setOnAction(saveTemplate); //docname
         OpenTempl.setOnAction(openTemplate);
        
         /* --- MENU BAR --- */
@@ -507,15 +509,28 @@ private void saveDocTree(ClauseContainer saveNode) {
 
      }
 
-    //FILE LOADERS
+    //FILE LOADERS AND SAVERS
     public void mainFileLoader() {
          final FileChooser fileChooser = new FileChooser();
         Stage myStage = new Stage();
         myStage.setTitle("Open File");
         File file = fileChooser.showOpenDialog(myStage);
         if (file != null) {
+          this.currentOpenFile = file; //store for later
           Main.this.Stage_WS.processMarkdown(file);
         } 
+    }
+
+    //if we have a list of the ClauseContainer objects inside the spriteboxes, and they have the relevant metadata (including x,y),
+    //Then we do not need to actually query the SpriteBox class - we can just save as per clause container
+    public void mainFileSaver() {
+        System.out.println("Saving: "+this.currentOpenFile.getPath());
+        ArrayList<ClauseContainer> mySaveBooks = Main.this.Stage_WS.getBooksOnShelf();
+        Iterator<ClauseContainer> myIterator = mySaveBooks.iterator();
+         while (myIterator.hasNext()) {
+            System.out.println(myIterator.next().toString());
+        }
+        System.exit(0);
     }
    
 
@@ -627,8 +642,9 @@ private void saveDocTree(ClauseContainer saveNode) {
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
+            Main.this.mainFileSaver();
             //use the persistent Stage_WS instance to get the current stage (class variable)
-            LoadSave myLS = new LoadSave();
+            /*LoadSave myLS = new LoadSave();
             ClauseContainer thisNode;
                     if (Main.this.getCurrentSprite()!=null) {
                         thisNode = Main.this.getCurrentSprite().getBoxNode();
@@ -640,7 +656,7 @@ private void saveDocTree(ClauseContainer saveNode) {
                     }
                     else {
                        myLS.Close();
-                    }
+                    } */
                 }
             }; 
 

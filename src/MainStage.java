@@ -145,7 +145,7 @@ BookMetaStage should store GUI objects in one way, data in another?  separation 
 Some kind of content manager for each stage?
 Consider if subclasses of BookMetaStage could deal with flavours of BookMetaStage (e.g. position?
 */
-ArrayList<Object> BoxContentsArray = new ArrayList<Object>(); //generic store of contents of boxes
+ArrayList<ClauseContainer> booksOnShelf = new ArrayList<ClauseContainer>(); //generic store of contents of boxes
 double orgSceneX;
 double orgSceneY;
 
@@ -1210,9 +1210,11 @@ private void addSpriteToStage(SpriteBox mySprite) {
     System.out.println(mySprite);
     System.out.println("SpriteGroup in addSprite, before addition");
     System.out.println(this.spriteGroup);
-    //System.exit(0);
-    //getSpriteGroup().getChildren().add(mySprite); //GUI tree 
+    
     this.spriteGroup.getChildren().add(mySprite);
+    ClauseContainer newNode = mySprite.getBoxNode(); //class with metadata
+    this.booksOnShelf.add(newNode);  //add to metadata collection TO DO: cater for deletions.
+
     System.out.println("SpriteGroup in addSprite, after addition");
     System.out.println(this.spriteGroup);
     
@@ -1315,12 +1317,12 @@ public void removeSpriteFromStage(SpriteBox thisSprite) {
     
 }
 
-public void setContentsArray(ArrayList<Object> inputObject) {
-    this.BoxContentsArray = inputObject;
+public void setBooksOnShelf(ArrayList<ClauseContainer> inputObject) {
+    this.booksOnShelf = inputObject;
 }
 
-public ArrayList<Object> getContentsArray() {
-    return this.BoxContentsArray;
+public ArrayList<ClauseContainer> getBooksOnShelf() {
+    return this.booksOnShelf;
 }
 
 public void positionSpriteOnStage(SpriteBox mySprite) {
