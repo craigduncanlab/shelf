@@ -1,10 +1,14 @@
-# M-Press (2020 beta, fork of powerdock)
+# Shelf (2020 beta)
 
-(c) Craig Duncan 2017-2020.  Make a request if you wish to use, demonstrate or assist with this project.
+(c) Craig Duncan 2017-2020.  
+
+History: PowerDock--> M-Press--> Shelf
+
+Make a request if you wish to use, demonstrate or assist with this project.
 
 # Project folder structure
 
-The *mpress* app uses these folders (create if not included)
+The *Shelf* app uses these folders (create if not included)
 
 src: contains Java source files
 
@@ -17,8 +21,6 @@ content : contains markdown files for input/output
 buildnotes: contains notes on Design, Classes.
 
 # Setup
-
-Modify the Config.java file before compiling to ensure project directory is specified.
 
 Default:
 
@@ -68,7 +70,7 @@ runprog
 
 # Simple instructions
 
-## Open Markdown document
+## Open previously created Shelf (markdown format)
 
 Choose File --> Open MD Document.
 
@@ -76,7 +78,13 @@ This will open up a markdown document inside a block container(s).
 
 As markdown parsing functions are added, this will parse the markdown file and divide into appropriate boxes.
 
-## New Blocks
+## New Books
 
 Choose New and Block to create a new container for a markdown heading 1 block.
+
+## Edit Book Meta
+
+Click on a book - double click on 'red' books to open and edit metadata.
+
+
 
