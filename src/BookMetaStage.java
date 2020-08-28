@@ -126,12 +126,12 @@ int doccount=0; //document counter for this stage
 TextArea filepathTextArea = new TextArea();
 TextArea urlTextArea = new TextArea();
 TextArea mdTextArea = new TextArea();
-TextArea headingTextArea = new TextArea();
-TextArea inputTextArea = new TextArea();
+TextArea bookLabelTextArea = new TextArea();
+TextArea notesTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
 Text filepathText;
-Text headingBoxText;
-Text inputBoxText;
+Text bookLabelText;
+Text multiLineNotesText;
 Text visibleBlockText;
 Text mdHeadingText;
 Text urlText;
@@ -164,7 +164,7 @@ static ClauseContainer currentTarget; //any Box(no?) or StageManager can set thi
 //constructor
 public BookMetaStage() {
     this.outputTextArea.setWrapText(true);
-    this.inputTextArea.setWrapText(true);  //default
+    this.notesTextArea.setWrapText(true);  //default
 }
 
 //temporary constructor for old windows (toolbars, output etc)
@@ -176,16 +176,17 @@ public BookMetaStage(MainStage parent, String myTitle) {
     setJavaFXStageParent(parent);
     this.mainStage=parent;
     this.outputTextArea.setWrapText(true);
-    this.inputTextArea.setWrapText(true);  //default
+    this.notesTextArea.setWrapText(true);  //default
     setToolBarWindowPosition();
     //cycleUserView();
 }
 
 //standard open node viewer constructor.  Used by 'OpenRedNodeNow' method in Main
-public BookMetaStage(MainStage parent, ClauseContainer myNode, EventHandler PressBox, EventHandler DragBox) {
+public BookMetaStage(MainStage parent, ClauseContainer myNode, EventHandler PressBox, EventHandler DragBox, SpriteBox currentSprite) {
     //view
     setJavaFXStageParent(parent);
-     this.mainStage=parent;
+    this.mainStage=parent;
+    setParentBox(currentSprite);
     //store event handlers as local instance variables
     setPressBox(PressBox);
     setDragBox(DragBox);
@@ -194,6 +195,7 @@ public BookMetaStage(MainStage parent, ClauseContainer myNode, EventHandler Pres
     setEditWindowPosition();
     //data: new 'parent' node based on category alone
     setDisplayNode(myNode);
+     //data 
     //
     /*
     this.myTrk = spTrk;
@@ -421,11 +423,11 @@ public TextArea getOutputTextNode() {
 
 //Input text area e.g. importer
 public void setInputText(String myText) {
-    inputTextArea.setText(myText);
+    notesTextArea.setText(myText);
 }
 
 public String getInputText() {
-    return inputTextArea.getText();
+    return notesTextArea.getText();
 }
 
 /* Text Area in JavaFX inherits selected text method from
@@ -433,17 +435,17 @@ javafx.scene.control.TextInputControl
 */
 
 private String getSelectedInputText() {
-    return inputTextArea.getSelectedText();
+    return notesTextArea.getSelectedText();
 }
 
 //set the identified JavaFX object (TextArea) for the Stage
 public void setStageTextArea(TextArea myTA) {
-    this.inputTextArea = myTA;
+    this.notesTextArea = myTA;
 }
 
 //Return the JavaFX object (Node) 
 public TextArea getInputTextNode() {
-    return this.inputTextArea;
+    return this.notesTextArea;
 }
 
 //SIMPLE SCENE GETTERS AND SETTERS AS JAVA FX WRAPPER
@@ -561,14 +563,14 @@ public void openThisURL() {
    }
    String prefix = upath.substring(0,7);
    String webcheck = upath.substring(0,3);
-   if (webcheck.equals("www")) {}
-   if (prefix.equals("http://")==false) {
-    System.out.println("Must include http:// at beginning of web URL");
-    checkedURI="http://"+upath;
-    urlTextArea.setText(checkedURI);
-    setLocalURL(checkedURI);
-    //udpatedisplay
-   }  
+   if (webcheck.equals("www")) {
+       //if (prefix.equals("http://")==false) {
+        System.out.println("Must include http:// at beginning of web URL");
+        checkedURI="http://"+upath;
+        urlTextArea.setText(checkedURI);
+        setLocalURL(checkedURI);
+        //udpatedisplay 
+   }
    else {
     System.out.println("http prefix ok web address");
     checkedURI=upath;
@@ -632,26 +634,13 @@ private void updateOpenNodeView() {
     String pathText = "Filepath:"+getDisplayNode().getdocfilepath();
     filepathText.setText(pathText);
     urlText.setText("URL path:");
-    headingBoxText.setText("Heading:");
-    inputBoxText.setText("Multi-line notes:");
+    bookLabelText.setText("Book Label:");
+    multiLineNotesText.setText("Multi-line notes:");
     visibleBlockText.setText("Visibility:");
     visibleCheck.setSelected(true);
     mdHeadingText.setText("Markdown:");
-    //REFRESHES ALL GUI DATA - EVEN IF NOT CURRENTLY VISIBLE
-        //LHS
-        ClauseContainer updateNode=getDisplayNode();
-
-        filepathTextArea.setText(updateNode.getdocfilepath());
-        urlTextArea.setText(updateNode.geturlpath());
-        headingTextArea.setText(updateNode.getHeading());
-        mdTextArea.setText(updateNode.getMD()); //update the markdown text
-        inputTextArea.setText(updateNode.getNotes());
-        visibleCheck.setSelected(updateNode.getVisible()); //check box
-        outputTextArea.setText(updateNode.getOutputText()); //output node contents
-        //RHS
-        htmlEditor.setHtmlText(updateNode.getHTML());
-        
-        displayConceptSection();
+    restoreBookMeta();
+    displayConceptSection();
 
     }
 /* ----- DATA (DISPLAY) NODE FUNCTIONS ----- */
@@ -662,6 +651,35 @@ All other nodes added to this node are considered child nodes of this node:
 they are added as child nodes to the data node; they are display in the section of the stage for this
 
 */
+
+//REFRESHES ALL GUI DATA FROM FILE 
+public void restoreBookMeta() {
+        //LHS
+        ClauseContainer updateNode=getDisplayNode();
+
+        filepathTextArea.setText(updateNode.getdocfilepath());
+        urlTextArea.setText(updateNode.geturlpath());
+        bookLabelTextArea.setText(updateNode.getHeading());
+        mdTextArea.setText(updateNode.getMD()); //update the markdown text
+        notesTextArea.setText(updateNode.getNotes());
+        visibleCheck.setSelected(updateNode.getVisible()); //check box
+        outputTextArea.setText(updateNode.getOutputText()); //output node contents
+        //RHS
+        htmlEditor.setHtmlText(updateNode.getHTML());
+}
+
+public void updateBookMeta() {
+        ClauseContainer updateNode=getDisplayNode();
+        SpriteBox thisBook = getParentBox();
+        System.out.println("This book box : "+thisBook.toString());
+        //System.exit(0);
+        updateNode.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),notesTextArea.getText());
+        thisBook.setBoxLabel(bookLabelTextArea.getText()); //update book label if needed
+         //some kind of refresh needed?
+        System.out.println(thisBook.getLabel());
+        //System.exit(0);
+    }
+
 
 private void setDisplayNode(ClauseContainer myNode) {
     this.displayNode = myNode;
@@ -1014,11 +1032,11 @@ private Scene makeSceneForBoxes(ScrollPane myPane) {
 
 private void refreshNodeViewScene() {
         ClauseContainer updateNode = getDisplayNode();
-        inputTextArea.setText(updateNode.getNotes());
+        notesTextArea.setText(updateNode.getNotes());
         urlTextArea.setText(updateNode.geturlpath());
-        inputTextArea.setWrapText(true);
+        notesTextArea.setWrapText(true);
         filepathTextArea.setText(updateNode.getdocfilepath());
-        headingTextArea.setText(updateNode.getHeading());
+        bookLabelTextArea.setText(updateNode.getHeading());
         htmlEditor.setHtmlText(updateNode.getHTML());
         //output node contents
         outputTextArea.setText(updateNode.getOutputText());
@@ -1075,10 +1093,10 @@ private void makeSceneForNodeEdit() {
         //HTML editor
         htmlEditor.setPrefSize(winWidth,winHeight);
         //TEXT AREAS
-        headingTextArea.setPrefRowCount(1);
+        bookLabelTextArea.setPrefRowCount(1);
         mdTextArea.setPrefRowCount(20); //for markdown.  Add to boxPane
-        inputTextArea.setPrefRowCount(7); //for notes
-        inputTextArea.setWrapText(true);
+        notesTextArea.setPrefRowCount(7); //for notes
+        notesTextArea.setWrapText(true);
         filepathTextArea.setPrefRowCount(1);
         urlTextArea.setPrefRowCount(1);
         outputTextArea.setPrefRowCount(1);
@@ -1089,9 +1107,9 @@ private void makeSceneForNodeEdit() {
         //boxPane.setContent(mdTextArea);
         //Button for saving clauses
         Button btnUpdate = new Button();
-        btnUpdate.setText("Save");
-        btnUpdate.setTooltip(new Tooltip ("Press to Save current edits"));
-        btnUpdate.setOnAction(UpdateNodeText);
+        btnUpdate.setText("Update");
+        btnUpdate.setTooltip(new Tooltip ("Confirm edits"));
+        btnUpdate.setOnAction(UpdateBookMetaText);
         //Button for cancel
         Button btnEditCancel = new Button();
         btnEditCancel.setText("Close");
@@ -1108,8 +1126,8 @@ private void makeSceneForNodeEdit() {
         btnOpenURL.setOnAction(OpenURLAction);
         //
         filepathText = new Text();
-        headingBoxText = new Text();
-        inputBoxText = new Text();
+        bookLabelText = new Text();
+        multiLineNotesText = new Text();
         visibleBlockText = new Text();
         mdHeadingText = new Text();
         urlText = new Text();
@@ -1130,14 +1148,14 @@ private void makeSceneForNodeEdit() {
             getDisplayNode().setUserView("all");
         }
         if (getDisplayNode().getUserView().equals("textonly")) {
-            vertFrame = new VBox(0,headingBoxText,headingTextArea,hboxButtons);
+            vertFrame = new VBox(0,bookLabelText,bookLabelTextArea,hboxButtons);
              vertFrame.setPrefSize(winWidth,winHeight);
             setTitle(getTitleText(" - HTML Text View"));
             widebox = new HBox(0,vertFrame,htmlEditor);
             widebox.setPrefSize(dblwidth,winHeight);
         }
         else if (getDisplayNode().getUserView().equals("inputoutput")) {
-            vertFrame = new VBox(0,visiblebox,headingBoxText,headingTextArea,mdHeadingText,mdTextArea,inputBoxText,inputTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,notesTextArea,hboxButtons);
              vertFrame.setPrefSize(winWidth,winHeight);
             setTitle(getTitleText(" Markdown View"));
             widebox = new HBox(0,vertFrame);
@@ -1153,7 +1171,7 @@ private void makeSceneForNodeEdit() {
         }
          //this is now the default?
             else {
-            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,headingBoxText,headingTextArea,mdHeadingText,mdTextArea,inputBoxText,inputTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,notesTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
             vertFrame.setPrefSize(winWidth,winHeight);
             widebox = new HBox(0,vertFrame,htmlEditor);
@@ -1192,7 +1210,7 @@ private void makeSceneForNodeEdit() {
                      System.out.println("makescene Viewer :"+BookMetaStage.this);
                      System.out.println("scene display node :"+getDisplayNode().toString());
                      System.out.println("notes String :"+getDisplayNode().getNotes());
-                     System.out.println("Notes: "+inputTextArea.getText());
+                     System.out.println("Notes: "+notesTextArea.getText());
                  }
                  else {
                     System.out.println("Problem with change Viewer Focus");
@@ -1260,9 +1278,10 @@ private void closeThisStage() {
 //also performs a save on shared parent.
 //TO DO: remove and just save each text box content to an SQL database.
 private void saveNodeText() {
-    //getDisplayNode().updateText(htmlEditor.getHtmlText(),filepathTextArea.getText(),headingTextArea.getText(),inputTextArea.getText(),outputTextArea.getText());
+    //getDisplayNode().updateText(htmlEditor.getHtmlText(),filepathTextArea.getText(),bookLabelTextArea.getText(),notesTextArea.getText(),outputTextArea.getText());
     
-    getDisplayNode().updateMDText(headingTextArea.getText(),mdTextArea.getText(),inputTextArea.getText());
+    getDisplayNode().updateMDText(bookLabelTextArea.getText(),mdTextArea.getText(),notesTextArea.getText());
+
     ClauseContainer fileNode=getDisplayNode().getUltimateParent();
     if (fileNode==null) {
      System.out.println ("No parent node to save.  saveNodeText method");
@@ -1276,7 +1295,7 @@ private void saveNodeText() {
         pntBox.setLabel(filepathTextArea.getText());
     }
     //error checking - log.  Leave this to show error for attempts with follower nodes.
-    if (getDisplayNode().getNotes().equals(inputTextArea.getText())) {
+    if (getDisplayNode().getNotes().equals(notesTextArea.getText())) {
         System.out.println("Node updated OK!");
     }
     else {
@@ -1298,11 +1317,11 @@ private void saveDocTree(ClauseContainer saveNode) {
 
 //Create Eventhandler to use with stages that allow edit button
 
-EventHandler<ActionEvent> UpdateNodeText = 
+EventHandler<ActionEvent> UpdateBookMetaText = 
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-            BookMetaStage.this.saveNodeText();
+            BookMetaStage.this.updateBookMeta();
             }
         };
 

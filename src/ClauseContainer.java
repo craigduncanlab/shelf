@@ -74,13 +74,22 @@ public ClauseContainer() {
 
 }
 
-//constructor with category
-public ClauseContainer(String category) {
-	setNodeCategory(category);
-
+//constructor 2 - default container for add new node
+public ClauseContainer (String myLabel) {
+	setDocName(myLabel); //to be phased out.  It's just a MD section.
+	setShortname(myLabel); 
+	String blank="";
+	setMD(blank);
+	setHTML(blank); //TO DO: make this auto-update into HTML note MD using Stage editor
+	setNotes(blank);
+	//other
+	setAuthorName(blank);
+	setBookLabel(myLabel);
+    setOutputText("");
 }
 
-//constructor with label, main text and notes
+
+//constructor with label, main text and notes (DEFAULT)
 public ClauseContainer(String label, String text, String note) {
 	setShortname(label); 
 	setMD(text);
@@ -89,7 +98,7 @@ public ClauseContainer(String label, String text, String note) {
 	//other
 	setAuthorName("Craig");
 	setDocName(label); //to be phased out.  It's just a MD section.
-    setHeading(label);
+    setBookLabel(label);
     setOutputText("");
 }
 
@@ -97,7 +106,20 @@ public ClauseContainer(String label, String text, String note) {
 public void updateMDText(String label, String text, String note) {
 	//setDocName(name);
 	setMD(text);
-    setHeading(label);
+    setBookLabel(label);
+    setNotes(note);
+    //setOutputText(outputtext);
+    //setHTML(htmltext);
+}
+
+//(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),notesTextArea.getText())
+//general update text function
+public void updateEditedText(String filepath,String urlpath,String label, String text, String note) {
+	//setDocName(name);
+	setdocfilepath(filepath);
+	seturlpath(urlpath);
+	setBookLabel(label);
+	setMD(text);
     setNotes(note);
     //setOutputText(outputtext);
     //setHTML(htmltext);
@@ -141,26 +163,6 @@ public void seturlpath(String up) {
 	this.urlpath = up;
 }
 
-//constructor 2 - a default container based on category 
-//parent node is updated for this node.
-//nb if a child of the master data node (visually represented as Stage_WS)
-//checks current docnum for this stage and advances it.
-//TO DO: advance docnumber based on category.
-public ClauseContainer (ClauseContainer parentNode) {
-	//int docNum = default.advanceDocCount();
-   	int docNum = 0;
-   	NodeCategory defaultNC = new NodeCategory("default",33,"darkblue");
-    setNC(defaultNC);
-    //
-    String docname=defaultNC.getCategory()+docNum;
-    String htmltext=defaultHTML();
-    updateText(htmltext,docname,"heading","","output");
-    setType(defaultNC.getCategory());
-    setAuthorName("Craig");
-    dataLinkParent = new ClauseContainer();
-    setParentNode(parentNode);
-    setUltimateParent(parentNode.getUltimateParent());
-}
 
 //constructor 3 - constructor for word tool node creation
 //parent node not set here (it's unknown) - will be set when added to display
@@ -231,6 +233,10 @@ public double getX() {
 
 public double getY() {
 	return this.childNodeY;
+}
+
+public void setX(double xpos) {
+	this.childNodeX=xpos;
 }
 
 public void setY(double ypos) {
@@ -413,7 +419,7 @@ public String getDocName () {
 }
 
 public String getHeading() {
-	return publicText(getdataDisplayNode().getthisHeading());
+	return publicText(getdataDisplayNode().getBookLabel());
 }
 
 private String getShortname () {
@@ -521,7 +527,7 @@ private String defaultHTML() {
 //general update text function
 public void updateText(String htmltext, String name, String heading, String inputtext, String outputtext) {
 	setDocName(name);
-    setHeading(heading);
+    setBookLabel(heading);
     setNotes(inputtext);
     setOutputText(outputtext);
     setHTML(htmltext);
@@ -553,7 +559,7 @@ private void setShortname (String myString) {
 }
 
 //set the text that will be the main text for identifying this node
-public void setHeading (String myString) {
+public void setBookLabel (String myString) {
 	this.heading = myString;
 }
 
@@ -580,7 +586,7 @@ private String publicText(String myString) {
 	*/
 }
 
-private String getthisNotes() {
+public String getthisNotes() {
 	return this.docnotes;
 }
 
@@ -588,7 +594,7 @@ private String getthisDocname() {
 	return this.docname;
 }
 
-private String getthisHeading () {
+public String getBookLabel() {
 	return this.heading;
 }
 

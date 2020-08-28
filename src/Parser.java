@@ -360,13 +360,15 @@ public ClauseContainer MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				String thisLine=scanner2.nextLine();
 				System.out.println("Line: "+thisLine);
 				System.out.println("File index:"+fileindex.get(nl));
-				if (fileindex.get(nl)==0 || fileindex.get(nl)==1) {
-					mdStream.append(thisLine);
-					mdStream.append("\n"); //EOL
-				}
-				//heading or label
+				
+				//heading or label. Do not include it in markdown
 				if (fileindex.get(nl)==0){
 					label=thisLine; //limit book label to first "# " + 10 characters
+				}
+				//markdown
+				if (fileindex.get(nl)==1) {
+					mdStream.append(thisLine);
+					mdStream.append("\n"); //EOL
 				}
 				//notes line
 				if (fileindex.get(nl)==2 || fileindex.get(nl)==3) {

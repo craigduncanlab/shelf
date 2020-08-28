@@ -228,6 +228,62 @@ public void processMarkdown(File file) {
     }
 }
 
+public void writeFileOut(String filepath) {
+    System.out.println("Saving: "+filepath);
+    ArrayList<ClauseContainer> mySaveBooks = getBooksOnShelf();
+    Iterator<ClauseContainer> myIterator = mySaveBooks.iterator();
+    String myOutput="";
+         while (myIterator.hasNext()) {
+            ClauseContainer myNode=myIterator.next();
+            //System.out.println(myNode.toString());
+            String myString=convertBookMetaToString(myNode);
+            myOutput=myOutput+myString;
+             //option: prepare string here, then write once.
+        }
+        basicFileWriter(myOutput,filepath);
+        //System.out.println(myOutput);
+        //System.exit(0);
+}
+
+//Convert this book meta into a String of markdown.  Only write links if data is there.
+public String convertBookMetaToString(ClauseContainer myNode) {
+    String myOutput="# "+myNode.getBookLabel()+"\n\n"; //check on EOL
+    myOutput=myOutput+myNode.getMD()+"\n\n"; //check on EOL
+    if (myNode.getdocfilepath().length()>5) {
+        myOutput=myOutput+"[filepath]("+myNode.getdocfilepath()+")\n\n";
+    }
+    if (myNode.geturlpath().length()>6) {
+        myOutput=myOutput+"[url]("+myNode.geturlpath()+")\n\n";
+    }
+    if (myNode.getX()!=0 || myNode.getY()!=0) {
+        myOutput=myOutput+"[x,y]("+myNode.getX()+","+myNode.getY()+")\n\n";
+    }
+    if (myNode.getthisNotes().length()!=0) {
+        myOutput=myOutput+"```\n"+myNode.getthisNotes()+"```\n\n";
+    }
+    return myOutput;
+}
+
+private void basicFileWriter(String logstring,String filename) {
+    //String reportfile=this.templatefolder+filename+".md";
+
+    try {
+    PrintStream console = System.out;
+    PrintStream outstream = new PrintStream(new FileOutputStream(filename,false)); //true = append.  This overwrites.
+    System.setOut(outstream);
+    //String logString = Integer.toString(myNode.getNodeRef())+"@@P"+myNode.getDocName()+"@@P"+myNode.getHeading()+"@@P"+myNode.getNotes()+"@@P"+myNode.getHTML()+"@@P@EOR";
+    System.out.print(logstring); //don't use println.  No CR needed.
+    outstream.close();
+    System.setOut(console);
+    }
+        catch (Throwable t)
+        {
+            t.printStackTrace();
+            return;
+        }
+}  
+
+
 public void setTargetByViewer(BookMetaStage mySM) {
     currentTarget = mySM.getDisplayNode();
 }
@@ -875,7 +931,7 @@ EventHandler<MouseEvent> processLocalBoxClick =
 
 private void OpenRedNodeNow(SpriteBox currentSprite) {
      ClauseContainer currentNode = currentSprite.getBoxNode();
-     OpenNodeStage = new BookMetaStage(MainStage.this, currentNode, PressBox, DragBox); 
+     OpenNodeStage = new BookMetaStage(MainStage.this, currentNode, PressBox, DragBox, currentSprite); 
 
 }
 /*switch(clickcount) {

@@ -239,12 +239,12 @@ private MenuBar makeMenuBar() {
             PrintTree,exit);
         
         //--- MENU CONCEPTS
-        Menu menuConcept = new Menu("Block");
-        MenuItem newNode = new MenuItem("New Block");
-        newNode.setOnAction(newNodeMaker);
-        MenuItem conceptDelete = new MenuItem("Delete Selected");
-        conceptDelete.setOnAction(deleteCurrentSprite);
-        menuConcept.getItems().addAll(newNode,conceptDelete);
+        Menu menuBooks = new Menu("Books");
+        MenuItem addNewBook = new MenuItem("New Book");
+        addNewBook.setOnAction(addNewBookMaker);
+        MenuItem bookDeleteMenuItem = new MenuItem("Delete Selected");
+        bookDeleteMenuItem.setOnAction(deleteSelectedBook);
+        menuBooks.getItems().addAll(addNewBook,bookDeleteMenuItem);
 
         //--- OUTPUT MENU ---
         Menu menuOutput = new Menu("Output");
@@ -266,7 +266,7 @@ private MenuBar makeMenuBar() {
         OpenTempl.setOnAction(openTemplate);
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile, menuConcept);     
+        menuBar.getMenus().addAll(menuFile, menuBooks);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
@@ -477,7 +477,7 @@ private void saveDocTree(ClauseContainer saveNode) {
 
     //BUTTON EVENT HANDLERS
 
-    EventHandler<ActionEvent> deleteCurrentSprite = 
+    EventHandler<ActionEvent> deleteSelectedBook = 
         new EventHandler<ActionEvent>() {
  
         @Override
@@ -505,7 +505,7 @@ private void saveDocTree(ClauseContainer saveNode) {
             System.exit(0);
         }
         ClauseContainer currentNode = currentSprite.getBoxNode();
-        OpenNodeStage = new BookMetaStage(Stage_WS, currentNode, PressBoxEventHandler, DragBoxEventHandler); 
+        OpenNodeStage = new BookMetaStage(Stage_WS, currentNode, PressBoxEventHandler, DragBoxEventHandler, currentSprite); 
 
      }
 
@@ -524,35 +524,22 @@ private void saveDocTree(ClauseContainer saveNode) {
     //if we have a list of the ClauseContainer objects inside the spriteboxes, and they have the relevant metadata (including x,y),
     //Then we do not need to actually query the SpriteBox class - we can just save as per clause container
     public void mainFileSaver() {
-        System.out.println("Saving: "+this.currentOpenFile.getPath());
-        ArrayList<ClauseContainer> mySaveBooks = Main.this.Stage_WS.getBooksOnShelf();
-        Iterator<ClauseContainer> myIterator = mySaveBooks.iterator();
-         while (myIterator.hasNext()) {
-            System.out.println(myIterator.next().toString());
-        }
-        System.exit(0);
+        Main.this.Stage_WS.writeFileOut(this.currentOpenFile.getPath());
     }
-   
 
     // --- EVENT HANDLERS
 
     // new spritebox on stage
 
-    EventHandler<ActionEvent> newNodeMaker = new EventHandler<ActionEvent>() {
+    EventHandler<ActionEvent> addNewBookMaker = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
-                //create a new node
-                //find current node
-                ClauseContainer parentNode = OpenNodeStage.getDisplayNode();
-                //new node with category and currentNode as parent
-                ClauseContainer newDataNode = new ClauseContainer(parentNode);
-                
-                //place a COPY (REF) of node in the relevant open node.  Testing...
-                Stage_WS.OpenNewNodeNow(newDataNode); // check they both update
-                /* place a NEW object in the relevant open node... */
-                //OpenNodeStage.OpenNewNodeNow(new ClauseContainer(myCat),Stage_WS);
-                    System.out.println("Nodes ");
-                    System.out.println("Context Node: "+OpenNodeStage.getDisplayNode().getChildNodes().toString());
+               
+                ClauseContainer newBookMeta = new ClauseContainer("New");
+                double x=100;
+                double y=0;
+                newBookMeta.setX(x);
+                Stage_WS.OpenNewNodeNow(newBookMeta); // check they both update
             }
     };
         

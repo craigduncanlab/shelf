@@ -323,8 +323,8 @@ Called from StageManager objects [BookMetaStage]
         System.out.println ("Updated child node offset:"+x+","+y);
     }
      
-    public Text getLabel() {
-        return boxlabel;
+    public String getLabel() {
+        return this.boxlabel.getText();
     }
 
     public void setLabel(String myString) {
