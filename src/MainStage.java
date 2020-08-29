@@ -847,6 +847,7 @@ EventHandler<MouseEvent> DragBox =
                     //System.exit(0);
                     currentSprite.setTranslateX(newTranslateX);
                     currentSprite.setTranslateY(newTranslateY);
+                    
                     currentSprite.doAlert();
                     } 
                 else {
@@ -1314,26 +1315,6 @@ public SpriteBox getActiveSprite() {
     return this.focusSprite;
 }
 
-//method to box up node as shape and add to GUI in node viewer
-
-private void addNodeToView (ClauseContainer myNode) {
-    //SpriteBox b = makeBoxWithNode(myNode); //relies on Main, event handlers x
-    double ypos=myNode.getY();
-    ypos=snapYtoShelf(ypos);
-    myNode.setY(ypos);
-
-    SpriteBox b = new SpriteBox(PressBox,DragBox,myNode);
-    addSpriteToStage(b); //differs from Main 
-    if (b==null) {
-        System.out.println("SpriteBox null in addnodetoview");
-        System.exit(0);
-    }
-    setActiveSprite(b);
-    System.out.println("SpriteGroup in addnodetoview");
-    System.out.println(this.spriteGroup);
-   
-}
-
 
 //General method to add AND open a node if not on ws; otherwise place on workspace
 //The BookMetaStage arg passed in as myWS should be 'Stage_WS' for all calls 
@@ -1354,6 +1335,42 @@ private void newNodeForWorkspace(ClauseContainer myNode) {
     System.out.println(this.spriteGroup);
     
     addNodeToView(myNode); //view
+}
+
+//method to box up node as shape and add to GUI in node viewer
+
+private void addNodeToView (ClauseContainer myNode) {
+    //SpriteBox b = makeBoxWithNode(myNode); //relies on Main, event handlers x
+    
+    SpriteBox b = new SpriteBox(PressBox,DragBox,myNode);
+
+    //adjusthorizontal
+    double xpos=myNode.getX();
+    double ypos=myNode.getY();
+    b.setTranslateX(xpos);
+    b.setTranslateY(ypos); 
+    setActiveSprite(b);
+    /*
+    System.out.println("getx: "+ xpos+ " gety: "+ypos);
+    if (xpos==this.spriteX) {
+        advanceSpritePositionHor();
+        myNode.setX(this.spriteX);
+        xpos=this.spriteX;
+    }
+    */
+    //ypos=snapYtoShelf(ypos);
+    //myNode.setY(ypos);
+   
+    System.out.println("getx: "+ this.spriteX+ " gety: "+this.spriteY);
+        //System.exit(0);
+    addSpriteToStage(b); //differs from Main 
+    if (b==null) {
+        System.out.println("SpriteBox null in addnodetoview");
+        System.exit(0);
+    }
+   
+    System.out.println("SpriteGroup in addnodetoview");
+    System.out.println(this.spriteGroup);  
 }
 
 //Method to add a single child node to the open node in this view and update parent node (data)
@@ -1396,8 +1413,8 @@ public void positionSpriteOnStage(SpriteBox mySprite) {
         mySprite.setTranslateY(y);
     }
     else {
-        mySprite.setTranslateX(spriteX);
-        mySprite.setTranslateY(spriteY); 
+        mySprite.setTranslateX(this.spriteX);
+        mySprite.setTranslateY(this.spriteY); 
     } 
     mySprite.setStageLocation(MainStage.this); //needed if stage is not o/w tracked
     if (mySprite.getStageLocation()!=MainStage.this) {

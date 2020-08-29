@@ -1552,38 +1552,6 @@ public void addNewSpriteToStage(SpriteBox mySprite) {
         addNodeToView(mySprite.getBoxNode());
     }
 
-/*
-Internal method to add sprite to the Group/Pane of this Node Viewer 
-This is to add an existing GUI 'box/node' to the Child Node section of this Viewer.
-i.e. this adds a specific object, rather than updating the view from whole underlying data set.
-*/
-
-private void addSpriteToStage(SpriteBox mySprite) {
-    getSpriteGroup().getChildren().add(mySprite); //GUI tree 
-     
-    // TO DO: general function to draw lines for all links in visible boxes
-    /*
-    //temporary line to test a line from box coord to diag coord
-    double x = mySprite.getX();
-    double y = mySprite.getY();
-    double sblength=150;
-    double sbheight=30;
-    double sp2x=x+200;
-    double sp2y=y+200;
-    System.out.println("Adding line at:"+x+","+y);
-    Line line = new Line(x+sblength,y+(sbheight/2),sp2x,sp2y+(sbheight/2));
-    line.setStroke(Color.RED);
-    getSpriteGroup().getChildren().add(line);
-    */
-    System.out.println("Current sprite group is "+getSpriteGroup().toString()); 
-    positionSpriteOnStage(mySprite);
-    advanceSpritePositionHor(); //default is to space along shelf
-    setFocusBox(mySprite); //local information
-    mySprite.setStageLocation(this.mainStage); //give Sprite the object for use later.
-}
-
-
-
 //Method to add child node based on the contents of an identified NodeBox in GUI.
 //also sets parent node of the node in the sprite box to this Stage Manager
 /*private void addChildBoxToDisplayNode(SpriteBox mySprite) {
@@ -1611,6 +1579,47 @@ public SpriteBox getFocusBox() {
 }
 
 
+
+/*
+Internal method to add sprite to the Group/Pane of this Node Viewer 
+This is to add an existing GUI 'box/node' to the Child Node section of this Viewer.
+i.e. this adds a specific object, rather than updating the view from whole underlying data set.
+*/
+
+private void addSpriteToStage(SpriteBox mySprite) {
+    getSpriteGroup().getChildren().add(mySprite); //GUI tree 
+    System.out.println("Current sprite group is "+getSpriteGroup().toString()); 
+    positionSpriteOnStage(mySprite);
+    advanceSpritePositionHor(); //default is to space along shelf
+    setFocusBox(mySprite); //local information
+    mySprite.setStageLocation(this.mainStage); //give Sprite the object for use later.
+}
+
+
+//General method to add AND open a node if not on ws; otherwise place on workspace
+//The StageManager arg passed in as myWS should be 'Stage_WS' for all calls 
+
+public void OpenNewNodeNow(ClauseContainer newNode, StageManager myWS) {
+    System.out.println("OpenNewNode now...");
+     if (BookMetaStage.this.equals(myWS)) { 
+        addChildNodeToDisplayNode(newNode); //data
+        SpriteBox b = new SpriteBox(this.PressBox,this.DragBox,newNode);
+        addSpriteToStage(b); //differs from Main 
+        if (b==null) {
+            System.out.println("SpriteBox null in addnodetoview");
+            System.exit(0);
+    }
+    setFocusBox(b);
+    }
+}
+
+/* This method adds a single node to workspace without refreshing entire view */
+/*
+private void newNodeForWorkspace(ClauseContainer myNode) {
+    //same as opennewnodenow
+}
+*/
+
 //method to box up node as shape and add to GUI in node viewer
 
 private void addNodeToView (ClauseContainer myNode) {
@@ -1625,20 +1634,6 @@ private void addNodeToView (ClauseContainer myNode) {
     
 }
 
-
-//General method to add AND open a node if not on ws; otherwise place on workspace
-//The StageManager arg passed in as myWS should be 'Stage_WS' for all calls 
-
-public void OpenNewNodeNow(ClauseContainer newNode, StageManager myWS) {
-    System.out.println("OpenNewNode now...");
-     if (BookMetaStage.this.equals(myWS)) { 
-     newNodeForWorkspace(newNode); //to do : make this open up as child node in whiteboard.  i.e. (1) change whiteboard focus to 'master', (2) add as child box.
-     System.out.println("Adding new node to Workspace");
-}
-        else {
-             newNodeAsChildNode(newNode);
-        }
-}
 
 //General method to PLACE AN EXISTING NODE
 //in current focus...
@@ -1655,6 +1650,8 @@ public void PlaceNodeNow(ClauseContainer myNode, StageManager myWS) {
         }
 }
 
+
+
 /* This method adds the child nodes of the parentNode passed as arg 
 to the Open Node, as its child nodes and then updates the view.
 */
@@ -1664,12 +1661,7 @@ public void addOpenNodeChildren (ClauseContainer parentNode) {
     updateOpenNodeView();
 }
 
-/* This method adds a single node to workspace without refreshing entire view */
 
-private void newNodeForWorkspace(ClauseContainer myNode) {
-    addChildNodeToDisplayNode(myNode); //data
-    addNodeToView(myNode); //view
-}
 
 //Method to add a single child node to the open node in this view and update parent node (data)
 
@@ -1710,15 +1702,20 @@ public void positionSpriteOnStage(SpriteBox mySprite) {
     //advanceSpritePosition();
     //if sprite does not have its own location, use GUI location
     //use Translate relative to origin of node (i.e. not scene as a whole)
+
+    System.out.println("x: "+mySprite.getX()+ "y: "+mySprite.getY());
+    System.exit(0);
     if (mySprite.getX()!=0 || mySprite.getY()!=0) {
+
         double x = mySprite.getX();
         double y = mySprite.getY();
         mySprite.setTranslateX(x);
         mySprite.setTranslateY(y);
     }
     else {
-        mySprite.setTranslateX(spriteX);
-        mySprite.setTranslateY(spriteY); 
+        advanceSpritePositionHor();
+        mySprite.setTranslateX(this.spriteX);
+        mySprite.setTranslateY(this.spriteY); 
     } 
     mySprite.setStageLocation(this.mainStage); //needed if stage is not o/w tracked
     if (mySprite.getStageLocation()!=this.mainStage) {
