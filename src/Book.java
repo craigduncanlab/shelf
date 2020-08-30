@@ -112,17 +112,6 @@ public void updateMDText(String label, String text, String note) {
 }
 
 //general update text function
-/*
-public void updateText(String htmltext, String name, String label, String mdtext, String outputtext) {
-	setDocName(name);
-    setBookLabel(label);
-    setNotes(mdtext);
-    setOutputText(outputtext);
-    setHTML(htmltext);
-}
-*/
-//(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),notesTextArea.getText())
-//general update text function
 public void updateEditedText(String filepath,String urlpath,String label, String mdtext, String note) {
 	//setDocName(name);
 	setdocfilepath(filepath);
@@ -302,7 +291,7 @@ private String getthisOutputText() {
 }
 
 //THIS NODE'S CLAUSE DATA (OBSOLETE)
-
+/*
 public void addNodeClause(Clause thisClause) {
 	this.dataClause = thisClause;
 }
@@ -310,7 +299,7 @@ public void addNodeClause(Clause thisClause) {
 public Clause getNodeClause() {
 	return this.dataClause;
 }
-
+*/
 public Book cloneBook() {
 	Book clone = new Book();
 	clone.setHTML(this.htmlString); 
