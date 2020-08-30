@@ -85,26 +85,26 @@ public class Main extends Application {
     double orgSceneX, orgSceneY;
     double orgTranslateX, orgTranslateY;
     //General managers
-    SpriteManager mySpriteManager;
+    //SpriteManager myBookManager;
     ControlsManager myControlsManager = new ControlsManager();
     //
-    BookMetaStage ParentStageSM;//= new BookMetaStage();
+    //BookMetaStage bookshelfInstance;//= new BookMetaStage();
     Stage ParentStage;
     //Main Stage (Workspace window) that owns all other Stages
     MainStage Stage_WS;
     //Text Output windows (no edits)
-    BookMetaStage Stage_Output;
+    //BookMetaStage Stage_Output;
     
     //Extracted Definitions window (text)
     Stage defsTextStage;
     ScrollPane defsTextStage_root;
     //Toolbar
-    BookMetaStage Stage_Toolbar;
+    //BookMetaStage Stage_Toolbar;
     Stage toolbarStage = null;
     Group toolbarGroup = null;
     Scene toolbarScene = null;   
     //Clause editor
-    BookMetaStage Stage_EDITNODEPROP;
+    //BookMetaStage Stage_EDITNODEPROP;
     TextArea labelEdit;
     TextArea headingEdit;
     TextArea textEdit;
@@ -117,7 +117,7 @@ public class Main extends Application {
     TextArea authorEdit;
     TextArea notesEdit;
     TextArea CCdateEdit;
-    ClauseContainer myEditCC;
+    Book myEditCC;
     //Group editGroup_root;
     Stage editorStage;
     Pane editGroup_root;
@@ -125,29 +125,21 @@ public class Main extends Application {
     int loaddocnum=0;
     int libdocnum=0;
     //move active sprite tracking to here from spritemanager class (redundant)
-    SpriteBox activeSprite;
+    Book activeSprite;
     SpriteTracker myTracker; // = new SpriteTracker();
     //STAGE IDS
     int location = 0;
     //Menus that need to be individually referenced/updated
-    Menu theFileMenu;
     Menu theRecentMenu;
     Recents theRecent;
-    Menu theViewMenu;
-    Menu theNewNodeMenu;
-    Menu theWorldsMenu;
-    Menu theNotesMenu;
-    Menu theProtocolMenu;
-    Menu theEventsMenu;
-
 
     ArrayList<NodeCategory> nodeCatList;
 
     //To hold Stage with open node that is current
-    BookMetaStage OpenNodeStage;  
-    ClauseContainer NodeTarget;
+    BookMetaStage bookshelfInspectorStage;  
+    Book NodeTarget;
     //to hold Master Node for project i.e. data
-    ClauseContainer masterNode = new ClauseContainer();
+    Book masterNode = new Book();
     //
     WhiteBoard mainWhiteBoard = new WhiteBoard();
     //File input/output
@@ -162,17 +154,19 @@ public static void main(String[] args) {
 
 //---EVENT HANDLER FUNCTIONS
 
+//TO DO: close old Inspector stage and open a new one.
 private void toggleView(BookMetaStage mySM) {
              
     mySM.toggleStage();
-    OpenNodeStage=mySM;
+    bookshelfInspectorStage=mySM;
 }
 
 //General function for box clicks
+/*
 private void processBoxClick(MouseEvent t) {
 
-SpriteBox hadFocus=null;
-SpriteBox currentSprite = (SpriteBox)t.getSource();  //selects a class for click source
+Book hadFocus=null;
+Book currentSprite = (Book)t.getSource();  //selects a class for click source
 
 int clickcount = t.getClickCount();
 
@@ -186,15 +180,15 @@ System.out.println("getx: "+ orgSceneX+ " gety: "+orgSceneY);
 switch(clickcount) {
     //single click
     case 1:
-        moveAlertFromBoxtoBox(getCurrentSprite(),currentSprite);
+        moveAlertFromBooktoBook(getActiveBook(),currentSprite);
         System.out.println("One click");
-        //change stage focus with just one click on spritebox (but node still closed)
+        //change stage focus with just one click on Book (but node still closed)
         //refreshNodeViewScene();
         break;
     case 2:
         System.out.println("Two clicks");
-        
-        moveAlertFromBoxtoBox(getCurrentSprite(),currentSprite);
+        System.exit(0);
+        moveAlertFromBooktoBook(getActiveBook(),currentSprite);
         
         //Dbl Click action options depending on box type
        
@@ -202,6 +196,7 @@ switch(clickcount) {
         //prevent closing until all children closed
         //close all children when node closed.
         OpenRedNodeNow(currentSprite);
+        System.exit(0);
         
         break;
     case 3:
@@ -209,7 +204,7 @@ switch(clickcount) {
         break;
 }
 }     
-
+*/
 private MenuBar makeMenuBar() {
         
         //MENUBAR SETUP
@@ -223,7 +218,7 @@ private MenuBar makeMenuBar() {
         MenuItem SaveAllTempl = new MenuItem("Save All");
         MenuItem OutputWork = new MenuItem("Output as Text");
         MenuItem PrintTree = new MenuItem("Print as HTML");
-        PrintTree.setOnAction(writeHTML);
+        //PrintTree.setOnAction(writeHTML);
         
         //there is no Stage_WS defined at this point
         this.theRecentMenu = new Menu("Open Recent $");
@@ -245,19 +240,6 @@ private MenuBar makeMenuBar() {
         MenuItem bookDeleteMenuItem = new MenuItem("Delete Selected");
         bookDeleteMenuItem.setOnAction(deleteSelectedBook);
         menuBooks.getItems().addAll(addNewBook,bookDeleteMenuItem);
-
-        //--- OUTPUT MENU ---
-        Menu menuOutput = new Menu("Output");
-        MenuItem saveOutput = new MenuItem("Save");
-        menuOutput.getItems().addAll(saveOutput);
-        saveOutput.setOnAction(new EventHandler<ActionEvent>() {
-        public void handle(ActionEvent t) {
-                
-            System.out.println("Save Output selected!");
-            EDOfileApp myfileApp = new EDOfileApp("output(PDock).txt");
-            myfileApp.replaceText(Stage_Output.getOutputText());
-            }
-        });
         
          // --- TEXT MENU ---
         MenuItem FileOpen = new MenuItem("FileOpen");
@@ -304,81 +286,43 @@ private void refreshRecentMenu() {
 Method to end alert status for current sprite and reassign
 Currently this looks at all Sprite Boxes globally (regardless of viewer/location)
 */
-private void moveAlertFromBoxtoBox(SpriteBox hadFocus, SpriteBox mySprite) {
+private void moveAlertFromBooktoBook(Book hadFocus, Book myBook) {
 
-    if (Stage_WS.getActiveSprite()==null) {
+    if (Stage_WS.getActiveBook()==null) {
             System.out.println("ActiveSprite is null move alert");
             System.exit(0);
         }
-    Stage_WS.setActiveSprite(mySprite);
+    Stage_WS.setActiveBook(myBook);
     }
  
 
 //general method to store currentSprite
 
-private void setCurrentSprite(SpriteBox mySprite) {
-    if (Stage_WS.getActiveSprite()==null) {
+private void setActiveBook(Book myBook) {
+    if (Stage_WS.getActiveBook()==null) {
             System.out.println("ActiveSprite is null set current sprite");
             System.exit(0);
         }
-    Stage_WS.setActiveSprite(mySprite);
+    Stage_WS.setActiveBook(myBook);
 }
 
-private SpriteBox getCurrentSprite() {
+private Book getActiveBook() {
     //return this.activeSprite;
-    return Stage_WS.getActiveSprite();  
+    return Stage_WS.getActiveBook();  
 }
 
-/*
-General method to place sprite on Stage.  Uses Stage Manager class 
-Since data nodes are to mirror GUI, update parent child relations here too
-27.4.18 - change approach so that it adds this node (rather than box) as sub-node to another node.
-The node viewer will then be responsible for display of child nodes (e.g. boxes)
-7.6.18 - used by 'copy sprite to destination'.  TO DO:  copy node, send to stage managers to handle.'
-e.g. targetStage.OpenNewNodeNow? or targetStage.PlaceNodeNow...needs work
+/* Method to remove current Book and contents 
 */
 
-private void placeSpriteOnStage(SpriteBox mySprite, BookMetaStage targetStage) {
+public void deleteSpriteGUI(Book myBook) {
     
-    setCurrentSprite(mySprite); 
-    targetStage.addNewSpriteToStage(mySprite); 
-    }
-
-//This is a move not a copy.  
-
-private void placeCurrentSpriteOnStage(BookMetaStage targetStage) {
-    SpriteBox currentSprite = getCurrentSprite(); //not based on the button
-    if (currentSprite !=null) {
-        currentSprite.endAlert(); 
-        System.out.println("Ended alert current:"+currentSprite.toString());
-    }
-    deleteSpriteGUI(currentSprite);
-    currentSprite.unsetParentNode(); //To DO: let node/viewer handle this.
-    targetStage.addNewSpriteToStage(currentSprite);
-}
-
-/* Method to remove current SpriteBox and contents 
-*/
-
-public void deleteSpriteGUI(SpriteBox mySprite) {
-    
-    if (mySprite!=null) {
-        mySprite.getStageLocation().removeSpriteFromStage(mySprite);
+    if (myBook!=null) {
+        Stage_WS.removeBookFromStage(myBook);
     }
     else
     {
         System.out.println("Error : no sprite selected to delete");
     }
-}
-
-// INPUT / OUTPUT
-private void saveDocTree(ClauseContainer saveNode) {
-    LoadSave myLS = new LoadSave();
-    myLS.saveName(saveNode);
-    myLS.Close();
-    String filename=saveNode.getDocName();
-    Recents myR = new Recents();
-    myR.updateRecents(filename);
 }
 
 //STAGE METHODS
@@ -392,10 +336,7 @@ private void saveDocTree(ClauseContainer saveNode) {
         primaryStage.setTitle("Powerdock App");
         primaryStage.hide();
         
-        ParentStageSM = new BookMetaStage();
         ParentStage = new Stage();
-        ParentStageSM.setStage(ParentStage);
-        ParentStageSM.setTitle("Powerdock");
 
         //master Node for save all workspace
         //masterNode.updateText("<html><body></body></html>","workspace","workspace(saved)","input","output");
@@ -419,61 +360,7 @@ private void saveDocTree(ClauseContainer saveNode) {
         else {
             System.out.println("Stage_WS created.");
         }
-        
-
-        /* Setup a general text Output Stage (for workspace?) 
-        Stage_Output = new BookMetaStage(Stage_WS,"Output");
-        Stage_Output.setupTextOutputWindow();
-        */
-
-        //Temporary: demonstration nodes at start
-        //Stage_WS.setCurrentFocus(Stage_WS);
-        //OpenNodeStage = Stage_WS.getCurrentFocus();
     }
-
-    /* Event handler added to box with clause content 
-    This is added to each stage created, so can be called from there*/
-
-    EventHandler<MouseEvent> PressBoxEventHandler = 
-        new EventHandler<MouseEvent>() {
- 
-        @Override
-        public void handle(MouseEvent t) {
-            processBoxClick(t);
-            t.consume();
-        }
-    };
-    
-     /* This is an eventhandler interface to create a new eventhandler class for the SpriteBox objects 
-     These currently have no limits on how far you can drag 
-     Handle release events in Stage Managers ?*/
-
-    EventHandler<MouseEvent> DragBoxEventHandler = 
-        new EventHandler<MouseEvent>() {
- 
-        @Override
-        public void handle(MouseEvent t) {
-            SpriteBox currentSprite = ((SpriteBox)(t.getSource()));
-            double offsetX = t.getSceneX() - orgSceneX;
-            double offsetY = t.getSceneY() - orgSceneY;
-            double newTranslateX = orgTranslateX + offsetX;
-            double newTranslateY = orgTranslateY + offsetY;
-            //end alert status for sprite
-            SpriteBox hasFocus = getCurrentSprite();
-            hasFocus.endAlert();
-            //change the active sprite to the current touched sprite.
-            setCurrentSprite(currentSprite); //clicked sprite
-            System.out.println("The handler for drag box is acting");
-            //update position
-            currentSprite.setXY(newTranslateX,newTranslateY);
-            System.out.println("Main: Translate Position (X,Y): "+newTranslateX+","+newTranslateY);
-            //updates to sprite that triggered event
-            currentSprite.setTranslateX(newTranslateX);
-            currentSprite.setTranslateY(newTranslateY);
-            currentSprite.doAlert(); //in case single click event doesn't detect
-            t.consume();//check
-        }
-    };
 
     //BUTTON EVENT HANDLERS
 
@@ -483,31 +370,9 @@ private void saveDocTree(ClauseContainer saveNode) {
         @Override
         public void handle(ActionEvent t) {
         
-            deleteSpriteGUI(getCurrentSprite());
+            deleteSpriteGUI(getActiveBook());
             }
         };
-
-    EventHandler<ActionEvent> OpenNodeViewNow = 
-        new EventHandler<ActionEvent>() {
- 
-        @Override
-        public void handle(ActionEvent t) {
-        
-        OpenRedNodeNow(getCurrentSprite());
-        }
-    };
-
-    //Open a new stage in all cases (a kind of refresh)
-    //This stage opens up as a sub-stage of the MainStage
-    public void OpenRedNodeNow (SpriteBox currentSprite) { 
-        if (this.myTracker==null) {
-            System.out.println("MyTRK is null openrednodenow");
-            System.exit(0);
-        }
-        ClauseContainer currentNode = currentSprite.getBoxNode();
-        OpenNodeStage = new BookMetaStage(Stage_WS, currentNode, PressBoxEventHandler, DragBoxEventHandler, currentSprite); 
-
-     }
 
     //FILE LOADERS AND SAVERS
     public void mainFileLoader() {
@@ -521,25 +386,20 @@ private void saveDocTree(ClauseContainer saveNode) {
         } 
     }
 
-    //if we have a list of the ClauseContainer objects inside the spriteboxes, and they have the relevant metadata (including x,y),
-    //Then we do not need to actually query the SpriteBox class - we can just save as per clause container
+    //if we have a list of the Book objects inside the Bookes, and they have the relevant metadata (including x,y),
+    //Then we do not need to actually query the Book class - we can just save as per clause container
     public void mainFileSaver() {
         Main.this.Stage_WS.writeFileOut(this.currentOpenFile.getPath());
     }
 
     // --- EVENT HANDLERS
 
-    // new spritebox on stage
+    // new Book on stage
 
     EventHandler<ActionEvent> addNewBookMaker = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent t) {
-               
-                ClauseContainer newBookMeta = new ClauseContainer("New");
-                double x=100;
-                double y=0;
-                newBookMeta.setX(x);
-                Stage_WS.OpenNewNodeNow(newBookMeta); // check they both update
+                Stage_WS.addNewBookToView(); // check they both update
             }
     };
         
@@ -549,15 +409,7 @@ private void saveDocTree(ClauseContainer saveNode) {
         @Override 
         public void handle(ActionEvent event) {
             Main.this.mainFileLoader();
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            /*LoadSave myLS = new LoadSave(Main.this.Stage_WS);
-            //myLS.makeLoad(Main.this.Stage_WS);
-            myLS.makeLoad(); //not attached to stage?
-
-            if (Main.this.Stage_WS==null) {
-                System.out.println("Problem with passing Stage_WS to openTemplate");
-            }
-            */
+           
             }
         };
 
@@ -584,15 +436,6 @@ private void saveDocTree(ClauseContainer saveNode) {
         public void handle(ActionEvent event) {
             //use the persistent Stage_WS instance to get the current stage (class variable)
             LoadSave myLS = new LoadSave();
-            /*ClauseContainer thisNode;
-                    if (Main.this.masterNode!=null) {
-                        myLS.makeSave(Main.this.Stage_WS,Main.this.masterNode);
-                    }
-                    else {
-                       myLS.Close();
-                    }
-                
-                */
                 }
             };
 
@@ -601,26 +444,10 @@ private void saveDocTree(ClauseContainer saveNode) {
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-            if (Main.this.getCurrentSprite()!=null) {
-                ClauseContainer thisNode = Main.this.getCurrentSprite().getBoxNode();
+            if (Main.this.getActiveBook()!=null) {
+                Book thisNode = Main.this.getActiveBook();
                 //Main.this.saveDocTree(thisNode);
             }
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            /*
-            LoadSave myLS = new LoadSave();
-            ClauseContainer thisNode;
-                    if (Main.this.getCurrentSprite()!=null) {
-                        thisNode = Main.this.getCurrentSprite().getBoxNode();
-                        myLS.saveName(thisNode);
-                        //update recent docs list
-                        String filename=thisNode.getDocName();
-                        Recents myR = new Recents();
-                        myR.updateRecents(filename);
-                    }
-                    else {
-                       myLS.Close();
-                    }
-                    */
                 }
             }; 
 
@@ -630,39 +457,7 @@ private void saveDocTree(ClauseContainer saveNode) {
         @Override 
         public void handle(ActionEvent event) {
             Main.this.mainFileSaver();
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            /*LoadSave myLS = new LoadSave();
-            ClauseContainer thisNode;
-                    if (Main.this.getCurrentSprite()!=null) {
-                        thisNode = Main.this.getCurrentSprite().getBoxNode();
-                        myLS.makeSave(Main.this.Stage_WS,thisNode);
-                        //update recent docs list
-                        String filename=thisNode.getDocName();
-                        Recents myR = new Recents();
-                        myR.updateRecents(filename);
-                    }
-                    else {
-                       myLS.Close();
-                    } */
                 }
             }; 
 
-        //write out html content from this node tree
-        //save template
-        EventHandler<ActionEvent> writeHTML = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            //use the persistent Stage_WS instance to get the current stage (class variable)
-            makeHTML mh = new makeHTML();
-            ClauseContainer thisNode;
-                    if (Main.this.getCurrentSprite()!=null) {
-                        thisNode = Main.this.getCurrentSprite().getBoxNode();
-                        mh.HTMLoutput(thisNode,thisNode.getDocName());
-                    }
-                    else {
-                       //mh.Close();
-                    }
-                }
-            };
 }

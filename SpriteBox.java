@@ -22,7 +22,7 @@ import javafx.stage.Stage;
 
 /* 
 
-JavaFX node (StackPane) that holds GUI objects (Rectangle), as well as abstract data objects like the 'ClauseContainer' that holds metadata.
+JavaFX node (StackPane) that holds GUI objects (Rectangle), as well as abstract data objects like the 'Book' that holds metadata.
 
 Mouse clicks are detectable as a result of the underlying 'Rectangle' ('BookIcon') being detected.
 
@@ -39,9 +39,9 @@ public class SpriteBox extends StackPane implements java.io.Serializable {
     //Try the bookshelf view for the 'library'.  Make both available?
     //ColBox myBox;
     BookIcon myBookIcon; //appearance (the extended Rectangle class)
-    ClauseContainer BoxNode; //generic holder of content/metadata
+    Book BoxNode; //generic holder of content/metadata
     Clause myClause;  //To do: remove this data type
-    ClauseContainer myDocument; //UNUSED
+    Book myDocument; //UNUSED
     String Category=""; //will be Clause, Definition etc
     Text boxlabel = new Text ("new box");//Default label text for every SpriteBox
     String contents;  // Text for the SpriteBox outside of Clause objects.  Currently unused.
@@ -86,13 +86,10 @@ public class SpriteBox extends StackPane implements java.io.Serializable {
     Not used by Main or StageManager.  Redundant?
     */
 
-    public SpriteBox(ClauseContainer node, MainStage mySM) {
+    public SpriteBox(Book node, MainStage mySM) {
     
     this.setup();
-    location = node.getNodeLocation();
-    String myCat = node.getNodeCategory(); //works with clausecontainer method
     setStageLocation(mySM);
-    setBoxCategory(myCat); 
     setBoxNode(node); //sets and updates appearance
     //inherited methods - need to reference from the object type to call them
     setOnMousePressed(PressBoxEventHandler);  // JavaFX - inherited from Rectangle 
@@ -101,20 +98,17 @@ public class SpriteBox extends StackPane implements java.io.Serializable {
 }
 
 /*
-Box constructor that puts a (ClauseContainer)Node inside as the Box's node.
+Box constructor that puts a (Book)Node inside as the Box's node.
 Called from StageManager objects [BookMetaStage]
 */
 
-    public SpriteBox(EventHandler PressBox, EventHandler DragBox, ClauseContainer node) {
+    public SpriteBox(EventHandler PressBox, EventHandler DragBox, Book node) {
     
     this.setup();
-    location = node.getNodeLocation(); //use parent Node instead??
-    String myCat = node.getNodeCategory(); 
-    setBoxNode(node); //sets and updates appearance//works with clausecontainer method
+    setBoxNode(node); //sets and updates appearance//works with Book method
     //SpriteBox.this.setStageLocation(mySM);
     setOnMousePressed(PressBox);  // JavaFX - inherited from Rectangle 
     setOnMouseDragged(DragBox);   //ditto
-    setBoxCategory(myCat); //TO DO: Abandon.  Just get directly when needed.
     //add filters
     //SpriteBox.this.addEventFilter(MouseEvent.MOUSE_PRESSED, PressBox);
     SpriteBox.this.setOnMousePressed(PressBox);
@@ -124,81 +118,60 @@ Called from StageManager objects [BookMetaStage]
 
 //box constructor for image viewer or snapshot - no event handlers needed
 
- public SpriteBox(ClauseContainer node) {
+ public SpriteBox(Book node) {
     
     this.setup();
-    location = node.getNodeLocation(); //use parent Node instead??
-    String myCat = node.getNodeCategory(); 
-    setBoxNode(node); //sets and updates appearance//works with clausecontainer method
-    //SpriteBox.this.setStageLocation(mySM);
-    //setOnMousePressed(PressBox);  // JavaFX - inherited from Rectangle 
-    //setOnMouseDragged(DragBox);   //ditto
-    setBoxCategory(myCat); //TO DO: Abandon.  Just get directly when needed.
+    setBoxNode(node); //sets and updates appearance//works with Book method
+
 }
-
-//Box constructor that takes puts a (ClauseContainer)Node inside as the Box's node.
-/*
-    private SpriteBox(ClauseContainer node) {
+//default constructor with label
+public SpriteBox(String startLabel) {
+	this.setup();
+    this.boxlabel = new Text (startLabel);//myBookIcon.getLabel();
     
+ }  
+// constructor with colour
+public SpriteBox(String startLabel, String mycolour) {
     this.setup();
-    location = node.getNodeLocation(); //use parent Node instead??
-    String myCat = node.getNodeCategory(); 
-    SpriteBox.this.setBoxNode(node); //sets and updates appearance//works with clausecontainer method
-    //SpriteBox.this.setStageLocation(mySM);
-    SpriteBox.this.setOnMousePressed(PressBoxEventHandler);  // JavaFX - inherited from Rectangle 
-    SpriteBox.this.setOnMouseDragged(DragBoxEventHandler);   //ditto
-    SpriteBox.this.setBoxCategory(myCat); //TO DO: Abandon.  Just get directly when needed.
+    this.myBookIcon = new BookIcon(mycolour);
+    this.boxlabel = new Text (startLabel);//myBookIcon.getLabel();
+ }
+
+ //SPRITEBOX STATUS: NODE OPEN OR NOT
+ public Boolean isOpen() {
+    return this.viewingNode;
+ }
+
+ public void setOpen() {
+    this.viewingNode=true;
+ }
+
+ public StageManager getChildStage() {
+    return this.childStage;
+ }
+
+ public void setChildStage(StageManager myCSM) {
+    this.childStage = myCSM;
+ }
+
+ //EVENT HANDLERS THAT PROVIDE CONTEXT [NOT USED]
+
+ EventHandler<MouseEvent> PressBoxEventHandler = 
+    new EventHandler<MouseEvent>() {
+
+    @Override
+    public void handle(MouseEvent t) {
+     //current position of mouse
+    orgSceneX = t.getSceneX(); //Mouse event X, Y coords relative to scene that triggered
+    orgSceneY = t.getSceneY();
+
+    //update the origin point to this click/press
+    orgTranslateX = SpriteBox.this.getTranslateX(); //references this instance at Runtime
+    orgTranslateY = SpriteBox.this.getTranslateY();
+    t.consume();
+
     }
-*/
-
-    //default constructor with label
-    public SpriteBox(String startLabel) {
-    	this.setup();
-        this.boxlabel = new Text (startLabel);//myBookIcon.getLabel();
-        
-     }  
-    // constructor with colour
-    public SpriteBox(String startLabel, String mycolour) {
-        this.setup();
-        this.myBookIcon = new BookIcon(mycolour);
-        this.boxlabel = new Text (startLabel);//myBookIcon.getLabel();
-     }
-
-     //SPRITEBOX STATUS: NODE OPEN OR NOT
-     public Boolean isOpen() {
-        return this.viewingNode;
-     }
-
-     public void setOpen() {
-        this.viewingNode=true;
-     }
-    
-     public StageManager getChildStage() {
-        return this.childStage;
-     }
-
-     public void setChildStage(StageManager myCSM) {
-        this.childStage = myCSM;
-     }
-
-     //EVENT HANDLERS THAT PROVIDE CONTEXT [NOT USED]
-
-     EventHandler<MouseEvent> PressBoxEventHandler = 
-        new EventHandler<MouseEvent>() {
- 
-        @Override
-        public void handle(MouseEvent t) {
-         //current position of mouse
-        orgSceneX = t.getSceneX(); //Mouse event X, Y coords relative to scene that triggered
-        orgSceneY = t.getSceneY();
-
-        //update the origin point to this click/press
-        orgTranslateX = SpriteBox.this.getTranslateX(); //references this instance at Runtime
-        orgTranslateY = SpriteBox.this.getTranslateY();
-        t.consume();
-
-        }
-    };
+};
 
     //Not invoked?  Uses the handler passed in from main method.
     EventHandler<MouseEvent> DragBoxEventHandler = 
@@ -238,41 +211,29 @@ Called from StageManager objects [BookMetaStage]
         return this.boxcategory;
     }
 
-     /*Place an ClauseContainer inside (e.g. handles subclasses Clause or ClauseContainer) */
+     /*Place an Book inside (e.g. handles subclasses Clause or Book) */
 
-    public void setBoxNode (ClauseContainer myNode) {
+    public void setBoxNode (Book myNode) {
         this.BoxNode = myNode;
         this.getXY();
         this.updateAppearance();
     }
 
-     /*Return the ClauseContainer inside (e.g. handles subclasses Clause or ClauseContainer) */
+     /*Return the Book inside (e.g. handles subclasses Clause or Book) */
 
-    public ClauseContainer getBoxNode() {
+    public Book getBoxNode() {
         return this.BoxNode;
     }
 
-    /*Set parent node/unset*/
-    //method to remove data links between Child node in this Box (closed node) and its parent.
-
-    public void unsetParentNode() {
-        if (getBoxNode()!=null) {
-            getBoxNode().unsetParentNode();
-        }
-        else {
-            System.out.println("Error : No parent node to unset");
-        }
-}
-
-    /*Return the ClauseContainer inside (if ClauseContainer) REDUNDANT 
+    /*Return the Book inside (if Book) REDUNDANT 
     Now private to test external dependencies */
 
-    private ClauseContainer getCC() {
-        if(this.BoxNode instanceof ClauseContainer) {
-            return (ClauseContainer)this.BoxNode;
+    private Book getCC() {
+        if(this.BoxNode instanceof Book) {
+            return (Book)this.BoxNode;
         }
         else {
-            return new ClauseContainer(); //error?
+            return new Book(); //error?
         }
     }
 
@@ -280,7 +241,7 @@ Called from StageManager objects [BookMetaStage]
 
     public void setup() {
         this.myBookIcon = new BookIcon();   //Uses defaults.
-        myClause = new Clause(); //TO DO: remove this data item.  ClauseContainer set in constructor
+        myClause = new Clause(); //TO DO: remove this data item.  Book set in constructor
         Font boxfont=Font.font ("Verdana", 12); //check this size on monitor/screen
         boxlabel.setFont(boxfont);
         boxlabel.setFill(myBookIcon.colourPicker("black"));
@@ -420,16 +381,11 @@ Called from StageManager objects [BookMetaStage]
     // --------------------------------
 
     public String getBoxDocName() {
-        ClauseContainer thisNode = this.getBoxNode();
+        Book thisNode = this.getBoxNode();
         return thisNode.getDocName();
     }
 
-    //get category from enclosed node
-    private String getNodeCategory() {
-        ClauseContainer thisNode = this.getBoxNode();
-        return thisNode.getNodeCategory();
-    }
-
+    
     /*
     Method to refresh appearance and default colour based on associated node.
     3.5.18:
@@ -438,8 +394,8 @@ Called from StageManager objects [BookMetaStage]
     This SpriteBox will not know the difference.
     */
 
-    // There is a ClauseContainer object associated with this box.
-    // The ClauseContainer stores the metadata, including the 'colour'
+    // There is a Book object associated with this box.
+    // The Book stores the metadata, including the 'colour'
     // The colour is, in turn, based on the 'category' of the Node.
     // TO DO: simplify this so that each 'Book' object has a type?
     //i.e. we will just treat the SpriteBox as the "Book" with its metadata and it tells the BookIcon what colour to be?
@@ -447,7 +403,7 @@ Called from StageManager objects [BookMetaStage]
 
     private void updateAppearance() {
         
-        ClauseContainer thisNode = this.getBoxNode();  
+        Book thisNode = this.getBoxNode();  
         this.setLabel(thisNode.getDocName());
         this.boxlabel.setRotate(270); 
         //this.SetColour(thisNode.getNodeColour());

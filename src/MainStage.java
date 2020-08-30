@@ -89,30 +89,30 @@ int spriteY = 0;
 String stageName = "";
 String stageTitle = "";
 
-ClauseContainer reference_ParentNode = new ClauseContainer();
+Book reference_ParentNode = new Book();
 Stage localStage = new Stage();
 Node rootNode; //Use Javafx object type
 Group spriteGroup;
 ScrollPane spriteScrollPane;
 Pane spritePane;
 Scene localScene;
-SpriteBox focusSprite; //for holding active sprite in this scene.  Pass to app.
-SpriteBox parentBox;//to hold the calling box for this viewer.  
+Book focusSprite; //for holding active sprite in this scene.  Pass to app.
+Book parentBox;//to hold the calling box for this viewer.  
 //Do not create new object here or circular constructors! Do in constructor
 
 String filename = ""; //current filename for saving this stage's contents
 //STAGE IDS
 int location = 0;
 String category="";
-//Displayed ClauseContainer (i.e. Node).  Will be updated through GUI.
-ClauseContainer displayNode = new ClauseContainer();
+//Displayed Book (i.e. Node).  Will be updated through GUI.
+Book displayNode = new Book();
 int doccount=0; //document counter for this stage
 
 //NODE'S TEXT CONTENT
 //For storing main text output area for this Stage (if any)
 //As of 26.4.2018: make this the default area to hold the node's own text (for stages that display a frame that is also an open node).  Always editable.
 
-//This TextArea is the GUI display object for the nodes' docnotes String.  Edit button will update the node's (ClauseContainer) actual data
+//This TextArea is the GUI display object for the nodes' docnotes String.  Edit button will update the node's (Book) actual data
 TextArea docNameTextArea = new TextArea();
 TextArea mdTextArea = new TextArea();
 TextArea headingTextArea = new TextArea();
@@ -134,7 +134,7 @@ MenuBar localmenubar;
 //visibility checkbox
 CheckBox visibleCheck = new CheckBox("Visible");
  //To hold Stage with open node that is current
-BookMetaStage OpenNodeStage; 
+BookMetaStage bookMetaInspectorStage; 
 Integer shelf1_Y;
 Integer shelfgap;
 Integer shelfthickness=15;
@@ -145,7 +145,7 @@ BookMetaStage should store GUI objects in one way, data in another?  separation 
 Some kind of content manager for each stage?
 Consider if subclasses of BookMetaStage could deal with flavours of BookMetaStage (e.g. position?
 */
-ArrayList<ClauseContainer> booksOnShelf = new ArrayList<ClauseContainer>(); //generic store of contents of boxes
+ArrayList<Book> booksOnShelf = new ArrayList<Book>(); //generic store of contents of boxes
 double orgSceneX;
 double orgSceneY;
 
@@ -154,7 +154,7 @@ double orgTranslateY;
 
 //Track current stage that is open.  Class variables
 static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
-static ClauseContainer currentTarget; //any Box(no?) or BookMetaStage can set this to its display node
+static Book currentTarget; //any Box(no?) or BookMetaStage can set this to its display node
 
 //constructor
 public MainStage() {
@@ -166,19 +166,19 @@ public MainStage() {
 //Passes MenuBar from main application for now
 //Passes general eventhandlers from Main (at present, also uses these for the boxes)
 public MainStage(String title, MenuBar myMenu) {
-    //ClauseContainer baseNode, 
+    //Book baseNode, 
     //category
     //NodeCategory NC_WS = new NodeCategory ("workspace",99,"white");
     //view
     setTitle(title);
     setMenuBar(myMenu);
     //TO DO: setLocalSpriteSelect(processLocalBoxClick);
-    //set event handlers as local instance variables.  These are used at time of SpriteBox creation
-    //They are set here so that the spriteboxes can access BookMetaStage level data
-    //See the 'addNodeToView' function that creates a new SpriteBox here.
-    setPressBox(processLocalBoxClick); //stores this in a variable to pass to SpriteBox.
+    //set event handlers as local instance variables.  These are used at time of Book creation
+    //They are set here so that the Bookes can access BookMetaStage level data
+    //See the 'addNodeToView' function that creates a new Book here.
+    setPressBox(processLocalBoxClick); //stores this in a variable to pass to Book.
     //setPressBox(PressBox);
-    setDragBox(DragBox); //stores this to pass to SpriteBox 
+    setDragBox(DragBox); //stores this to pass to Book 
     setKeyPressSprite(SpriteKeyHandler); //TO do - set a variable to pass to sprites=
     
     //we need to set sprite group etc
@@ -188,12 +188,12 @@ public MainStage(String title, MenuBar myMenu) {
     System.out.println (this.spriteGroup);
     System.out.println("Reference of this stage object MainStage");
     System.out.println(MainStage.this);
-    resetSpriteOrigin();
-    //This is for the 'clausecontainer node?'
+    resetBookOrigin();
+    //This is for the 'Book node?'
     //setWSNode(baseNode); 
     //data
-    //ClauseContainer WorkspaceNode = ;
-    //setWSNode(new ClauseContainer(myCategory,"The workspace is base node of project.","myWorkspace")); //data
+    //Book WorkspaceNode = ;
+    //setWSNode(new Book(myCategory,"The workspace is base node of project.","myWorkspace")); //data
 }
 
 
@@ -207,17 +207,17 @@ public void processMarkdown(File file) {
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
-      // Split the MD file
-      ArrayList<String> blocklist= myParser.splitMDfile(contents);
-      int length = blocklist.size();
-      //System.out.println(length);
+      // Split the MD file.  blocklist is list of 
+      ArrayList<String> blocklist= myParser.splitMDfile(contents); //should return file split into blocks per #
+      int length = blocklist.size();  // number of blocks
+      System.out.println(length);
       //System.exit(0);
       if (length>0) {
         Iterator<String> iter = blocklist.iterator(); 
           while (iter.hasNext()) {
-              ClauseContainer newNode=myParser.parseMDfile(iter.next());
+              Book newNode=myParser.parseMDfile(PressBox,DragBox,iter.next());
               if (newNode!=null) {
-                System.out.println("Starting iteration of lines in MD");
+                System.out.println("Starting iteration of block lines in MD");
                 OpenNewNodeNow(newNode);
               }
          } //end while
@@ -230,11 +230,11 @@ public void processMarkdown(File file) {
 
 public void writeFileOut(String filepath) {
     System.out.println("Saving: "+filepath);
-    ArrayList<ClauseContainer> mySaveBooks = getBooksOnShelf();
-    Iterator<ClauseContainer> myIterator = mySaveBooks.iterator();
+    ArrayList<Book> mySaveBooks = getBooksOnShelf();
+    Iterator<Book> myIterator = mySaveBooks.iterator();
     String myOutput="";
          while (myIterator.hasNext()) {
-            ClauseContainer myNode=myIterator.next();
+            Book myNode=myIterator.next();
             //System.out.println(myNode.toString());
             String myString=convertBookMetaToString(myNode);
             myOutput=myOutput+myString;
@@ -246,19 +246,24 @@ public void writeFileOut(String filepath) {
 }
 
 //Convert this book meta into a String of markdown.  Only write links if data is there.
-public String convertBookMetaToString(ClauseContainer myNode) {
+public String convertBookMetaToString(Book myNode) {
     String myOutput="# "+myNode.getBookLabel()+"\n\n"; //check on EOL
     myOutput=myOutput+myNode.getMD()+"\n\n"; //check on EOL
     if (myNode.getdocfilepath().length()>5) {
-        myOutput=myOutput+"[filepath]("+myNode.getdocfilepath()+")\n\n";
+        String tmp = myNode.getdocfilepath();
+        Integer len = tmp.length();
+        myOutput=myOutput+"[filepath]("+tmp+")\n";
+        if (tmp.substring(len-1,len)!="\n") {
+             myOutput=myOutput+"\n";
+        }; 
     }
     if (myNode.geturlpath().length()>6) {
         myOutput=myOutput+"[url]("+myNode.geturlpath()+")\n\n";
     }
-    if (myNode.getX()!=0 || myNode.getY()!=0) {
+    if (myNode.getX()>0 || myNode.getY()>0) {
         myOutput=myOutput+"[x,y]("+myNode.getX()+","+myNode.getY()+")\n\n";
     }
-    if (myNode.getthisNotes().length()!=0) {
+    if (myNode.getthisNotes().length()>0) {
         myOutput=myOutput+"```\n"+myNode.getthisNotes()+"```\n\n";
     }
     return myOutput;
@@ -282,20 +287,6 @@ private void basicFileWriter(String logstring,String filename) {
             return;
         }
 }  
-
-
-public void setTargetByViewer(BookMetaStage mySM) {
-    currentTarget = mySM.getDisplayNode();
-}
-
-/* TENTATIVE - NOT USED? */
-public void setTargetByBox(BookMetaStage mySM) {
-    currentTarget = mySM.getDisplayNode();
-}
-
-public ClauseContainer getCurrentTarget() {
-    return currentTarget;
-}
 
 //JAVAFX SCENE GRAPH GUI INFO (THIS IS NOT THE DATA NODE!)
 public void setSceneRoot(Node myNode) {
@@ -461,63 +452,16 @@ public MenuBar getMenuBar() {
 
 /* ----- DATA (DISPLAY) NODE FUNCTIONS ----- */
 
-/* 
-This method sets the node that is used for the display in this stage.
-All other nodes added to this node are considered child nodes of this node:
-they are added as child nodes to the data node; they are display in the section of the stage for this
-
-*/
-
-private void setDisplayNode(ClauseContainer myNode) {
-    this.displayNode = myNode;
-    String myFileLabel = myNode.getDocName();
-    setFilename(myFileLabel+".ser"); //default for serialisation only
-}
-
-public ClauseContainer getDisplayNode() {
-    return this.displayNode;
-}
-
-public void addWSNode(ClauseContainer myNode) {
-
-}
-
-/*
-//Method to update workspace appearance based on current node setting (usually root of project)
-public void setWSNode(ClauseContainer myNode) {
-    this.displayNode = myNode;
-    String myFileLabel = myNode.getDocName();
-    setFilename(myFileLabel+".ser"); //default
-    Group newGroup = new Group(); //new GUI node to show only new content.
-    swapSpriteGroup(newGroup); //store the new GUI node for later use
-    //resetSpriteorigin(); //not needed as in displayConceptSection
-    //displayConceptSection(); //update WS view with new child boxes only
-}
-*/
-
-public ClauseContainer Node() {
-    return this.displayNode;
-}
-
 //set the parent node for Nodes enclosed in boxes (i.e. level above)
-private void setRefParentNode(ClauseContainer myParentID) {
+private void setRefParentNode(Book myParentID) {
     this.reference_ParentNode = myParentID;
 }
 
-private ClauseContainer getRefParentNode() {
+private Book getRefParentNode() {
     return this.reference_ParentNode;
 }
 
 /* GUI FUNCTIONS FOR WORKING WITH BOXES, NODES */
-
-public void setParentBox (SpriteBox myPB) {
-    this.parentBox = myPB;
-    setDisplayNode(myPB.getBoxNode());
-}
-
-public SpriteBox getParentBox () {
-    return this.parentBox;
-}
 
 /* ----- GENERAL GUI FUNCTIONS ----- */
 
@@ -566,16 +510,6 @@ public void swapSpriteGroup(Group myGroup) {
     myPane.getChildren().addAll(myGroup);
 }
 
-/*
-public void swapSpriteChildGroup(Group myGroup) {
-    ScrollPane myPane = getSpriteScrollPane();
-    myPane.getChildren().remove(getSpriteGroup());
-    setSpriteGroup(myGroup);
-    myPane.getChildren().addAll(myGroup);
-}
-*/
-
-
 private void setStagePosition(double x, double y) {
     this.localStage.setX(x);
     this.localStage.setY(y);
@@ -600,7 +534,7 @@ public void setCurrentXY(double x, double y) {
 
 This is for GUI relationships, not data tree relationships.
 
-nb If the stage has been called from a SpriteBox, the tree parent is the box, but
+nb If the stage has been called from a Book, the tree parent is the box, but
 that box lies within a stage that can be used as parent stage here
 (or make all stages the child of Stage_WS)
 */
@@ -734,20 +668,6 @@ public void toggleStage() {
     }
 }
 
-//public interface setter helper - currently not used
-
-/*
-public void setInitStage(BookMetaStage myParentSM, Stage myStage, Group myGroup, String myTitle) {
-   setStageName(myTitle);
-   setStage(myStage);
-   setJavaFXStageParent(myParentSM);
-   setEditWindowPosition();
-   setSpriteGroup(myGroup);
-   setTitle(myTitle);
-}
-
-*/
-
 //The scene only contains a pane to display sprite boxes
 private Scene makeSceneForBoxes(ScrollPane myPane) {
         
@@ -767,9 +687,9 @@ private Scene makeSceneForBoxes(ScrollPane myPane) {
 
 //Method to change title depending on data mode the node is in.
 private String getTitleText(String myString) {
-    System.out.println("Make Scene. User Node View: "+getDisplayNode().getUserView());
+    System.out.println("Make Scene. User Node View: "+getActiveBook().getUserView());
     //main function        
-    return getDisplayNode().getDocName()+myString;
+    return getActiveBook().getDocName()+myString;
    
 }
 
@@ -808,12 +728,12 @@ public double snapYtoShelf(double newTranslateY){
  EventHandler<KeyEvent> SpriteKeyHandler = new EventHandler<KeyEvent>() {
     @Override
     public void handle(KeyEvent ke) {
-        //SpriteBox hasFocus = Main.this.getCurrentSprite();
-        SpriteBox hadFocus=null;
-        SpriteBox currentSprite = MainStage.this.getActiveSprite(); //clicksource
+        //Book hasFocus = Main.this.getcurrentBook();
+        Book hadFocus=null;
+        Book currentBook = MainStage.this.getActiveBook(); //clicksource
             if (ke.isMetaDown() && ke.getCode().getName().equals("E")) {
                  System.out.println("CMD-E pressed for sprite");
-                 currentSprite.cycleBookColour();
+                 //currentBook.cycleBookColour();
             }
         }
     };
@@ -825,13 +745,13 @@ EventHandler<MouseEvent> DragBox =
         @Override
         public void handle(MouseEvent t) {
 
-            SpriteBox currentSprite = ((SpriteBox)(t.getSource()));
+            Book currentBook = ((Book)(t.getSource()));
             final EventType TYPE = t.getEventType(); //
             System.out.println("Event");
             System.out.println(TYPE.toString());
               
-            if (currentSprite!=null) {
-                MainStage.this.setActiveSprite(currentSprite); //clicked sprite
+            if (currentBook!=null) {
+                MainStage.this.setActiveBook(currentBook); //clicked sprite
                 double offsetX = t.getSceneX() - orgSceneX;
                 double offsetY = t.getSceneY() - orgSceneY;
                 double newTranslateX = orgTranslateX + offsetX;
@@ -845,20 +765,20 @@ EventHandler<MouseEvent> DragBox =
                                        
                     newTranslateY=MainStage.this.snapYtoShelf(newTranslateY);
                     //System.exit(0);
-                    currentSprite.setTranslateX(newTranslateX);
-                    currentSprite.setTranslateY(newTranslateY);
-                    
-                    currentSprite.doAlert();
+                    currentBook.setTranslateX(newTranslateX);
+                    currentBook.setTranslateY(newTranslateY);
+
+                    currentBook.doAlert();
                     } 
                 else {
                     System.out.println("The handler for drag box is acting");
                     //update position
-                    currentSprite.setXY(newTranslateX,newTranslateY);
+                    currentBook.setXY(newTranslateX,newTranslateY);
                     System.out.println("Main: Translate Position (X,Y): "+newTranslateX+","+newTranslateY);
                     //updates to sprite that triggered event
-                    currentSprite.setTranslateX(newTranslateX);
-                    currentSprite.setTranslateY(newTranslateY);
-                    currentSprite.doAlert(); //in case single click event doesn't detect
+                    currentBook.setTranslateX(newTranslateX);
+                    currentBook.setTranslateY(newTranslateY);
+                    currentBook.doAlert(); //in case single click event doesn't detect
                     //t.consume();//check - maybe don't do this if you want to work with release
                 }
             }
@@ -880,42 +800,42 @@ EventHandler<MouseEvent> processLocalBoxClick =
         else {
             System.out.println(TYPE);
         }
-        SpriteBox hadFocus=MainStage.this.getActiveSprite();
-        SpriteBox currentSprite = (SpriteBox)t.getSource();  //selects a class for click source
-        if (currentSprite!=null) {
+        Book hadFocus=MainStage.this.getActiveBook();
+        Book currentBook = (Book)t.getSource();  //selects a class for click source
+        if (currentBook!=null) {
             System.out.println("Found click on sprite");
-            MainStage.this.setActiveSprite(currentSprite);
-            //moveAlertFromBoxtoBox(getCurrentSprite(),currentSprite);
+            MainStage.this.setActiveBook(currentBook);
+            //moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
             int clickcount = t.getClickCount();
 
             orgSceneX = t.getSceneX();
             orgSceneY = t.getSceneY();
 
-            orgTranslateX = currentSprite.getTranslateX();
-            orgTranslateY = currentSprite.getTranslateY();
+            orgTranslateX = currentBook.getTranslateX();
+            orgTranslateY = currentBook.getTranslateY();
             System.out.println("getx: "+ orgSceneX+ " gety: "+orgSceneY);
 
             switch(clickcount) {
             //single click
             case 1:
-                //moveAlertFromBoxtoBox(getCurrentSprite(),currentSprite);
+                //moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
                 System.out.println("One click");
-                //change stage focus with just one click on spritebox (but node still closed)
-                //OpenNodeStage=currentSprite.getStageLocation();
+                //change stage focus with just one click on Book (but node still closed)
+                //bookMetaInspectorStage=currentBook.getStageLocation();
                 //refreshNodeViewScene();
                 break;
             case 2:
                 System.out.println("Two clicks");
                 
-                //moveAlertFromBoxtoBox(getCurrentSprite(),currentSprite);
+                //moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
                 
                 //Dbl Click action options depending on box type
                
-                //OpenNodeStage=currentSprite.getStageLocation();
+                //bookMetaInspectorStage=currentBook.getStageLocation();
                 //only open if not already open (TO DO: reset when all children closed)
                 //prevent closing until all children closed
                 //close all children when node closed.
-                OpenRedNodeNow(currentSprite);
+                OpenRedBookNow(currentBook);
                 
                 break;
             case 3:
@@ -930,32 +850,32 @@ EventHandler<MouseEvent> processLocalBoxClick =
 };
 
 
-private void OpenRedNodeNow(SpriteBox currentSprite) {
-     ClauseContainer currentNode = currentSprite.getBoxNode();
-     OpenNodeStage = new BookMetaStage(MainStage.this, currentNode, PressBox, DragBox, currentSprite); 
+private void OpenRedBookNow(Book currentBook) {
+     //Book currentBook= getActiveBook(); //currentBook.getBoxNode();
+     bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox); 
 
 }
 /*switch(clickcount) {
     //single click
     case 1:
-        moveAlertFromBoxtoBox(getCurrentSprite(),currentSprite);
+        moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
         System.out.println("One click");
-        //change stage focus with just one click on spritebox (but node still closed)
-        OpenNodeStage=currentSprite.getStageLocation();
+        //change stage focus with just one click on Book (but node still closed)
+        bookMetaInspectorStage=currentBook.getStageLocation();
         //refreshNodeViewScene();
         break;
     case 2:
         System.out.println("Two clicks");
         
-        moveAlertFromBoxtoBox(getCurrentSprite(),currentSprite);
+        moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
         
         //Dbl Click action options depending on box type
        
-        OpenNodeStage=currentSprite.getStageLocation();
+        bookMetaInspectorStage=currentBook.getStageLocation();
         //only open if not already open (TO DO: reset when all children closed)
         //prevent closing until all children closed
         //close all children when node closed.
-        OpenRedNodeNow(currentSprite);
+        OpenRedNodeNow(currentBook);
         
         break;
     case 3:
@@ -976,7 +896,7 @@ EventHandler<MouseEvent> mouseEnterEventHandler =
  
         @Override
         public void handle(MouseEvent t) {
-            //SpriteBox currentSprite = ((SpriteBox)(t.getSource()));
+            //Book currentBook = ((Book)(t.getSource()));
             //TO DO: check if mouse is dragging/pressed
             //System.out.println("Detected mouse released - Stage Manager Group"+BookMetaStage.this.getSpriteGroup().toString());
             //t.consume();//check
@@ -990,7 +910,7 @@ EventHandler<MouseEvent> mouseEnterEventHandler =
  
         @Override
         public void handle(MouseEvent t) {
-            //SpriteBox currentSprite = ((SpriteBox)(t.getSource()));
+            //Book currentBook = ((Book)(t.getSource()));
             //TO DO: check if mouse is dragging/pressed
             //System.out.println("Detected mouse drag - Stage Manager Group"+BookMetaStage.this.getSpriteGroup().toString());
             //t.consume();//check
@@ -1004,45 +924,7 @@ private void closeThisStage() {
     getStage().close();
 }
 
-//general function to save GUI text data into node (position data for concept boxes is already updated)
-//also performs a save on shared parent.
-//TO DO: remove and just save each text box content to an SQL database.
-private void saveNodeText() {
-    //getDisplayNode().updateText(htmlEditor.getHtmlText(),docNameTextArea.getText(),headingTextArea.getText(),inputTextArea.getText(),outputTextArea.getText());
-    
-    getDisplayNode().updateMDText(headingTextArea.getText(),mdTextArea.getText(),inputTextArea.getText());
-    ClauseContainer fileNode=getDisplayNode().getUltimateParent();
-    if (fileNode==null) {
-     System.out.println ("No parent node to save.  saveNodeText method");
-     System.exit(0);
-     }
-    saveDocTree(fileNode); //save the whole tree (of updated text)
-    System.out.println("saved Parent: "+getDisplayNode().getUltimateParent().toString());
-    //parentBox - should we insist on one?
-    SpriteBox pntBox = getParentBox();
-    if (pntBox!=null) {
-        pntBox.setLabel(docNameTextArea.getText());
-    }
-    //error checking - log.  Leave this to show error for attempts with follower nodes.
-    if (getDisplayNode().getNotes().equals(inputTextArea.getText())) {
-        System.out.println("Node updated OK!");
-    }
-    else {
-         System.out.println("Problem with node update.");
-        }
-    }
-
 // INPUT / OUTPUT 
-
-//nb this method mirrors that which can be called from Main
-private void saveDocTree(ClauseContainer saveNode) {
-    LoadSave myLS = new LoadSave();
-    myLS.saveName(saveNode);
-    //myLS.Close();
-    String filename=saveNode.getDocName();
-    Recents myR = new Recents();
-    myR.updateRecents(filename);
-}
 
 //MainStage setup function
 private void newWorkstageFromGroup() {
@@ -1076,7 +958,7 @@ private Group makeWorkspaceTree() {
         MenuBar myMenu = getMenuBar();
         menubarGroup.getChildren().addAll(myMenu);
         
-        //the Pane holding the group allows movement of SpriteBoxes independently, without relative movement
+        //the Pane holding the group allows movement of Bookes independently, without relative movement
         
         Pane workspacePane = new Pane(); //to hold a group, holding a spritegroup
         //This is empty initially...
@@ -1177,8 +1059,8 @@ private Scene makeWorkspaceScene(Group myGroup) {
             /*
             areas and targets differ depending on objects on stage (invisible stretch)
             Ignore the MenuBar here
-            JavaFX has ability to detect Text, Rectangle, ColBox (all components of a SpriteBox)
-            Better to force it to detect a SpriteBox?
+            JavaFX has ability to detect Text, Rectangle, ColBox (all components of a Book)
+            Better to force it to detect a Book?
             Although clicking on text could be useful for updating headings/filenames
             It is possible to change focus with a click, but exclude MenuBar targets
             (these seemed to be instances of LabeledText 
@@ -1241,65 +1123,10 @@ private Scene makeWorkspaceScene(Group myGroup) {
         return workspaceScene;
     }
 
-
-/* public function to add a box (as a child node) to this Viewer.
-Add node to view will also call the addsprite to stage to complete this.
-*/
-public void addNewSpriteToStage(SpriteBox mySprite) {
-        //mySprite.getBoxNode()
-        addChildNodeToDisplayNode(mySprite.getBoxNode()); //data
-        //addSpriteToStage(mySprite); //view 
-        addNodeToView(mySprite.getBoxNode());
-    }
-
-/*
-Internal method to add sprite to the Group/Pane of this Node Viewer 
-This is to add an existing GUI 'box/node' to the Child Node section of this Viewer.
-i.e. this adds a specific object, rather than updating the view from whole underlying data set.
-*/
-
-private void addSpriteToStage(SpriteBox mySprite) {
-    if (mySprite==null) {
-        System.out.println("No sprite to add");
-        System.exit(0);
-    }
-    System.out.println("Sprite in addSprite, before addition");
-    System.out.println(mySprite);
-    System.out.println("SpriteGroup in addSprite, before addition");
-    System.out.println(this.spriteGroup);
-    
-    this.spriteGroup.getChildren().add(mySprite);
-    ClauseContainer newNode = mySprite.getBoxNode(); //class with metadata
-    this.booksOnShelf.add(newNode);  //add to metadata collection TO DO: cater for deletions.
-
-    System.out.println("SpriteGroup in addSprite, after addition");
-    System.out.println(this.spriteGroup);
-    
-    // TO DO: general function to draw lines for all links in visible boxes
-    /*
-    //temporary line to test a line from box coord to diag coord
-    double x = mySprite.getX();
-    double y = mySprite.getY();
-    double sblength=150;
-    double sbheight=30;
-    double sp2x=x+200;
-    double sp2y=y+200;
-    System.out.println("Adding line at:"+x+","+y);
-    Line line = new Line(x+sblength,y+(sbheight/2),sp2x,sp2y+(sbheight/2));
-    line.setStroke(Color.RED);
-    getSpriteGroup().getChildren().add(line);
-    */
-    System.out.println("Current sprite group is "+getSpriteGroup().toString()); 
-    positionSpriteOnStage(mySprite);
-    advanceSpritePositionHor(); //default is to space along shelf
-    setActiveSprite(mySprite); //local information
-    mySprite.setStageLocation(MainStage.this); //give Sprite the object for use later.
-}
-
 //set active sprite.  if problem with tracker, ignore.
-public void setActiveSprite(SpriteBox b) {
+public void setActiveBook(Book b) {
     if (this.focusSprite!=null) {
-        SpriteBox hadFocus = this.focusSprite;
+        Book hadFocus = this.focusSprite;
         hadFocus.endAlert();
     }
     this.focusSprite=b;
@@ -1307,7 +1134,7 @@ public void setActiveSprite(SpriteBox b) {
 }
 
 //set active sprite.  if problem with tracker, ignore.
-public SpriteBox getActiveSprite() {
+public Book getActiveBook() {
     if (this.focusSprite==null) {
         System.out.println("No sprite in active function");
         System.exit(0);
@@ -1316,56 +1143,37 @@ public SpriteBox getActiveSprite() {
 }
 
 
-//General method to add AND open a node if not on ws; otherwise place on workspace
-//The BookMetaStage arg passed in as myWS should be 'Stage_WS' for all calls 
 //Called by LoadSave and iterates through the nodes in the parsed MD file.
-public void OpenNewNodeNow(ClauseContainer newNode) {
+public void OpenNewNodeNow(Book newBook) throws NullPointerException {
     System.out.println("SpriteGroup in OpenNewNodeNow");
     System.out.println(this.spriteGroup);
     //System.exit(0);
     System.out.println("OpenNewNode now...");
-    newNodeForWorkspace(newNode); //to do : make this open up as child node in whiteboard.  i.e. (1) change whiteboard focus to 'master', (2) add as child box.
+    try {
+        addBookToStage(newBook);
+        System.out.println(newBook.toString());
+    }
+    catch (NullPointerException e) {
+        System.exit(0);
+    } 
 }
 
-/* This method adds a single node to workspace without refreshing entire view */
+//method to put new book on stage.  cf if you have an existing Book object. addBookToStage
 
-private void newNodeForWorkspace(ClauseContainer myNode) {
-    addChildNodeToDisplayNode(myNode); //data
-    System.out.println("SpriteGroup in newNodeForWorkspace");
-    System.out.println(this.spriteGroup);
+public void addNewBookToView () {
+    //Book b = makeBoxWithNode(myNode); //relies on Main, event handlers x
     
-    addNodeToView(myNode); //view
-}
-
-//method to box up node as shape and add to GUI in node viewer
-
-private void addNodeToView (ClauseContainer myNode) {
-    //SpriteBox b = makeBoxWithNode(myNode); //relies on Main, event handlers x
-    
-    SpriteBox b = new SpriteBox(PressBox,DragBox,myNode);
+    Book b = new Book(PressBox,DragBox,"label","text","note");
 
     //adjusthorizontal
-    double xpos=myNode.getX();
-    double ypos=myNode.getY();
+    double xpos=b.getX();
+    double ypos=b.getY();
     b.setTranslateX(xpos);
     b.setTranslateY(ypos); 
-    setActiveSprite(b);
-    /*
-    System.out.println("getx: "+ xpos+ " gety: "+ypos);
-    if (xpos==this.spriteX) {
-        advanceSpritePositionHor();
-        myNode.setX(this.spriteX);
-        xpos=this.spriteX;
-    }
-    */
-    //ypos=snapYtoShelf(ypos);
-    //myNode.setY(ypos);
-   
-    System.out.println("getx: "+ this.spriteX+ " gety: "+this.spriteY);
-        //System.exit(0);
-    addSpriteToStage(b); //differs from Main 
+    setActiveBook(b);
+    addBookToStage(b); //differs from Main 
     if (b==null) {
-        System.out.println("SpriteBox null in addnodetoview");
+        System.out.println("Book null in addnodetoview");
         System.exit(0);
     }
    
@@ -1373,72 +1181,81 @@ private void addNodeToView (ClauseContainer myNode) {
     System.out.println(this.spriteGroup);  
 }
 
-//Method to add a single child node to the open node in this view and update parent node (data)
+/*
+Internal method to add sprite to the Group/Pane of this Node Viewer 
+This is to add an existing GUI 'box/node' to the Child Node section of this Viewer.
+i.e. this adds a specific object, rather than updating the view from whole underlying data set.
+*/
 
-private void addChildNodeToDisplayNode(ClauseContainer myChildNode) {
-    getDisplayNode().addChildNode(myChildNode);
-    myChildNode.setParentNode(getDisplayNode());
+private void addBookToStage(Book myBook) {
+    if (myBook==null) {
+        System.out.println("No sprite to add");
+        System.exit(0);
+    }
+    System.out.println("Sprite in addSprite, before addition");
+    System.out.println(myBook);
+    System.out.println("SpriteGroup in addSprite, before addition");
+    System.out.println(this.spriteGroup);
+    
+    this.spriteGroup.getChildren().add(myBook);
+    this.booksOnShelf.add(myBook);  //add to metadata collection TO DO: cater for deletions.
+    setActiveBook(myBook); //local information
+    System.out.println("SpriteGroup in addSprite, after addition");
+    System.out.println(this.spriteGroup);
+    
+    System.out.println("Current sprite group is "+getSpriteGroup().toString()); 
+    positionBookOnStage(myBook);
+    advanceBookPositionHor(); //default is to space along shelf
+    
 }
 
-
-public void removeSpriteFromStage(SpriteBox thisSprite) {
-    thisSprite.unsetParentNode(); //data
+public void removeBookFromStage(Book thisBook) {
     //TO DO: remove Node (data) ? is it cleaned up by GUI object removal?
-    this.spriteGroup.getChildren().remove(thisSprite); //view/GUI
-    thisSprite.resetLocation(); //??
+    this.spriteGroup.getChildren().remove(thisBook); //view/GUI
+    //to do: remove Book from ArrayList too.
     getStage().show(); //refresh GUI
     
 }
 
-public void setBooksOnShelf(ArrayList<ClauseContainer> inputObject) {
+public void setBooksOnShelf(ArrayList<Book> inputObject) {
     this.booksOnShelf = inputObject;
 }
 
-public ArrayList<ClauseContainer> getBooksOnShelf() {
+public ArrayList<Book> getBooksOnShelf() {
     return this.booksOnShelf;
 }
 
-public void positionSpriteOnStage(SpriteBox mySprite) {
+public void positionBookOnStage(Book myBook) {
         
-    if (mySprite!=null) {  //might be no current sprite if not dbl clicked
-            mySprite.endAlert();
+    if (myBook!=null) {  //might be no current sprite if not dbl clicked
+            myBook.endAlert();
     }
-    //advanceSpritePosition();
-    //if sprite does not have its own location, use GUI location
-    //use Translate relative to origin of node (i.e. not scene as a whole)
-    if (mySprite.getX()!=0 || mySprite.getY()!=0) {
-        double x = mySprite.getX();
-        double y = mySprite.getY();
-        mySprite.setTranslateX(x);
-        mySprite.setTranslateY(y);
+        if (myBook.getY()!=0) {
+            double ypos=snapYtoShelf(myBook.getY());
+            myBook.setY(ypos);
+            myBook.setTranslateY(myBook.getY());
+            myBook.setTranslateX(myBook.getX());
+        }
+        else {
+            myBook.setTranslateX(this.spriteX);
+            myBook.setTranslateY(this.spriteY);
+        }
     }
-    else {
-        mySprite.setTranslateX(this.spriteX);
-        mySprite.setTranslateY(this.spriteY); 
-    } 
-    mySprite.setStageLocation(MainStage.this); //needed if stage is not o/w tracked
-    if (mySprite.getStageLocation()!=MainStage.this) {
-        System.out.println("Problem with adding sprite:"+mySprite.toString());
-    }
-    else {
-        System.out.println("Positioned sprite at:"+mySprite.toString()+" ("+spriteX+","+spriteY+")");
-    }
-}
 
-public void resetSpriteOrigin() {
+public void resetBookOrigin() {
     this.spriteY=20;
     this.spriteX=100;
 }
 
 //new 'shelf'??
-private void newSpriteColum() {
+private void newBookColumn() {
     this.spriteY=this.spriteY+this.shelfgap;
     this.spriteX=100;
 }
 
 //TO DO: Reset sprite positions when re-loading display.  To match a Grid Layout.
 //Layout horizontall on one shelf.
-private void advanceSpritePositionHor() {
+private void advanceBookPositionHor() {
         if (this.spriteX>880) {
                 this.spriteY=spriteY+this.shelfgap; //drop down
                 this.spriteX=0;
@@ -1453,7 +1270,7 @@ private void advanceSpritePositionHor() {
 //The alternative to this is to package boxes in a list view.
 //"A ListView displays a horizontal or vertical list of items from which the user may select, or with which the user may interact."
 //Observable List https://docs.oracle.com/javase/8/javafx/api/javafx/scene/control/ListView.html
-private void advanceSpritePositionVert() {
+private void advanceBookPositionVert() {
         if (this.spriteY>660) {
                 this.spriteY=spriteY+this.shelfgap;
                 this.spriteX=0;
@@ -1462,7 +1279,6 @@ private void advanceSpritePositionVert() {
                 this.spriteY = this.spriteY+this.shelfgap;
             }
 }
-
 
 //max screen dimensions
 public double getBigX() {

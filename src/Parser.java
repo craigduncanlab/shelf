@@ -5,8 +5,14 @@ import java.io.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*; //scanner, HashMap etc
+// event handlers
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+
 
 public class Parser {
+EventHandler PressBox;
+EventHandler DragBox;
 
 //default constructor
 public Parser(){
@@ -14,13 +20,15 @@ public Parser(){
 }
 
 //read in an .md file and then process it
-//This could return an Array of ClauseContainers, not one.
+//This could return an Array of Books, not one.
 
-public ClauseContainer parseMDfile(String contents) {
+public Book parseMDfile(EventHandler pb,EventHandler db,String contents) {
+	this.PressBox=pb;
+	this.DragBox=db;
     System.out.println("Begin parsing MD file");
     // for now, no processing of contents
-    //ClauseContainer newNode = new ClauseContainer("Test",contents,"notes");
-    ClauseContainer newNode = parseMDblock(contents);
+    //Book newNode = new Book("Test",contents,"notes");
+    Book newNode = parseMDblock(contents);
     System.out.println("Finished parsing MD file");
     return newNode;
 }
@@ -29,11 +37,11 @@ public ClauseContainer parseMDfile(String contents) {
 Parsing algo:
 1. read file
 2. split into heading blocks (make note of whether #- which is 'not visible state')
-3. split each block further into an individual ClauseContainer which has:
+3. split each block further into an individual Book which has:
 (a) the label from the same row as the # heading
 (b) main markdown section (up to next block).  This inclues single line markdown.
 (c) any multi-line notes (using ``` code or /* comments markup)
-4. Store ClauseContainers in an array and return...
+4. Store Books in an array and return...
 
 */
 
@@ -42,6 +50,7 @@ Parsing algo:
 public ArrayList<String> splitMDfile(String input) {
 	ArrayList<Integer> fileindex = new ArrayList<Integer>();
 	StringBuffer currentblock = new StringBuffer();
+	ArrayList<String>myLines = new ArrayList<String>();
 	ArrayList<String>newBlocks = new ArrayList<String>();
 	int filecount=0;
 	int nl=0;
@@ -56,8 +65,10 @@ public ArrayList<String> splitMDfile(String input) {
 			while (scanner1.hasNextLine()) {
 				//Array currentNotes[] = new Array(2);
 				String thisRow=scanner1.nextLine();
+				myLines.add(thisRow);
 				//Scanner scanner2= new Scanner(thisRow).useDelimiter("#");
 				
+				//This is a short row
 				System.out.println(nl+") "+thisRow);
 				if (thisRow.length()<3) {
 					fileindex.add(1);
@@ -103,41 +114,48 @@ public ArrayList<String> splitMDfile(String input) {
 					System.out.println("No MD block content");
 					return null;
 				}
-			
+			// at this point we have fileindex array with '0's for # lines and '1's for other lines.
 			int cb=0;
 			int cl=0;
 			while (scanner2.hasNextLine()) {
 				String thisLine=scanner2.nextLine();
-
-				if (fileindex.get(cl)==0) {
+				//if this row is a heading
+				System.out.println(cl+") ["+fileindex.get(cl)+"] "+thisLine);
+				if (fileindex.get(cl)==0) { //if we encounter start of next block
 					if(cl>cb) {
 						currentblock.append("\n"); //EOL
 						String thisBlock=currentblock.toString();
-						newBlocks.add(thisBlock);
-						currentblock.delete(0,currentblock.length());
-						currentblock.append(thisLine);
+						newBlocks.add(thisBlock); //add the current block to newBlocks array
+						currentblock.delete(0,currentblock.length()); //delete current block
+						currentblock.append(thisLine); //start new block
+						currentblock.append("\n"); 
 						cb=cl;
 					}
 					else {
 						currentblock.append(thisLine);
-						currentblock.append("\n"); //EOL;
+						currentblock.append("\n"); //EOL needed;
 					}
 				}
-				if (fileindex.get(cl)==1) {
+				//
+				if (fileindex.get(cl)==1) { 
 					currentblock.append(thisLine);
-					currentblock.append("\n"); //EOL
+					String thisBlock=thisLine;
+					currentblock.append("\n"); //EOL to end of each line in normal markdown lines.
 				}
+				
 				cl++;
-			} //end while
+			}   //end while
 			//tidy up last part of file
 			if(cl>cb) {
-				currentblock.append("\n"); //EOL
+				currentblock.append("\n"); //EOL needed?
 				String thisBlock=currentblock.toString();
 				newBlocks.add(thisBlock);
 				//currentblock.delete(0,currentblock.length());
 				//currentblock.append(thisLine);
+				System.out.println(thisBlock);
 				cb=cl;
 			}
+			
 			scanner2.close();
 			} //end try
 			catch (Throwable t)
@@ -146,15 +164,15 @@ public ArrayList<String> splitMDfile(String input) {
 				//System.exit(0);
 				return null;
 			}
-			//System.out.println(newBlocks);
+			System.out.println(newBlocks);
 			//System.exit(0);
 			return newBlocks;
 }
 
 //called externally to work on contents of an individual Markdown block
-public ClauseContainer parseMDblock(String input) {
+public Book parseMDblock(String input) {
 	ArrayList<Integer> fileindex = makeMDfileindex(input);
-	ClauseContainer newNode = MDfileFilter(fileindex,input);
+	Book newNode = MDfileFilter(fileindex,input);
 	return newNode;
 }
 
@@ -337,7 +355,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 
 
 //process/filter a markdown file using the prepared index of line content types
-public ClauseContainer MDfileFilter(ArrayList<Integer> fileindex,String input) {
+public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		StringBuffer mdStream = new StringBuffer();
 		StringBuffer notesStream = new StringBuffer();
 		StringBuffer codenotesStream = new StringBuffer();
@@ -450,7 +468,7 @@ public ClauseContainer MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		String label1=label.replace("# -",""); //remove hash but leave minus sign?
 		String label2=label1.replace("# ","");
 		//omits in-line coded notes for now
-		ClauseContainer newNode=new ClauseContainer(label2,contents,notes); //constructor: make new meta data with label of book
+		Book newNode=new Book(this.PressBox,this.DragBox,label2,contents,notes); //constructor: make new meta data with label of book
 		newNode.seturlpath(urlString);
 		newNode.setdocfilepath(filepathString);//filepath,urlpath,
 		newNode.setXY(x,y); //x,y  must be doubles

@@ -83,7 +83,7 @@ MainStage targetSM = new MainStage();
 WhiteBoard defaultWhiteBoard = new WhiteBoard();
 //current dialogue
 Stage myStage;
-ClauseContainer targetNode = new ClauseContainer();
+Book targetNode = new Book();
 Desktop desktop; 
 /*
 The FileChooser class is located in the javafx.stage package 
@@ -148,57 +148,15 @@ private VBox vertSetup(HBox myhbox) {
 	return myvbox;
 }
 
-public void makeSave(MainStage targetSM, ClauseContainer myNode) {
+public void makeSave(MainStage targetSM, Book myNode) {
 	this.targetSM = targetSM; //store for later
 	this.targetNode = myNode; //store for later
 	//make this dialogue
 	makeDialogue("Save Template As",0);
 }
 
-public void saveName(ClauseContainer myNode) {
-  TemplateUtil myUtil = new TemplateUtil();
-  String filename = myNode.getDocName();
-  //***** myUtil.saveTemplate(myNode,filename);
-  myUtil.saveTemplateSingle(myNode,filename);
-  myUtil.saveTidyTemplate(myNode,filename);
-  System.out.println("Save template completed");
-}
-
-//Make the new stage e.g. called from OpenTempl in Main, passing Stage_WS as argument
-// This creates a new Load stage dialogue
-// It does not 'close' the stage, and requires a separate 'close event' loop
-
-/*
-public void makeLoad() {
-	//this.targetSM = targetSM; //store for later.  Not used?
-	//this.targetNode = null; //store for later
-	//make this dialogue
-	//makeDialogue("Load Template",1);
-  //FileChooser newFC = new FileChooser();
-  //Makes a custom button for the stage
-   final Button openButton = new Button("Open a Markdown File");
-         
-         openButton.setOnAction(
-            new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(final ActionEvent e) {
-                    final FileChooser fileChooser = new FileChooser();
-                    File file = fileChooser.showOpenDialog(LoadSave.this.myStage);
-                    if (file != null) {
-                      LoadSave.this.processMarkdown(file);
-                    } //end if
-                } //end new defn of event handler
-            });
-  Stage myChooserStage = makeLoaderStage(openButton);  // this is not attached to Stage_WS at all?
-  myChooserStage.show();
-}
-*/
 public void makeChooser() {
-  //this.targetSM = targetSM; //store for later.  Not used?
-  //this.targetNode = null; //store for later
-  //make this dialogue
-  //makeDialogue("Load Template",1);
-  //FileChooser newFC = new FileChooser();
+ 
   //Makes a custom button for the stage
    final Button openButton = new Button("Select Filepath");
          final FileChooser fileChooser = new FileChooser();
@@ -216,7 +174,7 @@ public void makeChooser() {
   myChooserStage.show();
 }
 
-public void simpleOpen(ClauseContainer myNode) {
+public void simpleOpen(Book myNode) {
   System.out.println(myNode.toString());
   this.targetSM.OpenNewNodeNow(myNode); //TO DO: make this open up in whiteboard.  Should be triggered as if double click on a red box.  i.e. changes focus.
 }
@@ -279,40 +237,6 @@ public void Close() {
 	this.myStage.close();
 }
 
-
-/*
-public void processMarkdown(File file) {
-  //String filename=System.out.print(file.toString()); // this is full path
-    String last=file.getName();
-    last=last.substring(last.length() - 3);
-    if (last.equals(".md")==true) {
-      TemplateUtil myUtil = new TemplateUtil();
-      String contents = myUtil.getFileText(file);
-      //Recents myR = new Recents();
-      //myR.updateRecents(file.getName());
-      Parser myParser=new Parser();
-      // Split the MD file
-      ArrayList<String> blocklist= myParser.splitMDfile(contents);
-      int length = blocklist.size();
-      //System.out.println(length);
-      //System.exit(0);
-      if (length>0) {
-        Iterator<String> iter = blocklist.iterator(); 
-          while (iter.hasNext()) {
-              ClauseContainer newNode=myParser.parseMDfile(iter.next());
-              if (newNode!=null) {
-                System.out.println("Starting iteration of lines in MD");
-                System.out.println(LoadSave.this.targetSM);
-                LoadSave.this.targetSM.OpenNewNodeNow(newNode);
-              }
-         } //end while
-      } //end if
-      
-      System.out.println("Finished parse in 'open button' makeStage");
-      LoadSave.this.ListOfFiles();// print out current directory
-    }
-}
-*/
 //This is a separate Loader stage.  Can run it off menu selector or keystrokes.
 //Accepts button as input: currently used for loading markdown files
 //It is opened up as a prompt on the Stage_WS, and then adds nodes/boxes to the Stage_WS.
@@ -320,26 +244,6 @@ public void processMarkdown(File file) {
 private Stage makeLoaderStage(Button openButton) {
         this.myStage= new Stage();
         this.myStage.setTitle("Open File");
- 
-        /*
-        final Button openMultipleButton = new Button("Open Multiple MD");
- 
-        openMultipleButton.setOnAction(
-            new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(final ActionEvent e) {
-                    List<File> list =
-                        fileChooser.showOpenMultipleDialog(LoadSave.this.myStage);
-                    /*if (list != null) {
-                        for (File file : list) {
-                            openFile(file);
-                        }
-                    }
-                    
-                }
-            });
-        */
- 
         final GridPane inputGridPane = new GridPane();
  
         GridPane.setConstraints(openButton, 0, 0);
@@ -375,19 +279,6 @@ EventHandler<ActionEvent> clickOpen =
             System.out.println(testoutput);
             LoadSave.this.inputTextArea.setText("Blah");
             LoadSave.this.ListOfFiles();
-            /*TemplateUtil myUtil = new TemplateUtil();
-            String filename=inputTextArea.getText();
-            //ClauseContainer newNode = myUtil.getTemplate(filename); 
-            ClauseContainer newNode = myUtil.getStructuredData(filename); 
-            if (newNode!=null) {
-                LoadSave.this.targetSM.OpenNewNodeNow(newNode,LoadSave.this.targetSM); //make this new whitebaord
-                 //TO DO: change whiteboard display node.  Add child node.
-                 //update recents list
-                Recents myR = new Recents();
-                myR.updateRecents(filename);
-                LoadSave.this.Close();
-            }
-          */
         }
       };
 
@@ -395,16 +286,7 @@ EventHandler<ActionEvent> clickSave =
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-	        //TO DO: just save entire MD file?
-	        /*
-          BookMetaStage myStage=LoadSave.this.targetSM.getCurrentFocus();
-	        ClauseContainer thisNode = LoadSave.this.targetNode;
-	        String filename=inputTextArea.getText();
-	        TemplateUtil myUtil = new TemplateUtil();
-	        myUtil.saveTemplateSingle(thisNode,filename);
-          myUtil.saveTidyTemplate(thisNode,filename);
-	        System.out.println("Save template completed");
-          */
+	        
 	        LoadSave.this.Close();
           }
       };
