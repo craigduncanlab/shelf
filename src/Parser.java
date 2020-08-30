@@ -123,39 +123,28 @@ public ArrayList<String> splitMDfile(String input) {
 				System.out.println(cl+") ["+fileindex.get(cl)+"] "+thisLine);
 				if (fileindex.get(cl)==0) { //if we encounter start of next block
 					if(cl>cb) {
-						currentblock.append("\n"); //EOL
+						//currentblock.append("\n"); //EOL
 						String thisBlock=currentblock.toString();
 						newBlocks.add(thisBlock); //add the current block to newBlocks array
 						currentblock.delete(0,currentblock.length()); //delete current block
-						currentblock.append(thisLine); //start new block
-						currentblock.append("\n"); 
+						//currentblock.append("\n"); 
 						cb=cl;
 					}
-					else {
-						currentblock.append(thisLine);
-						currentblock.append("\n"); //EOL needed;
-					}
+
 				}
-				//
-				if (fileindex.get(cl)==1) { 
-					currentblock.append(thisLine);
-					String thisBlock=thisLine;
-					currentblock.append("\n"); //EOL to end of each line in normal markdown lines.
-				}
-				
 				cl++;
+				if (thisLine.length()>=0) { //first line of new block at start of file
+					currentblock.append(thisLine);
+					currentblock.append(System.getProperty("line.separator"));
+					//currentblock.append("\n"); //EOL needed;
+				}
 			}   //end while
-			//tidy up last part of file
-			if(cl>cb) {
-				currentblock.append("\n"); //EOL needed?
-				String thisBlock=currentblock.toString();
-				newBlocks.add(thisBlock);
-				//currentblock.delete(0,currentblock.length());
-				//currentblock.append(thisLine);
-				System.out.println(thisBlock);
-				cb=cl;
-			}
-			
+			//add last block or we drop 1 each time
+			String thisBlock=currentblock.toString();
+			newBlocks.add(thisBlock); //add the current block to newBlocks array
+			currentblock.delete(0,currentblock.length()); //delete current block
+			//currentblock.append("\n"); 
+		
 			scanner2.close();
 			} //end try
 			catch (Throwable t)
@@ -323,7 +312,12 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 	                    		fileindex.add(8);//8=coordinates
 	                    	}
 	                    	else {
-	                    		fileindex.add(1); //md
+	                    		if (thisRow.length()>0) {
+	                    			fileindex.add(1); //md
+	                    		} 
+	                    		else {
+	                    			fileindex.add(10); //nothing
+	                    		}
 	                    	}
 	                    	break;
 	                } //end switch
@@ -385,23 +379,32 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				}
 				//markdown
 				if (fileindex.get(nl)==1) {
-					mdStream.append(thisLine);
-					mdStream.append("\n"); //EOL
+					//all lines get a separator afterwards
+						mdStream.append(thisLine);
+						//mdStream.append("\n"); //EOL
+						mdStream.append(System.getProperty("line.separator"));
+					
 				}
 				//notes line
 				if (fileindex.get(nl)==2 || fileindex.get(nl)==3) {
 					String replacement = thisLine.replace("/*","");
 					String replacement2 = replacement.replace("```","");
 					String replacement3 = replacement2.replace("*/","");
-					notesStream.append(replacement3);
-					notesStream.append("\n"); //EOL
+					if (replacement3.length()>=0) {
+						notesStream.append(replacement3);
+						//notesStream.append("\n"); //EOL
+						notesStream.append(System.getProperty("line.separator"));
+					}
 				}
 
 				//code notes line
 				if (fileindex.get(nl)==4 || fileindex.get(nl)==5) {
 					String replacement2 = thisLine.replace("```","");
-					codenotesStream.append(replacement2);
-					codenotesStream.append("\n"); //EOL
+					if (replacement2.length()>=0) {
+						codenotesStream.append(replacement2);
+						//codenotesStream.append("\n"); //EOL
+						codenotesStream.append(System.getProperty("line.separator"));
+					}
 				}
 				if(fileindex.get(nl)==5) {
 

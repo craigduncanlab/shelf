@@ -211,7 +211,6 @@ public void processMarkdown(File file) {
       ArrayList<String> blocklist= myParser.splitMDfile(contents); //should return file split into blocks per #
       int length = blocklist.size();  // number of blocks
       System.out.println(length);
-      //System.exit(0);
       if (length>0) {
         Iterator<String> iter = blocklist.iterator(); 
           while (iter.hasNext()) {
@@ -247,24 +246,25 @@ public void writeFileOut(String filepath) {
 
 //Convert this book meta into a String of markdown.  Only write links if data is there.
 public String convertBookMetaToString(Book myNode) {
-    String myOutput="# "+myNode.getBookLabel()+"\n\n"; //check on EOL
-    myOutput=myOutput+myNode.getMD()+"\n\n"; //check on EOL
+    String myOutput="# "+myNode.getBookLabel()+System.getProperty("line.separator"); //check on EOL
+    myOutput=myOutput+myNode.getMD()+System.getProperty("line.separator"); //check on EOL
     if (myNode.getdocfilepath().length()>5) {
         String tmp = myNode.getdocfilepath();
         Integer len = tmp.length();
-        myOutput=myOutput+"[filepath]("+tmp+")\n";
-        if (tmp.substring(len-1,len)!="\n") {
+        myOutput=myOutput+"[filepath]("+tmp+")"+System.getProperty("line.separator");
+        /*if (tmp.substring(len-1,len)!="\n") {
              myOutput=myOutput+"\n";
         }; 
+        */
     }
     if (myNode.geturlpath().length()>6) {
-        myOutput=myOutput+"[url]("+myNode.geturlpath()+")\n\n";
+        myOutput=myOutput+"[url]("+myNode.geturlpath()+")"+System.getProperty("line.separator");
     }
     if (myNode.getX()>0 || myNode.getY()>0) {
-        myOutput=myOutput+"[x,y]("+myNode.getX()+","+myNode.getY()+")\n\n";
+        myOutput=myOutput+"[x,y]("+myNode.getX()+","+myNode.getY()+")"+System.getProperty("line.separator");
     }
     if (myNode.getthisNotes().length()>0) {
-        myOutput=myOutput+"```\n"+myNode.getthisNotes()+"```\n\n";
+        myOutput=myOutput+"```"+System.getProperty("line.separator")+myNode.getthisNotes()+System.getProperty("line.separator")+"```"+System.getProperty("line.separator");
     }
     return myOutput;
 }

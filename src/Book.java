@@ -230,10 +230,10 @@ private String defaultHTML() {
 }
 
 //general update text function
-public void updateText(String htmltext, String name, String heading, String inputtext, String outputtext) {
+public void updateText(String htmltext, String name, String heading, String mdtext, String outputtext) {
 	setDocName(name);
     setBookLabel(heading);
-    setNotes(inputtext);
+    setNotes(mdtext);
     setOutputText(outputtext);
     setHTML(htmltext);
 }
