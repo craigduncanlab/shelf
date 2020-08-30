@@ -111,16 +111,8 @@ String filename = ""; //current filename for saving this stage's contents
 int location = 0;
 String category="";
 //Displayed Book (i.e. Node).  Will be updated through GUI.
+MainStage mainStage;
 Book activeBook;
-
-
-//Do not create new object here or circular constructors! Do in constructor
-
-//NODE'S TEXT CONTENT
-//For storing main text output area for this Stage (if any)
-//As of 26.4.2018: make this the default area to hold the node's own text (for stages that display a frame that is also an open node).  Always editable.
-
-//This TextArea is the GUI display object for the nodes' docnotes String.  Edit button will update the node's (Book) actual data
 TextArea filepathTextArea = new TextArea();
 TextArea urlTextArea = new TextArea();
 TextArea mdTextArea = new TextArea();
@@ -143,7 +135,6 @@ MenuBar localmenubar;
  final HTMLEditor htmlEditor = new HTMLEditor();
 //visibility checkbox
 CheckBox visibleCheck = new CheckBox("Visible");
-MainStage mainStage;
 
 /*
 Data collection will parallel GUI display of boxes. Provided stage manager can be serialised?
@@ -163,20 +154,6 @@ static Book currentTarget; //any Box(no?) or StageManager can set this to its di
 public BookMetaStage() {
     this.outputTextArea.setWrapText(true);
     this.notesTextArea.setWrapText(true);  //default
-}
-
-//temporary constructor for old windows (toolbars, output etc)
-public BookMetaStage(MainStage parent, String myTitle) {
-    Stage myStage = new Stage();
-    setStage(myStage);
-    setTitle(myTitle);
-    setDragBox(DragBox);
-    setJavaFXStageParent(parent);
-    this.mainStage=parent;
-    this.outputTextArea.setWrapText(true);
-    this.notesTextArea.setWrapText(true);  //default
-    setToolBarWindowPosition();
-    //cycleUserView();
 }
 
 //standard open node viewer constructor.  Used by 'OpenRedNodeNow' method in Main
