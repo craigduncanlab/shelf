@@ -308,6 +308,7 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
      }
  };
 
+ //nb: This picks up key presses even when entering data into book meta stage TextAreas.
  EventHandler<KeyEvent> NodeKeyHandler = new EventHandler<KeyEvent>() {
  @Override
  public void handle(KeyEvent ke) {
@@ -402,6 +403,7 @@ private void updateScene (Scene myScene) {
      getStage().setScene(myScene); //JavaFX in the GUI
      this.localScene = myScene; //local copy/reference
 }
+
 
 //SIMPLE STAGE GETTERS AND SETTERS FOR CUSTOM GUI.  WRAPPER FOR JAVAFX SETTERS
 
@@ -574,7 +576,7 @@ public void restoreBookMeta() {
 
         filepathTextArea.setText(updateNode.getdocfilepath());
         urlTextArea.setText(updateNode.geturlpath());
-        bookLabelTextArea.setText(updateNode.getHeading());
+        bookLabelTextArea.setText(updateNode.getLabel());
         mdTextArea.setText(updateNode.getMD()); //update the markdown text
         notesTextArea.setText(updateNode.getNotes());
         visibleCheck.setSelected(updateNode.getVisible()); //check box
@@ -588,7 +590,7 @@ public void updateBookMeta() {
         System.out.println("This book box : "+thisBook.toString());
         //System.exit(0);
         thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),notesTextArea.getText());
-        thisBook.setBookLabel(bookLabelTextArea.getText()); //update book label if needed
+        thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
          //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
         //System.exit(0);
@@ -597,8 +599,6 @@ public void updateBookMeta() {
 
 private void setActiveBook(Book myBook) {
     this.activeBook = myBook;
-    String myFileLabel = myBook.getDocName();
-    //setFilename(myFileLabel+".ser"); //default for serialisation only
 }
 
 public Book getActiveBook() {
@@ -711,6 +711,7 @@ public TextArea makeTextArea() {
 }
 
 //The scene only contains a pane to display sprite boxes
+/*
 private Scene makeSceneForBoxes(ScrollPane myPane) {
         
         Scene tempScene = new Scene (myPane,650,400); //default width x height (px)
@@ -725,7 +726,7 @@ private Scene makeSceneForBoxes(ScrollPane myPane) {
         updateScene(tempScene);
         return tempScene;
 }
-
+*/
 //Method to change title depending on data mode the node is in.
 private String getTitleText(String myString) {
     System.out.println("Make Scene. User Node View: "+getActiveBook().getUserView());
@@ -768,6 +769,7 @@ private void makeSceneForBookMetaView() {
         //TEXT AREAS
         bookLabelTextArea.setPrefRowCount(1);
         mdTextArea.setPrefRowCount(20); //for markdown.  Add to boxPane
+        mdTextArea.setWrapText(true);
         notesTextArea.setPrefRowCount(7); //for notes
         notesTextArea.setWrapText(true);
         filepathTextArea.setPrefRowCount(1);
@@ -866,7 +868,7 @@ private void makeSceneForBookMetaView() {
         tempScene.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
          @Override
          public void handle(MouseEvent mouseEvent) {
-                 System.out.println("Mouse click on a node (StageManager scene) detected! " + mouseEvent.getSource());
+                 System.out.println("Mouse click on Meta Stage detected! " + mouseEvent.getSource());
                  //setStageFocus("document");
                  /*
                  if (!getCurrentFocus().equals(BookMetaStage.this)) {

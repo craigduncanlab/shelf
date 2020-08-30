@@ -89,7 +89,7 @@ int spriteY = 0;
 String stageName = "";
 String stageTitle = "";
 
-Book reference_ParentNode = new Book();
+//Book reference_ParentNode = new Book();
 Stage localStage = new Stage();
 Node rootNode; //Use Javafx object type
 Group spriteGroup;
@@ -97,7 +97,7 @@ ScrollPane spriteScrollPane;
 Pane spritePane;
 Scene localScene;
 Book focusSprite; //for holding active sprite in this scene.  Pass to app.
-Book parentBox;//to hold the calling box for this viewer.  
+//Book parentBox;//to hold the calling box for this viewer.  
 //Do not create new object here or circular constructors! Do in constructor
 
 String filename = ""; //current filename for saving this stage's contents
@@ -105,7 +105,7 @@ String filename = ""; //current filename for saving this stage's contents
 int location = 0;
 String category="";
 //Displayed Book (i.e. Node).  Will be updated through GUI.
-Book displayNode = new Book();
+//Book displayNode = new Book();
 int doccount=0; //document counter for this stage
 
 //NODE'S TEXT CONTENT
@@ -136,7 +136,6 @@ CheckBox visibleCheck = new CheckBox("Visible");
  //To hold Stage with open node that is current
 BookMetaStage bookMetaInspectorStage; 
 Integer shelf1_Y;
-Integer shelfgap;
 Integer shelfthickness=15;
 /*
 Data collection will parallel GUI display of boxes. Provided stage manager can be serialised?
@@ -154,7 +153,7 @@ double orgTranslateY;
 
 //Track current stage that is open.  Class variables
 static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
-static Book currentTarget; //any Box(no?) or BookMetaStage can set this to its display node
+//static Book currentTarget; //any Box(no?) or BookMetaStage can set this to its display node
 
 //constructor
 public MainStage() {
@@ -217,7 +216,7 @@ public void processMarkdown(File file) {
               Book newNode=myParser.parseMDfile(PressBox,DragBox,iter.next());
               if (newNode!=null) {
                 System.out.println("Starting iteration of block lines in MD");
-                OpenNewNodeNow(newNode);
+                AddNewBookFromParser(newNode);
               }
          } //end while
       } //end if
@@ -246,7 +245,7 @@ public void writeFileOut(String filepath) {
 
 //Convert this book meta into a String of markdown.  Only write links if data is there.
 public String convertBookMetaToString(Book myNode) {
-    String myOutput="# "+myNode.getBookLabel()+System.getProperty("line.separator"); //check on EOL
+    String myOutput="# "+myNode.getLabel()+System.getProperty("line.separator"); //check on EOL
     myOutput=myOutput+myNode.getMD()+System.getProperty("line.separator"); //check on EOL
     if (myNode.getdocfilepath().length()>5) {
         String tmp = myNode.getdocfilepath();
@@ -452,6 +451,7 @@ public MenuBar getMenuBar() {
 
 /* ----- DATA (DISPLAY) NODE FUNCTIONS ----- */
 
+/*
 //set the parent node for Nodes enclosed in boxes (i.e. level above)
 private void setRefParentNode(Book myParentID) {
     this.reference_ParentNode = myParentID;
@@ -460,7 +460,7 @@ private void setRefParentNode(Book myParentID) {
 private Book getRefParentNode() {
     return this.reference_ParentNode;
 }
-
+*/
 /* GUI FUNCTIONS FOR WORKING WITH BOXES, NODES */
 
 /* ----- GENERAL GUI FUNCTIONS ----- */
@@ -502,6 +502,11 @@ public ScrollPane getSpriteScrollPane() {
     return this.spriteScrollPane;
 }
 
+
+public void clearAllBooks() {
+    this.spriteGroup.getChildren().clear();
+    this.booksOnShelf.clear(); 
+}
 
 public void swapSpriteGroup(Group myGroup) {
     Pane myPane = getSpritePane();
@@ -1144,8 +1149,8 @@ public Book getActiveBook() {
 
 
 //Called by LoadSave and iterates through the nodes in the parsed MD file.
-public void OpenNewNodeNow(Book newBook) throws NullPointerException {
-    System.out.println("SpriteGroup in OpenNewNodeNow");
+public void AddNewBookFromParser(Book newBook) throws NullPointerException {
+    System.out.println("SpriteGroup in AddNewBookFromParser");
     System.out.println(this.spriteGroup);
     //System.exit(0);
     System.out.println("OpenNewNode now...");
@@ -1249,7 +1254,7 @@ public void resetBookOrigin() {
 
 //new 'shelf'??
 private void newBookColumn() {
-    this.spriteY=this.spriteY+this.shelfgap;
+    this.spriteY=this.spriteY+this.shelf1_Y;
     this.spriteX=100;
 }
 
@@ -1257,7 +1262,7 @@ private void newBookColumn() {
 //Layout horizontall on one shelf.
 private void advanceBookPositionHor() {
         if (this.spriteX>880) {
-                this.spriteY=spriteY+this.shelfgap; //drop down
+                this.spriteY=spriteY+this.shelf1_Y; //drop down
                 this.spriteX=0;
             }
             else {
@@ -1272,11 +1277,11 @@ private void advanceBookPositionHor() {
 //Observable List https://docs.oracle.com/javase/8/javafx/api/javafx/scene/control/ListView.html
 private void advanceBookPositionVert() {
         if (this.spriteY>660) {
-                this.spriteY=spriteY+this.shelfgap;
+                this.spriteY=spriteY+this.shelf1_Y;
                 this.spriteX=0;
             }
             else {
-                this.spriteY = this.spriteY+this.shelfgap;
+                this.spriteY = this.spriteY+this.shelf1_Y;
             }
 }
 

@@ -215,7 +215,7 @@ private MenuBar makeMenuBar() {
         MenuItem OpenTempl = new MenuItem("Open MD document");
         MenuItem SaveName = new MenuItem("Save (current bookshelf)");
         MenuItem SaveTempl = new MenuItem("Save As (selected)");
-        MenuItem SaveAllTempl = new MenuItem("Save All");
+        MenuItem ClearBookshelfMenuItem = new MenuItem("Clear Bookshelf");
         MenuItem OutputWork = new MenuItem("Output as Text");
         MenuItem PrintTree = new MenuItem("Print as HTML");
         //PrintTree.setOnAction(writeHTML);
@@ -229,7 +229,7 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-         menuFile.getItems().addAll(OpenTempl,this.theRecentMenu,SaveName,SaveTempl,SaveAllTempl,
+         menuFile.getItems().addAll(OpenTempl,this.theRecentMenu,SaveName,SaveTempl,ClearBookshelfMenuItem,
             OutputWork,
             PrintTree,exit);
         
@@ -246,6 +246,7 @@ private MenuBar makeMenuBar() {
         SaveName.setOnAction(saveTemplate);
         SaveTempl.setOnAction(saveTemplate); //docname
         OpenTempl.setOnAction(openTemplate);
+        ClearBookshelfMenuItem.setOnAction(clearBookShelf);
        
         /* --- MENU BAR --- */
         menuBar.getMenus().addAll(menuFile, menuBooks);     
@@ -280,6 +281,14 @@ private void refreshRecentMenu() {
         System.out.println("menu item added:"+filename);
         this.theRecentMenu.getItems().add(myMI);
     }
+}
+
+//clearBooksFromShelf
+private void clearBooksFromShelf() {
+    //clear filepath too, to prevent saving over?
+    this.currentOpenFile = new File ("default.md");
+    Stage_WS.clearAllBooks();
+    Stage_WS.resetBookOrigin();
 }
 
 /*
@@ -409,6 +418,16 @@ public void deleteSpriteGUI(Book myBook) {
         @Override 
         public void handle(ActionEvent event) {
             Main.this.mainFileLoader();
+           
+            }
+        };
+
+        //to load a new template to workspace (e.g. from markdown)
+        EventHandler<ActionEvent> clearBookShelf = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Main.this.clearBooksFromShelf();
            
             }
         };

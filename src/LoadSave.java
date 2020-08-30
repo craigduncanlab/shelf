@@ -174,10 +174,12 @@ public void makeChooser() {
   myChooserStage.show();
 }
 
+/*
 public void simpleOpen(Book myNode) {
   System.out.println(myNode.toString());
   this.targetSM.OpenNewNodeNow(myNode); //TO DO: make this open up in whiteboard.  Should be triggered as if double click on a red box.  i.e. changes focus.
 }
+*/
 
 // args is redundant input argument to List: String args[]
 // TO  throws IOException 

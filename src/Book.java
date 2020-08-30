@@ -94,7 +94,7 @@ public Book(EventHandler PressBox, EventHandler DragBox, String label, String te
 	setHTML(text); //TO DO: make this auto-update into HTML note MD using Stage editor
 	setNotes(note);
 	setDocName(label); //to be phased out.  It's just a MD section.
-    setBookLabel(label);
+    setLabel(label);
     setOutputText("");
     //Works with MainStage object
     Book.this.setOnMousePressed(PressBox);
@@ -107,18 +107,28 @@ public Book(EventHandler PressBox, EventHandler DragBox, String label, String te
 public void updateMDText(String label, String text, String note) {
 	//setDocName(name);
 	setMD(text);
-    setBookLabel(label);
+    setLabel(label);
     setNotes(note);
 }
 
+//general update text function
+/*
+public void updateText(String htmltext, String name, String label, String mdtext, String outputtext) {
+	setDocName(name);
+    setBookLabel(label);
+    setNotes(mdtext);
+    setOutputText(outputtext);
+    setHTML(htmltext);
+}
+*/
 //(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),notesTextArea.getText())
 //general update text function
-public void updateEditedText(String filepath,String urlpath,String label, String text, String note) {
+public void updateEditedText(String filepath,String urlpath,String label, String mdtext, String note) {
 	//setDocName(name);
 	setdocfilepath(filepath);
 	seturlpath(urlpath);
-	setBookLabel(label);
-	setMD(text);
+	setLabel(label);
+	setMD(mdtext);
     setNotes(note);
     //setOutputText(outputtext);
     //setHTML(htmltext);
@@ -207,7 +217,7 @@ Also enables the GUI to toggle the 'view' - i.e. to change the node's preference
 */
 
 public String getHeading() {
-	return getBookLabel();
+	return this.heading;
 }
 
 private String getShortname () {
@@ -227,15 +237,6 @@ public String getNotes () {
 private String defaultHTML() {
 	//return "<html dir="ltr"><head></head><body contenteditable="true"></body></html>"
 	return "<html><head></head><body></body></html>";
-}
-
-//general update text function
-public void updateText(String htmltext, String name, String heading, String mdtext, String outputtext) {
-	setDocName(name);
-    setBookLabel(heading);
-    setNotes(mdtext);
-    setOutputText(outputtext);
-    setHTML(htmltext);
 }
 
 //set the text that will be the main descriptive or clause text in this node
@@ -264,7 +265,7 @@ private void setShortname (String myString) {
 }
 
 //set the text that will be the main text for identifying this node
-public void setBookLabel (String myString) {
+public void setHeading (String myString) {
 	this.heading = myString;
 }
 
@@ -289,10 +290,6 @@ private String publicText(String myString) {
 
 public String getthisNotes() {
 	return this.docnotes;
-}
-
-public String getBookLabel() {
-	return this.heading;
 }
 
 private String getthisShortname () {
@@ -386,7 +383,7 @@ public void doAlert() {
 
 private void updateAppearance() {
     
-    this.setLabel(this.docname);
+    //this.setLabel(this.docname);
     //this.SetColour(thisNode.getNodeColour());
     //this.SetDefaultColour(thisNode.getNodeColour());
     if (this.isAlert==true) {
