@@ -5,6 +5,8 @@ import java.util.*;
 //JavaFX
 import javafx.stage.Stage;
 import javafx.stage.Screen;
+//File chooser
+import javafx.stage.FileChooser;
 //Screen positioning
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.Insets;
@@ -31,6 +33,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.CheckBox;
+
 //Scene - general appearance & layout of Background Fills, Stages, nodes
 import javafx.scene.layout.Region;
 import javafx.scene.layout.Background;
@@ -226,7 +229,20 @@ public void processMarkdown(File file) {
     }
 }
 
-public void writeFileOut(String filepath) {
+public File openMarkdown() {
+         final FileChooser fileChooser = new FileChooser();
+        Stage myStage = new Stage();
+        myStage.setTitle("Open File");
+        File file = fileChooser.showOpenDialog(myStage);
+        if (file != null) {
+          processMarkdown(file);
+        } 
+        setFilename(file.getPath());
+    return file;
+}
+
+public void writeFileOut() {
+    String filepath=this.getFilename();
     System.out.println("Saving: "+filepath);
     ArrayList<Book> mySaveBooks = getBooksOnShelf();
     Iterator<Book> myIterator = mySaveBooks.iterator();
@@ -783,6 +799,7 @@ public double snapYtoShelf(double newTranslateY){
                  System.out.println("CMD-E pressed for sprite");
                  //currentBook.cycleBookColour();
             }
+
         }
     };
 
@@ -1162,9 +1179,34 @@ private Scene makeWorkspaceScene(Group myGroup) {
 
         workspaceScene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
              @Override
-             public void handle(KeyEvent keyEvent) {
-             System.out.println("Key pressed on workspace stage " + keyEvent.getSource());
-             //if source = ... only then change focus 
+             public void handle(KeyEvent ke) {
+             System.out.println("Key pressed on workspace stage " + ke.getSource());
+             //open book if CMD-O
+             if (ke.isMetaDown() && ke.getCode().getName().equals("I")) {
+                System.out.println("CMD-I pressed (will open metadata inspector stage)");
+                try {
+                    Book myBook= MainStage.this.getActiveBook();
+                    MainStage.this.OpenRedBookNow(myBook);
+                }
+                catch (NullPointerException e) {
+                    //do nothing
+                }
+            //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
+            }
+            if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
+                 System.out.println("CMD-S pressed for save");
+                 MainStage.this.writeFileOut();
+                 //currentBook.cycleBookColour();
+            }
+            if (ke.isMetaDown() && ke.getCode().getName().equals("W")) {
+                System.out.println("CMD-W pressed (will clear bookshelf)");
+                clearAllBooks();
+            }
+            if (ke.isMetaDown() && ke.getCode().getName().equals("O")) {
+                 System.out.println("CMD-O pressed for open");
+                 MainStage.this.openMarkdown();
+                 //currentBook.cycleBookColour();
+            }
             }
         });
         

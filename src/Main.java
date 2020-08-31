@@ -385,20 +385,14 @@ public void deleteSpriteGUI(Book myBook) {
 
     //FILE LOADERS AND SAVERS
     public void mainFileLoader() {
-         final FileChooser fileChooser = new FileChooser();
-        Stage myStage = new Stage();
-        myStage.setTitle("Open File");
-        File file = fileChooser.showOpenDialog(myStage);
-        if (file != null) {
-          this.currentOpenFile = file; //store for later
-          Main.this.Stage_WS.processMarkdown(file);
-        } 
+          this.currentOpenFile=Main.this.Stage_WS.openMarkdown();
     }
 
     //if we have a list of the Book objects inside the Bookes, and they have the relevant metadata (including x,y),
     //Then we do not need to actually query the Book class - we can just save as per clause container
     public void mainFileSaver() {
-        Main.this.Stage_WS.writeFileOut(this.currentOpenFile.getPath());
+        this.Stage_WS.setFilename(this.currentOpenFile.getPath());
+        this.Stage_WS.writeFileOut();
     }
 
     // --- EVENT HANDLERS

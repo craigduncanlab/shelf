@@ -299,9 +299,18 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
     System.out.println("KeyPress (unicode): " + ke.getCharacter());
     System.out.println("is Control Down: " + ke.isControlDown());
     System.out.println("is Meta(Command) Down: " + ke.isMetaDown());
+    //shortcuts
     if (ke.isMetaDown() && ke.getCode().getName().equals("Z")) {
          System.out.println("CMD-Z pressed");
          cycleUserView();
+    }
+    if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
+         System.out.println("CMD-S pressed (will save metadata)");
+         updateBookMeta();
+    }
+    if (ke.isMetaDown() && ke.getCode().getName().equals("W")) {
+         System.out.println("CMD-W pressed (will close metadata stage)");
+         closeThisStage();
     }
  }
 };
