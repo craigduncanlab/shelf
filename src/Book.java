@@ -65,7 +65,7 @@ String mdString="";
 // Visibility
 Boolean visible = true;
 //OLD spritebook variables
-Text boxlabel = new Text ("new box");//Default label text for every SpriteBox
+Text boxlabel = new Text ("new book");//Default label text for every SpriteBox
 //String contents;  // Text for the SpriteBox outside of Clause objects.  Currently unused.
 double myXpos = 100; //default for shelves. not needed?
 double myYpos = 50;
