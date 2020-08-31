@@ -245,8 +245,10 @@ public void writeFileOut(String filepath) {
 
 //Convert this book meta into a String of markdown.  Only write links if data is there.
 public String convertBookMetaToString(Book myNode) {
-    String myOutput="# "+myNode.getLabel()+System.getProperty("line.separator"); //check on EOL
-    myOutput=myOutput+myNode.getMD()+System.getProperty("line.separator"); //check on EOL
+    String myOutput="# "+trim(myNode.getLabel()); //check on EOL
+    String markdown=myNode.getMD();
+    String filteredMD=trim(markdown); //trims but inserts EOL
+    myOutput=myOutput+filteredMD; //check on EOL
     if (myNode.getdocfilepath().length()>5) {
         String tmp = myNode.getdocfilepath();
         Integer len = tmp.length();
@@ -266,6 +268,47 @@ public String convertBookMetaToString(Book myNode) {
         myOutput=myOutput+"```"+System.getProperty("line.separator")+myNode.getthisNotes()+System.getProperty("line.separator")+"```"+System.getProperty("line.separator");
     }
     return myOutput;
+}
+
+private String trim(String input){
+    Scanner scanner1 = new Scanner(input).useDelimiter(System.getProperty("line.separator"));
+    ArrayList<String> myList = new ArrayList<String>();
+    while (scanner1.hasNext()) {
+        String item=scanner1.next();
+        System.out.println(item+","+item.length());
+        myList.add(item);
+    }
+    Integer stop=0;
+    Integer trimcount=0;
+    Integer listlength=myList.size();
+    for (int i=listlength-1;i>0;i=i-1) {
+        int size = myList.get(i).length();
+        if (stop==0 && size==0) {
+            trimcount++;
+        }
+        else {
+            stop=1;
+        }
+    }
+    //System.out.println(trimcount);
+    //System.out.println(listlength-trimcount-1+","+myList.get(listlength-trimcount-1));
+    //System.out.println(listlength-trimcount+","+myList.get(listlength-trimcount));
+    StringBuffer newString = new StringBuffer();
+    int end = listlength-(trimcount-1);
+    if (end<0 || end>listlength-1) {
+        end=0; 
+        System.out.println("listlength: "+listlength+" trim: "+trimcount);
+        //System.exit(0);
+        end=listlength;
+    }
+    for (int i =0;i<end;i++) {
+        newString=newString.append(myList.get(i));
+        newString=newString.append(System.getProperty("line.separator"));
+    }
+    //System.out.println(newString);
+    //System.exit(0);
+    String output = newString.toString();
+    return output;
 }
 
 private void basicFileWriter(String logstring,String filename) {
@@ -1025,7 +1068,7 @@ private Group makeWorkspaceTree() {
 private Rectangle makeNewShelf(Integer x, Integer y) {
         
         Rectangle shelf1= new Rectangle();
-        shelf1.setFill(Color.WHITE); //default
+        shelf1.setFill(Color.BROWN); //default
         shelf1.setStroke(Color.BLACK); //stroke is border colour
         shelf1.setWidth(1000);
         shelf1.setHeight(15);
@@ -1039,8 +1082,8 @@ private Rectangle makeNewShelf(Integer x, Integer y) {
 
 private Scene makeWorkspaceScene(Group myGroup) {
         
-        //construct scene with its root node
-        Scene workspaceScene = new Scene (myGroup,getBigX(),getBigY(), Color.LIGHTGREY);
+        //construct scene with its root node Color.DARKSLATEGREY
+        Scene workspaceScene = new Scene (myGroup,getBigX(),getBigY(), Color.WHITE);
 
         
         //nb do not change focus unless click on sprite group

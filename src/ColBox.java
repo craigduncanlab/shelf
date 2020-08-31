@@ -50,7 +50,7 @@ public class ColBox extends Rectangle{
         Color myColour = colourPicker(mycol);
         this.boxcolour=mycol;//not updated yet?
         //update the Rectangle Colour for display; allows for transparency
-        setFill(myColour.deriveColor(0, 1.2, 1, 0.6));
+        setFill(myColour.deriveColor(0, 1.2, 1, 0.7));
      } 
 
      //this is public so can be generally useful to other objects

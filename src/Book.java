@@ -55,12 +55,6 @@ ArrayList<NodeCategory> nodeCatList = new ArrayList<NodeCategory>();
 Clause dataClause = new Clause(); 
 
 String nodecategory = "";
-int nodelevel = 0; //start at root 0 (project) allows future tree expansion
-int nodeGUIloc = 0; //to store Stage or GUI element where the node is located
-//(nodelocation can match Stage?)
-// store the node's preference for what GUI view & data view to start in.
-//(for current session only.  TO DO: store when saving.)
-String userNodeView;
 //counters
 int count=0; //general purpose counter for node
 int branchcount=0; //general purpose counter for this branch of node
@@ -77,10 +71,12 @@ double myXpos = 100; //default for shelves. not needed?
 double myYpos = 50;
 Boolean isAlert=false;
 //
-String defaultColour="white";
+Color defaultColour=Color.WHITE;
+Color userColour=Color.LIGHTBLUE;
 //String alertColour="red";
 Color alertColour=Color.RED;
 BookIcon myBookIcon;
+String userMetaView; //how to display metadata
 
 //empty constructor no arguments
 public Book() {
@@ -146,11 +142,11 @@ public void seturlpath(String up) {
 //DEFAULT USER VIEWS
 //GUI layout.  This is currently not affected by follower mode.
 public String getUserView() {
-	return this.userNodeView;
+	return this.userMetaView;
 }
 
 public void setUserView(String myView) {
-	this.userNodeView=myView;
+	this.userMetaView=myView;
 }
 
 //Adjust mirror variables in Book - to be used to updated JavaFX variables
@@ -379,7 +375,7 @@ private void updateAppearance() {
        this.myBookIcon.setColour(this.alertColour);
     }
     else {
-        this.myBookIcon.setColour(Color.BLUE);
+    	this.myBookIcon.setColour(userColour);
     }
     }
 
@@ -387,7 +383,7 @@ public void SetColour(Color myColour) {
     this.myBookIcon.setColour(myColour);
 }
 
-public void SetDefaultColour (String mycol) {
+public void SetDefaultColour (Color mycol) {
     this.defaultColour=mycol;
 }
 
