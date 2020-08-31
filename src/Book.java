@@ -42,6 +42,7 @@ String docname=""; //to hold the container name or filename
 String docauthor=""; //to hold author name
 String docnotes=""; //to hold Document notes
 String shortname="";
+String booklabel="";
 String heading="";
 String date="";
 //this book's local reference for input/ouput
@@ -65,7 +66,7 @@ String mdString="";
 // Visibility
 Boolean visible = true;
 //OLD spritebook variables
-Text boxlabel = new Text ("new book");//Default label text for every SpriteBox
+Text bookspinetext = new Text ("new book");//Default label text for every SpriteBox
 //String contents;  // Text for the SpriteBox outside of Clause objects.  Currently unused.
 double myXpos = 100; //default for shelves. not needed?
 double myYpos = 50;
@@ -312,13 +313,13 @@ Position can also be set externally by the calling class */
 public void FXsetup() {
     this.myBookIcon = new BookIcon();   //Uses defaults.
     Font boxfont=Font.font ("Verdana", 12); //check this size on monitor/screen
-    this.boxlabel.setFont(boxfont);
-    this.boxlabel.setRotate(270); 
-    this.boxlabel.setFill(myBookIcon.colourPicker("black")); //black Text
-    this.boxlabel.setWrappingWidth(130);
+    this.bookspinetext.setFont(boxfont);
+    this.bookspinetext.setRotate(270); 
+    this.bookspinetext.setFill(myBookIcon.colourPicker("black")); //black Text
+    this.bookspinetext.setWrappingWidth(130);
     this.setCursor(Cursor.HAND);
     //add these other GUI child nodes to this Stackpane i.e. to this Object as a 'Stackpane' in JavaFX
-    this.getChildren().addAll(myBookIcon,boxlabel);  // - a BookIcon (type Rectangle) and a Text object
+    this.getChildren().addAll(myBookIcon,bookspinetext);  // - a BookIcon (type Rectangle) and a Text object
     updatePosition(); //set position relative to current scene?
 }
 
@@ -340,13 +341,22 @@ private void updatePosition() {
  
 //helper function to return label of underlying BookIcon 
 public String getLabel() {
-    return this.boxlabel.getText();
+    return this.booklabel; //return the stored value, not the book spine
+    //this.bookspinetext.getText();
+}
+
+private void setVisibleBookSpine(String myLabel) {
+	if (myLabel.length()>50) {
+		myLabel=myLabel.substring(0,50); //limit book label to first "# " + 10 characters
+		}
+		this.bookspinetext.setText(myLabel);
 }
 
  //helper function to set label of underlying BookIcon 
 public void setLabel(String myString) {
     if (!myString.equals("")) {
-        this.boxlabel.setText(myString);
+    	this.booklabel=myString;
+        setVisibleBookSpine(booklabel); //crop label but store booklabel
     }
 }
 

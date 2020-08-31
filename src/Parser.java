@@ -464,10 +464,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		if (label.length()<1) {
 			label="Default"; //for front of box.
 		}
-		//labels are wrapped.  Allow for 2 x 20 lines
-		if (label.length()>40) {
-			label=label.substring(0,40); //limit book label to first "# " + 10 characters
-		}
+		
 		String label1=label.replace("# -",""); //remove hash but leave minus sign?
 		String label2=label1.replace("# ","");
 		//omits in-line coded notes for now
