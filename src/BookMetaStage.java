@@ -56,6 +56,7 @@ import javafx.event.EventHandler;
 //for UI and Mouse Click and Drag
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.KeyCode;
 import javafx.scene.Cursor;
 // event handlers
 import javafx.event.ActionEvent;
@@ -312,6 +313,10 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
          System.out.println("CMD-W or CMD-I pressed (will close metadata stage)");
          System.out.println(htmlEditor.getHtmlText());
          closeThisStage();
+    }
+    //if just inspecting, use space to close
+    if (ke.getCode()==KeyCode.SPACE && targetBook.getUserView()=="HTMLonly") {
+        closeThisStage();
     }
  }
 };

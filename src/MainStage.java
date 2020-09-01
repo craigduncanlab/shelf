@@ -1255,6 +1255,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                     System.out.println("CMD-I pressed (will open metadata inspector stage)");
                     try {
                         Book myBook= MainStage.this.getActiveBook();
+                        myBook.setUserView("metaedithtml");
                         MainStage.this.OpenRedBookNow(myBook);
                     }
                     catch (NullPointerException e) {
@@ -1277,6 +1278,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                     System.out.println("SPACEBAR pressed (will open metadata inspector stage)");
                     try {
                         Book myBook= MainStage.this.getActiveBook();
+                        myBook.setUserView("HTMLonly");
                         MainStage.this.OpenRedBookNow(myBook);
                     }
                     catch (NullPointerException e) {
