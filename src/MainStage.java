@@ -122,6 +122,8 @@ TextArea mdTextArea = new TextArea();
 TextArea headingTextArea = new TextArea();
 TextArea inputTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
+TextArea shelfFileTextArea = new TextArea();
+Text shelfFileName = new Text("default.md");
 Text parentBoxText;
 Text headingBoxText;
 Text inputBoxText;
@@ -154,6 +156,7 @@ double orgSceneY;
 
 double orgTranslateX;
 double orgTranslateY;
+Main parentStage;
 
 //Track current stage that is open.  Class variables
 static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
@@ -168,11 +171,12 @@ public MainStage() {
 //workspace constructor.  Filename details will be inherited from loaded node.
 //Passes MenuBar from main application for now
 //Passes general eventhandlers from Main (at present, also uses these for the boxes)
-public MainStage(String title, MenuBar myMenu) {
+public MainStage(String title, MenuBar myMenu, Main parentStage) {
     //Book baseNode, 
     //category
     //NodeCategory NC_WS = new NodeCategory ("workspace",99,"white");
     //view
+    this.parentStage=parentStage;
     setTitle(title);
     setMenuBar(myMenu);
     //TO DO: setLocalSpriteSelect(processLocalBoxClick);
@@ -202,11 +206,12 @@ public MainStage(String title, MenuBar myMenu) {
 
 public void processMarkdown(File file) {
   //String filename=System.out.print(file.toString()); // this is full path
-    String last=file.getName();
-    last=last.substring(last.length() - 3);
+    String thefilename=file.getName();
+    String last=thefilename.substring(thefilename.length() - 3);
     if (last.equals(".md")==true) {
       TemplateUtil myUtil = new TemplateUtil();
       String contents = myUtil.getFileText(file);
+      this.shelfFileName.setText(thefilename); //update name on shelf view
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
@@ -366,6 +371,7 @@ public String getFilename() {
 
 public void setFilename(String myFile) {
     this.filename = myFile;
+    this.shelfFileName.setText(this.filename);
 }
 
 public int getDocCount() {
@@ -568,6 +574,8 @@ public ScrollPane getSpriteScrollPane() {
 public void clearAllBooks() {
     this.spriteGroup.getChildren().clear();
     this.booksOnShelf.clear(); 
+    this.resetBookOrigin();
+    this.parentStage.clearBooksFromShelf(); //to update general file name etc
 }
 
 public void swapSpriteGroup(Group myGroup) {
@@ -1051,6 +1059,14 @@ private Group makeWorkspaceTree() {
         Rectangle shelf2 = makeNewShelf(100,2*this.shelf1_Y+offset); 
         Rectangle shelf3 = makeNewShelf(100,3*this.shelf1_Y+offset);
         Rectangle shelf4 = makeNewShelf(100,4*this.shelf1_Y+offset); 
+        //make up a pane to display filename of bookshelf
+        Pane shelfFilePane = new Pane();
+        shelfFilePane.getChildren().add(this.shelfFileTextArea);
+        this.shelfFileTextArea.setText("default.md");
+        
+        shelfFileName = new Text("default.md");
+        shelfFileName.setY(20.0);
+        shelfFileName.setX(250.0); //575
 
         //setArcWidth(60);  //do this enough you get a circle.  option
         //setArcHeight(60);                
@@ -1080,7 +1096,7 @@ private Group makeWorkspaceTree() {
         //add the Border Pane and branches to root Group 
         myGroup_root.getChildren().addAll(myBP);
         //putting lines first means they appear at back
-        myGroup_root.getChildren().addAll(line,line2,line3,shelf1,shelf2,shelf3,shelf4); //line and shelf 1
+        myGroup_root.getChildren().addAll(line,line2,line3,shelf1,shelf2,shelf3,shelf4,shelfFileName); //line and shelf 1
         //store the root node for future use
         setSceneRoot(myGroup_root); //store 
         //for box placement within the Scene - attach them to the correct Node.

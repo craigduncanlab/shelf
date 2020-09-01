@@ -284,11 +284,12 @@ private void refreshRecentMenu() {
 }
 
 //clearBooksFromShelf
-private void clearBooksFromShelf() {
+public void clearBooksFromShelf() {
     //clear filepath too, to prevent saving over?
     this.currentOpenFile = new File ("default.md");
-    Stage_WS.clearAllBooks();
-    Stage_WS.resetBookOrigin();
+    //Stage_WS.clearAllBooks(); //do not call - circular reference
+    //Stage_WS.resetBookOrigin();
+    Stage_WS.setFilename(this.currentOpenFile.getPath());
 }
 
 /*
@@ -360,7 +361,7 @@ public void deleteSpriteGUI(Book myBook) {
             System.exit(0);
         }
         //The main Stage for Workspace.  
-        Stage_WS = new MainStage("Workspace", myMenu);  //sets up GUI for view
+        Stage_WS = new MainStage("Workspace", myMenu,Main.this);  //sets up GUI for view
         
         if (this.Stage_WS==null) {
             System.out.println("Stage_WS is null start application");
