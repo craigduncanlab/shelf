@@ -7,7 +7,7 @@ Copyright © 2017-2020, Craig Duncan www.craigduncan.com.au; http://github.com/c
 
 ## Repository License
 
-Repository URL: https://github.com/craigduncanlab/mpress ("Repository")
+Repository URL: https://github.com/craigduncanlab/shelf ("Repository")
 
 The copyright holder's programs located in the Repository (software) at any time are disclosed on the following terms and conditions.
 
@@ -23,4 +23,4 @@ If the software is removed from the Repository, these terms continue to apply to
 
 ## Last updated
 
-10 August 2020.
+1 September 2020.
