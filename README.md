@@ -45,7 +45,7 @@ When you have downloaded the JavaFX SDK package, locate the folder javafx-sdk-11
 
 Inside the downloaded javafx package, find the lib folder with the javafx .jar files in it.  There are also dylib files, which are needed too, but they are too large to store here.
 
-Rename the 'lib' folder to fxlib and put it into the root folder of the Shell project.
+Rename the 'lib' folder to fxlib and put it into the root folder of the Shelf project.
 
 # Compiling and running from source
 
