@@ -157,14 +157,16 @@ public BookMetaStage() {
 }
 
 //standard open node viewer constructor.  Used by 'OpenRedNodeNow' method in Main
-public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, EventHandler DragBox) {
+public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, EventHandler DragBox, EventHandler SaveKeyEvent) {
     //view
     setJavaFXStageParent(parent);
     this.mainStage=parent;
     //store event handlers as local instance variables
     setPressBox(PressBox);
     setDragBox(DragBox);
-    setKeyPress(NodeKeyHandler); //this can be different for workspace
+    //setKeyPress(NodeKeyHandler); //this can be different for workspace
+    setKeyPress(SaveKeyEvent); //put all key press events in one key event handler
+    setKeyPress(NodeKeyHandler); //add additional local handler
     //position
     setEditWindowPosition();
     //data: new 'parent' node based on category alone
@@ -270,10 +272,10 @@ public void setDragBox(EventHandler<MouseEvent> myEvent) {
 
 //Set key handler at level of stage in node editor
 private void setKeyPress(EventHandler<KeyEvent> myKE) {
-    getStage().addEventFilter(KeyEvent.KEY_PRESSED, NodeKeyHandler);
+    getStage().addEventFilter(KeyEvent.KEY_PRESSED, myKE);
 }
 
-//Set key handler at level of stage in node editor
+//Set key handler at level of stage  - from passed in event
 private void setKeyPressSprite(EventHandler<KeyEvent> myKE) {
     getStage().addEventFilter(KeyEvent.KEY_PRESSED, KeyEventHandler);
 }
@@ -304,12 +306,14 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
          System.out.println("CMD-Z pressed");
          cycleUserView();
     }
+    /*
     if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
          System.out.println("CMD-S pressed (will save metadata)");
          updateBookMeta();
     }
-    if (ke.isMetaDown() && ke.getCode().getName().equals("W")) {
-         System.out.println("CMD-W pressed (will close metadata stage)");
+    */
+    if (ke.isMetaDown() && (ke.getCode().getName().equals("W") || ke.getCode().getName().equals("I"))){
+         System.out.println("CMD-W or CMD-I pressed (will close metadata stage)");
          closeThisStage();
     }
  }

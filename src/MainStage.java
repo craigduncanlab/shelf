@@ -51,6 +51,7 @@ import javafx.event.EventHandler;
 //for UI and Mouse Click and Drag
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.KeyCode; //for testing keyevent
 import javafx.scene.Cursor;
 // event handlers
 import javafx.event.ActionEvent;
@@ -129,7 +130,7 @@ Text mdHeadingText;
 //Store the common event handlers here for use
 EventHandler<MouseEvent> PressBox;
 //EventHandler<MouseEvent> DragBox;
-EventHandler<KeyEvent> KeyEventHandler;
+//EventHandler<KeyEvent> SaveKeyEventHandler;
 //MenuBar
 MenuBar localmenubar;
 //html editor
@@ -181,7 +182,7 @@ public MainStage(String title, MenuBar myMenu) {
     setPressBox(processLocalBoxClick); //stores this in a variable to pass to Book.
     //setPressBox(PressBox);
     setDragBox(DragBox); //stores this to pass to Book 
-    setKeyPressSprite(SpriteKeyHandler); //TO do - set a variable to pass to sprites=
+    setKeyPressHandler(SaveKeyEventHandler); //TO do - set a variable to pass to sprites=
     
     //we need to set sprite group etc
 
@@ -281,7 +282,9 @@ public String convertBookMetaToString(Book myNode) {
         myOutput=myOutput+"[x,y]("+myNode.getX()+","+myNode.getY()+")"+System.getProperty("line.separator");
     }
     if (myNode.getthisNotes().length()>0) {
-        myOutput=myOutput+"```"+System.getProperty("line.separator")+myNode.getthisNotes()+System.getProperty("line.separator")+"```"+System.getProperty("line.separator");
+        String notes = myNode.getthisNotes();
+        String filteredNote=trim(notes);
+        myOutput=myOutput+"```"+System.getProperty("line.separator")+filteredNote+"```"+System.getProperty("line.separator");
     }
     return myOutput;
 }
@@ -397,7 +400,7 @@ public void setDragBox(EventHandler<MouseEvent> myEvent) {
 }
 
 //Set key handler at level of stage in node editor
-private void setKeyPressSprite(EventHandler<KeyEvent> myKE) {
+private void setKeyPressHandler(EventHandler<KeyEvent> myKE) {
     getStage().addEventFilter(KeyEvent.KEY_PRESSED, myKE);
 }
 
@@ -789,14 +792,16 @@ public double snapYtoShelf(double newTranslateY){
 }
 
 /* New Local mouse event handler */
- EventHandler<KeyEvent> SpriteKeyHandler = new EventHandler<KeyEvent>() {
+ EventHandler<KeyEvent> SaveKeyEventHandler = new EventHandler<KeyEvent>() {
     @Override
     public void handle(KeyEvent ke) {
         //Book hasFocus = Main.this.getcurrentBook();
         Book hadFocus=null;
         Book currentBook = MainStage.this.getActiveBook(); //clicksource
-            if (ke.isMetaDown() && ke.getCode().getName().equals("E")) {
-                 System.out.println("CMD-E pressed for sprite");
+            if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
+                 System.out.println("CMD-S pressed for save");
+                 MainStage.this.bookMetaInspectorStage.updateBookMeta(); //update inspector edits first
+                 MainStage.this.writeFileOut();
                  //currentBook.cycleBookColour();
             }
 
@@ -917,7 +922,7 @@ EventHandler<MouseEvent> processLocalBoxClick =
 
 private void OpenRedBookNow(Book currentBook) {
      //Book currentBook= getActiveBook(); //currentBook.getBoxNode();
-     bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox); 
+     bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
 
 }
 /*switch(clickcount) {
@@ -1180,33 +1185,44 @@ private Scene makeWorkspaceScene(Group myGroup) {
         workspaceScene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
              @Override
              public void handle(KeyEvent ke) {
-             System.out.println("Key pressed on workspace stage " + ke.getSource());
-             //open book if CMD-O
-             if (ke.isMetaDown() && ke.getCode().getName().equals("I")) {
-                System.out.println("CMD-I pressed (will open metadata inspector stage)");
-                try {
-                    Book myBook= MainStage.this.getActiveBook();
-                    MainStage.this.OpenRedBookNow(myBook);
+                 System.out.println("Key pressed on workspace stage " + ke.getSource());
+                 //open book if CMD-O
+                 if (ke.isMetaDown() && ke.getCode().getName().equals("I")) {
+                    System.out.println("CMD-I pressed (will open metadata inspector stage)");
+                    try {
+                        Book myBook= MainStage.this.getActiveBook();
+                        MainStage.this.OpenRedBookNow(myBook);
+                    }
+                    catch (NullPointerException e) {
+                        //do nothing
+                    }
                 }
-                catch (NullPointerException e) {
-                    //do nothing
+                if (ke.getCode()==KeyCode.SPACE) {
+                    System.out.println("SPACEBAR pressed (will open metadata inspector stage)");
+                    try {
+                        Book myBook= MainStage.this.getActiveBook();
+                        MainStage.this.OpenRedBookNow(myBook);
+                    }
+                    catch (NullPointerException e) {
+                        //do nothing
+                    }
+                    //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
+                    }
+                //This operates independently to save event handler passed to bookmetastage
+                if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
+                     System.out.println("CMD-S pressed for save");
+                    MainStage.this.writeFileOut();
+                     //currentBook.cycleBookColour();
                 }
-            //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
-            }
-            if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
-                 System.out.println("CMD-S pressed for save");
-                 MainStage.this.writeFileOut();
-                 //currentBook.cycleBookColour();
-            }
-            if (ke.isMetaDown() && ke.getCode().getName().equals("W")) {
-                System.out.println("CMD-W pressed (will clear bookshelf)");
-                clearAllBooks();
-            }
-            if (ke.isMetaDown() && ke.getCode().getName().equals("O")) {
-                 System.out.println("CMD-O pressed for open");
-                 MainStage.this.openMarkdown();
-                 //currentBook.cycleBookColour();
-            }
+                if (ke.isMetaDown() && ke.getCode().getName().equals("W")) {
+                    System.out.println("CMD-W pressed (will clear bookshelf)");
+                    clearAllBooks();
+                }
+                if (ke.isMetaDown() && ke.getCode().getName().equals("O")) {
+                     System.out.println("CMD-O pressed for open");
+                     MainStage.this.openMarkdown();
+                     //currentBook.cycleBookColour();
+                }
             }
         });
         
