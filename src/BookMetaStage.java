@@ -135,20 +135,12 @@ MenuBar localmenubar;
  final HTMLEditor htmlEditor = new HTMLEditor();
 //visibility checkbox
 CheckBox visibleCheck = new CheckBox("Visible");
-
-/*
-Data collection will parallel GUI display of boxes. Provided stage manager can be serialised?
-Can GUI info be transient or should it be serialised?
-StageManager should store GUI objects in one way, data in another?  separation of concerns
-Some kind of content manager for each stage?
-Consider if subclasses of StageManager could deal with flavours of StageManager (e.g. position?
-*/
 ArrayList<Object> BoxContentsArray = new ArrayList<Object>(); //generic store of contents of boxes
 
 
 //Track current stage that is open.  Class variables
-static StageManager currentFocus; //any StageManager can set this to itself
-static Book currentTarget; //any Box(no?) or StageManager can set this to its display node
+static StageManager currentFocus; 
+static Book currentTarget; 
 
 //constructor
 public BookMetaStage() {
@@ -165,8 +157,7 @@ public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, Event
     setPressBox(PressBox);
     setDragBox(DragBox);
     //setKeyPress(NodeKeyHandler); //this can be different for workspace
-    setKeyPress(SaveKeyEvent); //put all key press events in one key event handler
-    setKeyPress(NodeKeyHandler); //add additional local handler
+    setKeyPress(SaveKeyEvent); //save key event common to both shelf and inspector views
     //position
     setEditWindowPosition();
     //data: new 'parent' node based on category alone
@@ -550,14 +541,7 @@ private void updateCurrentBookMetaView() {
     restoreBookMeta();
 
     }
-/* ----- DATA (DISPLAY) NODE FUNCTIONS ----- */
-
-/* 
-This method sets the node that is used for the display in this stage.
-All other nodes added to this node are considered child nodes of this node:
-they are added as child nodes to the data node; they are display in the section of the stage for this
-
-*/
+/* ----- METADATA FUNCTIONS ----- */
 
 //REFRESHES ALL GUI DATA FROM FILE 
 public void restoreBookMeta() {
@@ -646,7 +630,7 @@ private void setJavaFXStageParent(MainStage parent) {
 
 The order in which the Stages are created and set will determine initial z order for display
 Earliest z is toward back
-The workspace (WS) is, in effect, a large window placed at back.
+MainStage(Stage_WS) is, in effect, a large window placed at back.
 TO DO: check x y and within tolerable limits
 
 */
@@ -659,12 +643,6 @@ private void setEditWindowPosition() {
 private void setWorkspaceWindowPosition() {
    setStagePosition(0,0);
    stageBack();
-}
-
-//toolbars and other misc output
-private void setToolBarWindowPosition() {
-    setStagePosition(800,300);
-    stageFront();
 }
 
 //STAGE MANAGEMENT FUNCTIONS
@@ -700,23 +678,6 @@ public TextArea makeTextArea() {
     return tempTextArea;
 }
 
-//The scene only contains a pane to display sprite boxes
-/*
-private Scene makeSceneForBoxes(ScrollPane myPane) {
-        
-        Scene tempScene = new Scene (myPane,650,400); //default width x height (px)
-        //add event handler for mouse event
-        tempScene.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
-         @Override
-         public void handle(MouseEvent mouseEvent) {
-         System.out.println("Mouse click on SM scene detected! " + mouseEvent.getSource());
-         //setStageFocus("document");
-             }
-        });
-        updateScene(tempScene);
-        return tempScene;
-}
-*/
 //Method to change title depending on data mode the node is in.
 private String getTitleText(String myString) {
     System.out.println("Make Scene. User Node View: "+getActiveBook().getUserView());
@@ -734,10 +695,6 @@ i.e. can resemble a text editor, or graphical tree, or functional text processor
 
 State variable (userNodeView) defines which version of UI to display.
 User can cycle through states of UI display through key press (CMD-Z)
-
-Should presence of update buttons be dependent on node not in "Follower" mode?
-i.e. should GUI/cycle options be varied for a follower node? 
-especially if it is a non-edit node?       
 
 */
 
@@ -766,11 +723,6 @@ private void makeSceneForBookMetaView() {
         urlTextArea.setPrefRowCount(1);
         outputTextArea.setPrefRowCount(1);
         //
-        //add mdTextArea to BoxPane
-        //ScrollPane boxPane = new ScrollPane();
-        //boxPane.setPrefSize(winWidth, winHeight-300);
-        //boxPane.setContent(mdTextArea);
-        //Button for saving clauses
         Button btnUpdate = new Button();
         btnUpdate.setText("Update");
         btnUpdate.setTooltip(new Tooltip ("Confirm edits"));
