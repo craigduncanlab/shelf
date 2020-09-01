@@ -28,9 +28,9 @@ public Book parseMDfile(EventHandler pb,EventHandler db,String contents) {
     System.out.println("Begin parsing MD file");
     // for now, no processing of contents
     //Book newNode = new Book("Test",contents,"notes");
-    Book newNode = parseMDblock(contents);
+    Book newBook = parseMDblock(contents);
     System.out.println("Finished parsing MD file");
-    return newNode;
+    return newBook;
 }
 
 /*

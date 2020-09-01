@@ -100,7 +100,7 @@ Group spriteGroup;
 ScrollPane spriteScrollPane;
 Pane spritePane;
 Scene localScene;
-Book focusSprite; //for holding active sprite in this scene.  Pass to app.
+Book focusBook; //for holding active sprite in this scene.  Pass to app.
 //Book parentBox;//to hold the calling box for this viewer.  
 //Do not create new object here or circular constructors! Do in constructor
 
@@ -217,10 +217,10 @@ public void processMarkdown(File file) {
       if (length>0) {
         Iterator<String> iter = blocklist.iterator(); 
           while (iter.hasNext()) {
-              Book newNode=myParser.parseMDfile(PressBox,DragBox,iter.next());
-              if (newNode!=null) {
+              Book newBook=myParser.parseMDfile(PressBox,DragBox,iter.next());
+              if (newBook!=null) {
                 System.out.println("Starting iteration of block lines in MD");
-                AddNewBookFromParser(newNode);
+                AddNewBookFromParser(newBook);
               }
          } //end while
       } //end if
@@ -1231,21 +1231,21 @@ private Scene makeWorkspaceScene(Group myGroup) {
 
 //set active sprite.  if problem with tracker, ignore.
 public void setActiveBook(Book b) {
-    if (this.focusSprite!=null) {
-        Book hadFocus = this.focusSprite;
+    if (this.focusBook!=null) {
+        Book hadFocus = this.focusBook;
         hadFocus.endAlert();
     }
-    this.focusSprite=b;
-    this.focusSprite.doAlert();
+    this.focusBook=b;
+    this.focusBook.doAlert();
 }
 
 //set active sprite.  if problem with tracker, ignore.
 public Book getActiveBook() {
-    if (this.focusSprite==null) {
-        System.out.println("No sprite in active function");
+    if (this.focusBook==null) {
+        System.out.println("No book in setActiveBook method");
         System.exit(0);
     }
-    return this.focusSprite;
+    return this.focusBook;
 }
 
 
@@ -1254,7 +1254,7 @@ public void AddNewBookFromParser(Book newBook) throws NullPointerException {
     System.out.println("SpriteGroup in AddNewBookFromParser");
     System.out.println(this.spriteGroup);
     //System.exit(0);
-    System.out.println("OpenNewNode now...");
+    System.out.println("addBookToStage...");
     try {
         addBookToStage(newBook);
         System.out.println(newBook.toString());
@@ -1295,21 +1295,13 @@ i.e. this adds a specific object, rather than updating the view from whole under
 
 private void addBookToStage(Book myBook) {
     if (myBook==null) {
-        System.out.println("No sprite to add");
+        System.out.println("addBookToStage.  No Book to add");
         System.exit(0);
     }
-    System.out.println("Sprite in addSprite, before addition");
-    System.out.println(myBook);
-    System.out.println("SpriteGroup in addSprite, before addition");
-    System.out.println(this.spriteGroup);
     
     this.spriteGroup.getChildren().add(myBook);
     this.booksOnShelf.add(myBook);  //add to metadata collection TO DO: cater for deletions.
     setActiveBook(myBook); //local information
-    System.out.println("SpriteGroup in addSprite, after addition");
-    System.out.println(this.spriteGroup);
-    
-    System.out.println("Current sprite group is "+getSpriteGroup().toString()); 
     positionBookOnStage(myBook);
     advanceBookPositionHor(); //default is to space along shelf
     
@@ -1318,6 +1310,7 @@ private void addBookToStage(Book myBook) {
 public void removeBookFromStage(Book thisBook) {
     //TO DO: remove Node (data) ? is it cleaned up by GUI object removal?
     this.spriteGroup.getChildren().remove(thisBook); //view/GUI
+    this.booksOnShelf.remove(thisBook);
     //to do: remove Book from ArrayList too.
     getStage().show(); //refresh GUI
     
@@ -1333,20 +1326,17 @@ public ArrayList<Book> getBooksOnShelf() {
 
 public void positionBookOnStage(Book myBook) {
         
-    if (myBook!=null) {  //might be no current sprite if not dbl clicked
-            myBook.endAlert();
+    if (myBook.getY()!=0) {
+        double ypos=snapYtoShelf(myBook.getY());
+        myBook.setY(ypos);
+        myBook.setTranslateY(myBook.getY());
+        myBook.setTranslateX(myBook.getX());
     }
-        if (myBook.getY()!=0) {
-            double ypos=snapYtoShelf(myBook.getY());
-            myBook.setY(ypos);
-            myBook.setTranslateY(myBook.getY());
-            myBook.setTranslateX(myBook.getX());
-        }
-        else {
-            myBook.setTranslateX(this.spriteX);
-            myBook.setTranslateY(this.spriteY);
-        }
+    else {
+        myBook.setTranslateX(this.spriteX);
+        myBook.setTranslateY(this.spriteY);
     }
+}
 
 public void resetBookOrigin() {
     this.spriteY=20;

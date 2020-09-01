@@ -74,7 +74,6 @@ Boolean isAlert=false;
 //
 Color defaultColour=Color.WHITE;
 Color userColour=Color.LIGHTBLUE;
-//String alertColour="red";
 Color alertColour=Color.RED;
 BookIcon myBookIcon;
 String userMetaView; //how to display metadata
@@ -378,9 +377,6 @@ public void doAlert() {
 
 private void updateAppearance() {
     
-    //this.setLabel(this.docname);
-    //this.SetColour(thisNode.getNodeColour());
-    //this.SetDefaultColour(thisNode.getNodeColour());
     if (this.isAlert==true) {
        this.myBookIcon.setColour(this.alertColour);
     }
