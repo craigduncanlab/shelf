@@ -74,10 +74,10 @@ Boolean isAlert=false;
 //
 Color defaultColour=Color.WHITE;
 Color userColour=Color.LIGHTBLUE;
-//String alertColour="red";
 Color alertColour=Color.RED;
 BookIcon myBookIcon;
 String userMetaView; //how to display metadata
+Integer shelfNumber;
 
 //empty constructor no arguments
 public Book() {
@@ -174,6 +174,27 @@ public double getX() {
 public double getY() {
 	return this.myYpos;
 
+}
+
+public void setShelf(Integer myShelf) {
+	this.shelfNumber=myShelf;
+}
+
+public Integer getShelf() {
+	return this.shelfNumber;
+}
+
+//create a Score that will rank all Books by Shelf position lowest (top left) to highest (bottom right)
+public Integer getShelfScore(){
+	Integer myScore=0;
+	try {
+		double dScore=getShelf()*1000+getX();
+		myScore = (int)dScore;
+	}
+	catch (NullPointerException e) {
+		System.out.println(getLabel()+"[x,y]("+getX()+","+getY()+")");
+	}
+	return myScore;
 }
 
 //returns the mirrored position data in this object
@@ -378,9 +399,6 @@ public void doAlert() {
 
 private void updateAppearance() {
     
-    //this.setLabel(this.docname);
-    //this.SetColour(thisNode.getNodeColour());
-    //this.SetDefaultColour(thisNode.getNodeColour());
     if (this.isAlert==true) {
        this.myBookIcon.setColour(this.alertColour);
     }

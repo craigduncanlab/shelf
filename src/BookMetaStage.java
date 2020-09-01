@@ -56,6 +56,7 @@ import javafx.event.EventHandler;
 //for UI and Mouse Click and Drag
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.KeyCode;
 import javafx.scene.Cursor;
 // event handlers
 import javafx.event.ActionEvent;
@@ -117,7 +118,7 @@ TextArea filepathTextArea = new TextArea();
 TextArea urlTextArea = new TextArea();
 TextArea mdTextArea = new TextArea();
 TextArea bookLabelTextArea = new TextArea();
-TextArea notesTextArea = new TextArea();
+TextArea codeNotesTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
 Text filepathText;
 Text bookLabelText;
@@ -145,7 +146,7 @@ static Book currentTarget;
 //constructor
 public BookMetaStage() {
     this.outputTextArea.setWrapText(true);
-    this.notesTextArea.setWrapText(true);  //default
+    this.codeNotesTextArea.setWrapText(true);  //default
 }
 
 //standard open node viewer constructor.  Used by 'OpenRedNodeNow' method in Main
@@ -176,23 +177,23 @@ private void cycleUserView() {
     switch (myView) {
     
         case "all" : 
-            getActiveBook().setUserView("textonly");
+            getActiveBook().setUserView("metaedithtml");
             updateCurrentBookMetaView();
             break;
-        case "textonly" :
-            getActiveBook().setUserView("inputoutput");
+        case "metaedit" :
+            getActiveBook().setUserView("metaedithtml");
             updateCurrentBookMetaView();
             break;
-        case "inputoutput" :
-            getActiveBook().setUserView("nodeboxesonly");
+        case "metaedithtml" :
+            getActiveBook().setUserView("HTMLonly");
             updateCurrentBookMetaView();
             break;
-        case "nodeboxesonly" :
-            getActiveBook().setUserView("all");
+        case "HTMLonly" :
+            getActiveBook().setUserView("metaedit");
             updateCurrentBookMetaView();
             break;
         default:
-            getActiveBook().setUserView("all");
+            getActiveBook().setUserView("HTMLonly");
             updateCurrentBookMetaView();
             break;
         }
@@ -292,6 +293,11 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
     System.out.println("KeyPress (unicode): " + ke.getCharacter());
     System.out.println("is Control Down: " + ke.isControlDown());
     System.out.println("is Meta(Command) Down: " + ke.isMetaDown());
+    //'live' conversion of typing into HTML (not as efficient but typists don't notice)
+    Book targetBook = BookMetaStage.this.getActiveBook();
+    targetBook.setMD(mdTextArea.getText()); //cf updateBookMeta
+    BookMetaStage.this.updateHTMLpreview(targetBook);
+
     //shortcuts
     if (ke.isMetaDown() && ke.getCode().getName().equals("Z")) {
          System.out.println("CMD-Z pressed");
@@ -305,7 +311,12 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
     */
     if (ke.isMetaDown() && (ke.getCode().getName().equals("W") || ke.getCode().getName().equals("I"))){
          System.out.println("CMD-W or CMD-I pressed (will close metadata stage)");
+         System.out.println(htmlEditor.getHtmlText());
          closeThisStage();
+    }
+    //if just inspecting, use space to close
+    if (ke.getCode()==KeyCode.SPACE && targetBook.getUserView()=="HTMLonly") {
+        closeThisStage();
     }
  }
 };
@@ -340,11 +351,11 @@ public TextArea getOutputTextNode() {
 
 //Input text area e.g. importer
 public void setInputText(String myText) {
-    notesTextArea.setText(myText);
+    codeNotesTextArea.setText(myText);
 }
 
 public String getInputText() {
-    return notesTextArea.getText();
+    return codeNotesTextArea.getText();
 }
 
 /* Text Area in JavaFX inherits selected text method from
@@ -352,17 +363,17 @@ javafx.scene.control.TextInputControl
 */
 
 private String getSelectedInputText() {
-    return notesTextArea.getSelectedText();
+    return codeNotesTextArea.getSelectedText();
 }
 
 //set the identified JavaFX object (TextArea) for the Stage
 public void setStageTextArea(TextArea myTA) {
-    this.notesTextArea = myTA;
+    this.codeNotesTextArea = myTA;
 }
 
 //Return the JavaFX object (Node) 
 public TextArea getInputTextNode() {
-    return this.notesTextArea;
+    return this.codeNotesTextArea;
 }
 
 //SIMPLE SCENE GETTERS AND SETTERS AS JAVA FX WRAPPER
@@ -525,7 +536,7 @@ public void setLocalURL (String filepath){
 
 /* --- BASIC GUI SETUP FOR OPEN NODE VIEWERS --- */
 private void updateCurrentBookMetaView() {
-    makeSceneForBookMetaView();
+    makeSceneForBookMetaView(); //sets up scene, not content
     //title bar
     refreshTitle();
     //provide information about path of current open node in tree
@@ -552,20 +563,21 @@ public void restoreBookMeta() {
         urlTextArea.setText(updateNode.geturlpath());
         bookLabelTextArea.setText(updateNode.getLabel());
         mdTextArea.setText(updateNode.getMD()); //update the markdown text
-        notesTextArea.setText(updateNode.getNotes());
+        codeNotesTextArea.setText(updateNode.getNotes());
         visibleCheck.setSelected(updateNode.getVisible()); //check box
         outputTextArea.setText(updateNode.getOutputText()); //output node contents
         //RHS
-        htmlEditor.setHtmlText(updateNode.getHTML());
+        //dynamic update of Book's HTML data
+        updateHTMLpreview(updateNode);
 }
 
 public void updateBookMeta() {
         Book thisBook=getActiveBook();
         System.out.println("This book box : "+thisBook.toString());
         //System.exit(0);
-        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),notesTextArea.getText());
+        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),codeNotesTextArea.getText());
         thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
-         //some kind of refresh needed?
+        updateHTMLpreview(thisBook); //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
         //System.exit(0);
     }
@@ -711,14 +723,11 @@ private void makeSceneForBookMetaView() {
         int dblwidth=2*winWidth;
         int winHeight=700;
         int scenewidth=winWidth;
-        //HTML editor
-        htmlEditor.setPrefSize(winWidth,winHeight);
+        
         //TEXT AREAS
         bookLabelTextArea.setPrefRowCount(1);
         mdTextArea.setPrefRowCount(20); //for markdown.  Add to boxPane
         mdTextArea.setWrapText(true);
-        notesTextArea.setPrefRowCount(7); //for notes
-        notesTextArea.setWrapText(true);
         filepathTextArea.setPrefRowCount(1);
         urlTextArea.setPrefRowCount(1);
         outputTextArea.setPrefRowCount(1);
@@ -749,7 +758,7 @@ private void makeSceneForBookMetaView() {
         mdHeadingText = new Text();
         urlText = new Text();
         //set view option
-        HBox widebox;
+        
         VBox vertFrame;
         HBox visiblebox = new HBox(0,visibleBlockText,visibleCheck);
         Button btnBrowseFilepath = new Button();
@@ -759,36 +768,48 @@ private void makeSceneForBookMetaView() {
 
         HBox filepathBox = new HBox(0,filepathTextArea,btnBrowseFilepath,btnOpenDoc);
         HBox urlpathBox = new HBox(0,urlTextArea,btnOpenURL);
-
+        HBox widebox = new HBox(0,htmlEditor); //default - can change as below
+        
         //handle null case
         if (getActiveBook().getUserView()==null) {
-            getActiveBook().setUserView("all");
+            getActiveBook().setUserView("metaedithtml");
+
         }
-        if (getActiveBook().getUserView().equals("textonly")) {
-            vertFrame = new VBox(0,bookLabelText,bookLabelTextArea,hboxButtons);
-             vertFrame.setPrefSize(winWidth,winHeight);
-            setTitle(getTitleText(" - HTML Text View"));
+        //compare states and update view
+        if (getActiveBook().getUserView().equals("metaedit")) {
+            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame.setPrefSize(winWidth,winHeight);
+            setTitle(getTitleText(" - Meta Edit View"));
+            //htmlEditor.setPrefSize(winWidth,winHeight);
+            widebox = new HBox(0,vertFrame);
+            widebox.setPrefSize(winWidth,winHeight); 
+            scenewidth=winWidth;
+        }
+        else if (getActiveBook().getUserView().equals("metaedithtml")) {
+            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            setTitle(getTitleText(" - Full View"));
+            htmlEditor.setPrefSize(winWidth,winHeight);
+            vertFrame.setPrefSize(winWidth,winHeight);//both, with equal width to HTML
             widebox = new HBox(0,vertFrame,htmlEditor);
             widebox.setPrefSize(dblwidth,winHeight);
+            scenewidth=dblwidth;
         }
-        else if (getActiveBook().getUserView().equals("inputoutput")) {
-            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,notesTextArea,hboxButtons);
-             vertFrame.setPrefSize(winWidth,winHeight);
-            setTitle(getTitleText(" Markdown View"));
-            widebox = new HBox(0,vertFrame);
-            widebox.setPrefSize(dblwidth,winHeight);
+           
+        else if(getActiveBook().getUserView().equals("HTMLonly")) {
+            //vertFrame = new VBox(0,this.codeNotesTextArea,hboxButtons); //lose buttons?
+            //vertFrame.setPrefSize(dblwidth,winHeight);
+            htmlEditor.setPrefSize(dblwidth,winHeight);
+            setTitle(getTitleText(" - HTML View"));
+            widebox = new HBox(0,htmlEditor); //htmlEditor is itself a component for view
+            widebox.setPrefSize(dblwidth,winHeight); //whole dbl width devoted to htmlEditor
+            scenewidth=dblwidth;
+            //System.exit(0);
         }
-
-        else if(getActiveBook().getUserView().equals("nodeboxesonly")) {
-            vertFrame = new VBox(0,filepathBox,mdHeadingText,mdTextArea,hboxButtons);
-            vertFrame.setPrefSize(winWidth,winHeight);
-            setTitle(getTitleText(" - Concepts View"));
-            widebox = new HBox(0,vertFrame);
-            widebox.setPrefSize(dblwidth,winHeight);
-        }
+        
          //this is now the default?
+        /*
             else {
-            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,notesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,this.codeNotesTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
             vertFrame.setPrefSize(winWidth,winHeight);
             widebox = new HBox(0,vertFrame,htmlEditor);
@@ -796,6 +817,7 @@ private void makeSceneForBookMetaView() {
             scenewidth=dblwidth;
             //widebox.getChildren().add()
         }
+        */
         //
         Pane largePane = new Pane();
         largePane.setPrefSize(scenewidth, winHeight);
@@ -827,7 +849,7 @@ private void makeSceneForBookMetaView() {
                      System.out.println("makescene Viewer :"+BookMetaStage.this);
                      System.out.println("scene display node :"+getActiveBook().toString());
                      System.out.println("notes String :"+getActiveBook().getNotes());
-                     System.out.println("Notes: "+notesTextArea.getText());
+                     System.out.println("Notes: "+codeNotesTextArea.getText());
                  }
                  else {
                     System.out.println("Problem with change Viewer Focus");
@@ -839,6 +861,41 @@ private void makeSceneForBookMetaView() {
         });
         updateScene(tempScene);
 }
+
+public void updateHTMLpreview(Book myBook){
+    String newHTML=getHTMLfromContents(myBook);
+    myBook.setHTML(newHTML);
+    htmlEditor.setHtmlText(newHTML);
+}
+
+//Convert the MD section of current Book to some HTML and update the HTML parameter     
+public String getHTMLfromContents(Book myBook) {
+    String input = myBook.getMD();
+    String label = myBook.getLabel();
+    String logString="";
+    //take out any existing headers?
+    //String replaceString = input.replaceAll("(<html[ =\\w\\\"]*>{1})|(<body[ =\\w\\\"]*>{1})|<html>|</html>|<body>|</body>|<head>|</head>",""); //regEx
+    int index =0; //
+    //top row or heading
+    if(index==0) {
+        logString = "<html><head><title>"+label+"</title></head>"+"<body>";// use the label for the html page (if needed)
+        //logString=logString+"<p><b>"+label+"</b></p>";
+        logString=logString+"<H1><span style=\"font-family: Arial;\">"+label+"<span style=\"font-family: Arial;\"></H1>";
+     }
+     //iterate and create rest of file
+    Scanner scanner1 = new Scanner(input);
+    String prefix = "<p><span style=\"font-family: Arial;\">";
+    String suffix="</span></p>";
+
+     while (scanner1.hasNextLine()) {
+        //just make paragraphs for now
+        String thisLine=scanner1.nextLine();
+        logString=logString+prefix+thisLine+suffix;
+     }
+     logString=logString+"</body></html>";
+     System.out.println(logString);
+    return logString;
+    }
 
 /* New Local mouse event handler */
 

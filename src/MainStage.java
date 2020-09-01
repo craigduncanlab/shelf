@@ -1,7 +1,7 @@
 //(c) Craig Duncan 2017-2020
 
 //import utilities needed for Arrays lists etc
-import java.util.*;
+import java.util.*; //collections too
 //JavaFX
 import javafx.stage.Stage;
 import javafx.stage.Screen;
@@ -100,7 +100,7 @@ Group spriteGroup;
 ScrollPane spriteScrollPane;
 Pane spritePane;
 Scene localScene;
-Book focusSprite; //for holding active sprite in this scene.  Pass to app.
+Book focusBook; //for holding active sprite in this scene.  Pass to app.
 //Book parentBox;//to hold the calling box for this viewer.  
 //Do not create new object here or circular constructors! Do in constructor
 
@@ -122,6 +122,8 @@ TextArea mdTextArea = new TextArea();
 TextArea headingTextArea = new TextArea();
 TextArea inputTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
+TextArea shelfFileTextArea = new TextArea();
+Text shelfFileName = new Text("default.md");
 Text parentBoxText;
 Text headingBoxText;
 Text inputBoxText;
@@ -154,6 +156,7 @@ double orgSceneY;
 
 double orgTranslateX;
 double orgTranslateY;
+Main parentStage;
 
 //Track current stage that is open.  Class variables
 static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
@@ -168,11 +171,12 @@ public MainStage() {
 //workspace constructor.  Filename details will be inherited from loaded node.
 //Passes MenuBar from main application for now
 //Passes general eventhandlers from Main (at present, also uses these for the boxes)
-public MainStage(String title, MenuBar myMenu) {
+public MainStage(String title, MenuBar myMenu, Main parentStage) {
     //Book baseNode, 
     //category
     //NodeCategory NC_WS = new NodeCategory ("workspace",99,"white");
     //view
+    this.parentStage=parentStage;
     setTitle(title);
     setMenuBar(myMenu);
     //TO DO: setLocalSpriteSelect(processLocalBoxClick);
@@ -202,11 +206,12 @@ public MainStage(String title, MenuBar myMenu) {
 
 public void processMarkdown(File file) {
   //String filename=System.out.print(file.toString()); // this is full path
-    String last=file.getName();
-    last=last.substring(last.length() - 3);
+    String thefilename=file.getName();
+    String last=thefilename.substring(thefilename.length() - 3);
     if (last.equals(".md")==true) {
       TemplateUtil myUtil = new TemplateUtil();
       String contents = myUtil.getFileText(file);
+      this.shelfFileName.setText(thefilename); //update name on shelf view
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
@@ -217,10 +222,10 @@ public void processMarkdown(File file) {
       if (length>0) {
         Iterator<String> iter = blocklist.iterator(); 
           while (iter.hasNext()) {
-              Book newNode=myParser.parseMDfile(PressBox,DragBox,iter.next());
-              if (newNode!=null) {
+              Book newBook=myParser.parseMDfile(MainStage.this,PressBox,DragBox,iter.next());
+              if (newBook!=null) {
                 System.out.println("Starting iteration of block lines in MD");
-                AddNewBookFromParser(newNode);
+                AddNewBookFromParser(newBook);
               }
          } //end while
       } //end if
@@ -243,9 +248,10 @@ public File openMarkdown() {
 }
 
 public void writeFileOut() {
+    //
     String filepath=this.getFilename();
     System.out.println("Saving: "+filepath);
-    ArrayList<Book> mySaveBooks = getBooksOnShelf();
+    ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
     Iterator<Book> myIterator = mySaveBooks.iterator();
     String myOutput="";
          while (myIterator.hasNext()) {
@@ -258,6 +264,48 @@ public void writeFileOut() {
         basicFileWriter(myOutput,filepath);
         //System.out.println(myOutput);
         //System.exit(0);
+}
+
+//sort books by shelf order
+public ArrayList<Book> listBooksShelfOrder() {
+    ArrayList<Book> myBooksonShelves = getBooksOnShelf();
+    ArrayList<Integer> scoreIndexes = new ArrayList();
+    Integer booknum=myBooksonShelves.size();
+    for (int x=0;x<booknum;x++) {
+        Book item = myBooksonShelves.get(x);
+        Integer score=item.getShelfScore();
+        scoreIndexes.add(score);
+    }
+    Collections.sort(scoreIndexes); //performs a sort
+    //System.out.println(scoreIndexes);
+    //System.exit(0);
+    System.out.println("Books num: "+booknum);
+    ArrayList<Book> sortedBooks = new ArrayList<Book>();
+    Iterator<Integer> myIterator = scoreIndexes.iterator();
+    //System.out.println("Book score printout:\n");
+         while (myIterator.hasNext()) {
+            Integer targetscore = myIterator.next();
+            System.out.println("target:"+targetscore);
+            Iterator<Book> bookIterator = myBooksonShelves.iterator();
+            while (bookIterator.hasNext()) {
+                Book item = bookIterator.next();
+                Integer test = item.getShelfScore();
+                System.out.println("test score:"+test);
+                if (test.equals(targetscore)) {
+                    System.out.println("matched");
+                    sortedBooks.add(item);
+                }
+            }
+        }
+        /*Iterator<Book> bookIterator=sortedBooks.iterator();
+        while (bookIterator.hasNext()) {
+            Book item = bookIterator.next();
+            String label = item.getLabel();
+            System.out.println(label);
+        }
+        System.exit(0);
+        */
+        return sortedBooks;
 }
 
 //Convert this book meta into a String of markdown.  Only write links if data is there.
@@ -366,6 +414,7 @@ public String getFilename() {
 
 public void setFilename(String myFile) {
     this.filename = myFile;
+    this.shelfFileName.setText(this.filename);
 }
 
 public int getDocCount() {
@@ -568,6 +617,8 @@ public ScrollPane getSpriteScrollPane() {
 public void clearAllBooks() {
     this.spriteGroup.getChildren().clear();
     this.booksOnShelf.clear(); 
+    this.resetBookOrigin();
+    this.parentStage.clearBooksFromShelf(); //to update general file name etc
 }
 
 public void swapSpriteGroup(Group myGroup) {
@@ -760,33 +811,37 @@ private String getTitleText(String myString) {
    
 }
 
-public double snapYtoShelf(double newTranslateY){
+public double snapYtoShelf(Book myBook, double newTranslateY){
     Integer shelf1 = 200;
     Integer shelf2=2*shelf1;
     Integer shelf3=3*shelf2;
     Integer bookiconheight=150;
-    Integer offset1=20;
-    Integer overshoot=20;
+    Integer offset1=40;
+    //Integer overshoot=20;
     Integer offset2=offset1+200;
     Integer offset3=offset2+200;
     Integer offset4=offset3+200;
     /* --- SNAP TO GRID --- */
     //if release points don't fit shelf range, simulate 'gravity' to shelf below
-    if (newTranslateY<=offset1+overshoot) {
+    if (newTranslateY<=offset1) {
         System.out.println("Put on shelf 1");
-         newTranslateY=offset1;
+         newTranslateY=offset1-20;
+         myBook.setShelf(1);
     }
-    else if (newTranslateY>offset1+overshoot && newTranslateY<=offset2) {
+    else if (newTranslateY>offset1 && newTranslateY<=offset2) {
         System.out.println("Put on shelf 2");
-         newTranslateY=offset2;
+         newTranslateY=offset2-20;
+         myBook.setShelf(2);
     }
-    else if (newTranslateY>offset2+overshoot && newTranslateY<=offset3) {
+    else if (newTranslateY>offset2 && newTranslateY<=offset3) {
         System.out.println("Put on shelf 3");
-        newTranslateY=offset3;
+        newTranslateY=offset3-20;
+        myBook.setShelf(3);
     }
-    else if (newTranslateY>offset3+overshoot) {
+    else if (newTranslateY>offset3) {
         System.out.println("Put on shelf 4");
-        newTranslateY=offset4;
+        newTranslateY=offset4-20;
+        myBook.setShelf(4);
     }
     return newTranslateY;
 }
@@ -833,7 +888,7 @@ EventHandler<MouseEvent> DragBox =
                     System.out.println("release position: x "+newTranslateX+" y "+newTranslateY);
                     //shelf parameters
                                        
-                    newTranslateY=MainStage.this.snapYtoShelf(newTranslateY);
+                    newTranslateY=MainStage.this.snapYtoShelf(currentBook,newTranslateY);
                     //System.exit(0);
                     currentBook.setTranslateX(newTranslateX);
                     currentBook.setTranslateY(newTranslateY);
@@ -1051,6 +1106,14 @@ private Group makeWorkspaceTree() {
         Rectangle shelf2 = makeNewShelf(100,2*this.shelf1_Y+offset); 
         Rectangle shelf3 = makeNewShelf(100,3*this.shelf1_Y+offset);
         Rectangle shelf4 = makeNewShelf(100,4*this.shelf1_Y+offset); 
+        //make up a pane to display filename of bookshelf
+        Pane shelfFilePane = new Pane();
+        shelfFilePane.getChildren().add(this.shelfFileTextArea);
+        this.shelfFileTextArea.setText("default.md");
+        
+        shelfFileName = new Text("default.md");
+        shelfFileName.setY(20.0);
+        shelfFileName.setX(250.0); //575
 
         //setArcWidth(60);  //do this enough you get a circle.  option
         //setArcHeight(60);                
@@ -1080,7 +1143,7 @@ private Group makeWorkspaceTree() {
         //add the Border Pane and branches to root Group 
         myGroup_root.getChildren().addAll(myBP);
         //putting lines first means they appear at back
-        myGroup_root.getChildren().addAll(line,line2,line3,shelf1,shelf2,shelf3,shelf4); //line and shelf 1
+        myGroup_root.getChildren().addAll(line,line2,line3,shelf1,shelf2,shelf3,shelf4,shelfFileName); //line and shelf 1
         //store the root node for future use
         setSceneRoot(myGroup_root); //store 
         //for box placement within the Scene - attach them to the correct Node.
@@ -1186,28 +1249,43 @@ private Scene makeWorkspaceScene(Group myGroup) {
              @Override
              public void handle(KeyEvent ke) {
                  System.out.println("Key pressed on workspace stage " + ke.getSource());
+                 System.out.println("KeyCode: "+ke.getCode());
                  //open book if CMD-O
                  if (ke.isMetaDown() && ke.getCode().getName().equals("I")) {
                     System.out.println("CMD-I pressed (will open metadata inspector stage)");
                     try {
                         Book myBook= MainStage.this.getActiveBook();
+                        myBook.setUserView("metaedithtml");
                         MainStage.this.OpenRedBookNow(myBook);
                     }
                     catch (NullPointerException e) {
                         //do nothing
                     }
                 }
+                //On Mac keyboards the 'delete' key activates as 'BACK_SPACE'
+                if (ke.getCode()==KeyCode.DELETE || ke.getCode()==KeyCode.BACK_SPACE) {
+                    System.out.println("BS/DELETE pressed (will delete book with focus)");
+                    try {
+                        Book myBook= MainStage.this.getActiveBook();
+                        MainStage.this.removeBookFromStage(myBook);
+                    }
+                    catch (NullPointerException e) {
+                        //do nothing
+                    }
+                    //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
+                }
                 if (ke.getCode()==KeyCode.SPACE) {
                     System.out.println("SPACEBAR pressed (will open metadata inspector stage)");
                     try {
                         Book myBook= MainStage.this.getActiveBook();
+                        myBook.setUserView("HTMLonly");
                         MainStage.this.OpenRedBookNow(myBook);
                     }
                     catch (NullPointerException e) {
                         //do nothing
                     }
                     //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
-                    }
+                }
                 //This operates independently to save event handler passed to bookmetastage
                 if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
                      System.out.println("CMD-S pressed for save");
@@ -1223,6 +1301,11 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      MainStage.this.openMarkdown();
                      //currentBook.cycleBookColour();
                 }
+                //Stage_WS.addNewBookToView();
+                if (ke.isMetaDown() && ke.getCode().getName().equals("N")) {
+                     System.out.println("CMD-N pressed for new book");
+                     MainStage.this.addNewBookToView();
+                }
             }
         });
         
@@ -1231,21 +1314,21 @@ private Scene makeWorkspaceScene(Group myGroup) {
 
 //set active sprite.  if problem with tracker, ignore.
 public void setActiveBook(Book b) {
-    if (this.focusSprite!=null) {
-        Book hadFocus = this.focusSprite;
+    if (this.focusBook!=null) {
+        Book hadFocus = this.focusBook;
         hadFocus.endAlert();
     }
-    this.focusSprite=b;
-    this.focusSprite.doAlert();
+    this.focusBook=b;
+    this.focusBook.doAlert();
 }
 
 //set active sprite.  if problem with tracker, ignore.
 public Book getActiveBook() {
-    if (this.focusSprite==null) {
-        System.out.println("No sprite in active function");
+    if (this.focusBook==null) {
+        System.out.println("No book in setActiveBook method");
         System.exit(0);
     }
-    return this.focusSprite;
+    return this.focusBook;
 }
 
 
@@ -1254,7 +1337,7 @@ public void AddNewBookFromParser(Book newBook) throws NullPointerException {
     System.out.println("SpriteGroup in AddNewBookFromParser");
     System.out.println(this.spriteGroup);
     //System.exit(0);
-    System.out.println("OpenNewNode now...");
+    System.out.println("addBookToStage...");
     try {
         addBookToStage(newBook);
         System.out.println(newBook.toString());
@@ -1295,29 +1378,23 @@ i.e. this adds a specific object, rather than updating the view from whole under
 
 private void addBookToStage(Book myBook) {
     if (myBook==null) {
-        System.out.println("No sprite to add");
+        System.out.println("addBookToStage.  No Book to add");
         System.exit(0);
     }
-    System.out.println("Sprite in addSprite, before addition");
-    System.out.println(myBook);
-    System.out.println("SpriteGroup in addSprite, before addition");
-    System.out.println(this.spriteGroup);
     
     this.spriteGroup.getChildren().add(myBook);
     this.booksOnShelf.add(myBook);  //add to metadata collection TO DO: cater for deletions.
     setActiveBook(myBook); //local information
-    System.out.println("SpriteGroup in addSprite, after addition");
-    System.out.println(this.spriteGroup);
-    
-    System.out.println("Current sprite group is "+getSpriteGroup().toString()); 
-    positionBookOnStage(myBook);
-    advanceBookPositionHor(); //default is to space along shelf
+    advanceBookPositionHor();
+    positionBookOnStage(myBook); //snap to shelf after horizontal move
+   //default is to space along shelf
     
 }
 
 public void removeBookFromStage(Book thisBook) {
     //TO DO: remove Node (data) ? is it cleaned up by GUI object removal?
     this.spriteGroup.getChildren().remove(thisBook); //view/GUI
+    this.booksOnShelf.remove(thisBook);
     //to do: remove Book from ArrayList too.
     getStage().show(); //refresh GUI
     
@@ -1333,20 +1410,21 @@ public ArrayList<Book> getBooksOnShelf() {
 
 public void positionBookOnStage(Book myBook) {
         
-    if (myBook!=null) {  //might be no current sprite if not dbl clicked
-            myBook.endAlert();
+    if (myBook.getY()!=0) {
+        double ypos=snapYtoShelf(myBook,myBook.getY());
+        myBook.setY(ypos);
     }
-        if (myBook.getY()!=0) {
-            double ypos=snapYtoShelf(myBook.getY());
-            myBook.setY(ypos);
-            myBook.setTranslateY(myBook.getY());
-            myBook.setTranslateX(myBook.getX());
-        }
-        else {
-            myBook.setTranslateX(this.spriteX);
-            myBook.setTranslateY(this.spriteY);
-        }
+    else {
+        myBook.setX(this.spriteX);
+        double ypos=snapYtoShelf(myBook,this.spriteY);
+        this.spriteY=(int)ypos;
+        myBook.setY(ypos);
+        //myBook.setTranslateX(this.spriteX);
+        //myBook.setTranslateY(this.spriteY);
     }
+    myBook.setTranslateY(myBook.getY());
+    myBook.setTranslateX(myBook.getX());
+}
 
 public void resetBookOrigin() {
     this.spriteY=20;
@@ -1364,7 +1442,7 @@ private void newBookColumn() {
 private void advanceBookPositionHor() {
         if (this.spriteX>880) {
                 this.spriteY=spriteY+this.shelf1_Y; //drop down
-                this.spriteX=0;
+                this.spriteX=100;
             }
             else {
                 this.spriteX = this.spriteX+65; //uniform size for now

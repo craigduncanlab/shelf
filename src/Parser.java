@@ -13,6 +13,7 @@ import javafx.event.EventHandler;
 public class Parser {
 EventHandler PressBox;
 EventHandler DragBox;
+MainStage mainstage;
 
 //default constructor
 public Parser(){
@@ -22,15 +23,16 @@ public Parser(){
 //read in an .md file and then process it
 //This could return an Array of Books, not one.
 
-public Book parseMDfile(EventHandler pb,EventHandler db,String contents) {
+public Book parseMDfile(MainStage myStage, EventHandler pb,EventHandler db,String contents) {
 	this.PressBox=pb;
 	this.DragBox=db;
+	this.mainstage=myStage;
     System.out.println("Begin parsing MD file");
     // for now, no processing of contents
     //Book newNode = new Book("Test",contents,"notes");
-    Book newNode = parseMDblock(contents);
+    Book newBook = parseMDblock(contents);
     System.out.println("Finished parsing MD file");
-    return newNode;
+    return newBook;
 }
 
 /*
@@ -471,9 +473,43 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		Book newNode=new Book(this.PressBox,this.DragBox,label2,contents,notes); //constructor: make new meta data with label of book
 		newNode.seturlpath(urlString);
 		newNode.setdocfilepath(filepathString);//filepath,urlpath,
-		newNode.setXY(x,y); //x,y  must be doubles
+		newNode.setXY(x,y); //x,y  must be doubles		
+		this.mainstage.snapYtoShelf(newNode,y); //check y and set shelf number
 		//At present visibility reflects the last markdown # code detected in file.
 		newNode.setVisible(true);
+		//convert contents to html for initial 'preview'
+		String myHTML=getHTMLfromContents(newNode);
+		newNode.setHTML(myHTML); //could do this in method that receives below but do it here for now
 		return newNode;
 		} //end method
+
+//Convert the MD section of current Book to some HTML and update the HTML parameter		
+public String getHTMLfromContents(Book myBook) {
+	String input = myBook.getMD();
+	String label = myBook.getLabel();
+	String logString="";
+	//take out any existing headers?
+	//String replaceString = input.replaceAll("(<html[ =\\w\\\"]*>{1})|(<body[ =\\w\\\"]*>{1})|<html>|</html>|<body>|</body>|<head>|</head>",""); //regEx
+	int index =0; //
+	//top row or heading
+	if(index==0) {
+	 	logString = "<html><head><title>"+label+"</title></head>"+"<body>";// use the label for the html page (if needed)
+	 	//logString=logString+"<p><b>"+label+"</b></p>";
+	 	logString=logString+"<H1>"+label+"</H1>";
+	 }
+	 //iterate and create rest of file
+	Scanner scanner1 = new Scanner(input);
+ 	String prefix = "<p>";
+ 	String suffix="</p>";
+
+	 while (scanner1.hasNextLine()) {
+	 	//just make paragraphs for now
+	 	String thisLine=scanner1.nextLine();
+	 	logString=logString+prefix+thisLine+suffix;
+	 }
+	 logString=logString+"</body></html>";
+	 System.out.println(logString);
+	return logString;
+	}
+
 } //end class
