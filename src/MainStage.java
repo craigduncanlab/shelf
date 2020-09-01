@@ -1299,6 +1299,11 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      MainStage.this.openMarkdown();
                      //currentBook.cycleBookColour();
                 }
+                //Stage_WS.addNewBookToView();
+                if (ke.isMetaDown() && ke.getCode().getName().equals("N")) {
+                     System.out.println("CMD-N pressed for new book");
+                     MainStage.this.addNewBookToView();
+                }
             }
         });
         

@@ -292,6 +292,11 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
     System.out.println("KeyPress (unicode): " + ke.getCharacter());
     System.out.println("is Control Down: " + ke.isControlDown());
     System.out.println("is Meta(Command) Down: " + ke.isMetaDown());
+    //'live' conversion of typing into HTML (not as efficient but typists don't notice)
+    Book targetBook = BookMetaStage.this.getActiveBook();
+    targetBook.setMD(mdTextArea.getText()); //cf updateBookMeta
+    BookMetaStage.this.updateHTMLpreview(targetBook);
+
     //shortcuts
     if (ke.isMetaDown() && ke.getCode().getName().equals("Z")) {
          System.out.println("CMD-Z pressed");
