@@ -43,7 +43,7 @@ The openJDK download is specific for each OS.  The SDK library file when unzippe
 
 When you have downloaded the JavaFX SDK package, locate the folder javafx-sdk-11.0.2 (or similar) and inside this, find the lib file with the javafx .jar files in it.  You will also need the dylib files, but they are too large to store here.
 
-Rename it to fxlib and put it into the root folder of the Powerdock project.
+Rename it to fxlib and put it into the root folder of the Shell project.
 
 # Compiling and running from source
 
@@ -68,23 +68,37 @@ and this to run:
 runprog
 ```
 
-# Simple instructions
+# --- Simple instructions ---
+
+# Bookshelf
 
 ## Open previously created Shelf (markdown format)
 
 Choose File --> Open MD Document.
 
-This will open up a markdown document inside a block container(s).
+This will open up a markdown document.  It will detect # divisions in a text file and interpret those as book divisions.
 
-As markdown parsing functions are added, this will parse the markdown file and divide into appropriate boxes.
+Books will be displayed on the shelf, and you can drag them to different locations.
 
 ## New Books
 
-Choose New and Block to create a new container for a markdown heading 1 block.
+Choose Book--> New to add a new Book to Bookshelf.
 
-## Edit Book Meta
+## Bookshelf view key commands:
 
-Click on a book - double click on 'red' books to open and edit metadata.
+CMD-I or SPACEBAR: Inspect a book's metadata
 
+CMD-S: Save bookshelf data (to current file).  This saves book position on shelf.
 
+CMD-W: Clear the bookshelf.
+
+# Book Inspector
+
+## Book metadata view key commands
+
+CMD-S: Save the updated book metadata (and saves all other bookshelf data)
+
+CMD-W or CMD-I: Close the metadata view.
+
+CMD-Z: Toggles the view to show/hide the HTML preview.
 
