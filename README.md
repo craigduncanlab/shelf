@@ -33,7 +33,7 @@ e.g. with src folder for source files etc
 
 # Make sure you have JavaFX library available
 
-To use JavaFX you need to invoke it as a module when you compile and run.  It is not longer automatically part of the Java SDK.
+To use JavaFX you need to invoke it as a module when you compile and run.  It is no longer included with the Java SDK.
 
 So first you need to download the JavaFX library.
 
@@ -41,15 +41,17 @@ see https://openjfx.io and https://gluonhq.com/products/javafx/
 
 The openJDK download is specific for each OS.  The SDK library file when unzipped will be closer to 95MB.
 
-When you have downloaded the JavaFX SDK package, locate the folder javafx-sdk-11.0.2 (or similar) and inside this, find the lib file with the javafx .jar files in it.  You will also need the dylib files, but they are too large to store here.
+When you have downloaded the JavaFX SDK package, locate the folder javafx-sdk-11.0.2 (or similar).
 
-Rename it to fxlib and put it into the root folder of the Shell project.
+Inside the downloaded javafx package, find the lib folder with the javafx .jar files in it.  There are also dylib files, which are needed too, but they are too large to store here.
+
+Rename the 'lib' folder to fxlib and put it into the root folder of the Shell project.
 
 # Compiling and running from source
 
-The next step is to set up the environment variables and make it easier to invoke the program.  This requires some terminal (bash) commands to be executed, in order.
+The next step is to set up the environment variables and make it easier to compile and run the program.  This requires some terminal (bash) commands to be executed, in order.
 
-In the parent folder (the root folder for the github):
+In the parent folder (the root folder for the local copy of the github repository files):
 
 ```
 export PATH_TO_FX='fxlib'
