@@ -13,6 +13,7 @@ import javafx.event.EventHandler;
 public class Parser {
 EventHandler PressBox;
 EventHandler DragBox;
+MainStage mainstage;
 
 //default constructor
 public Parser(){
@@ -22,9 +23,10 @@ public Parser(){
 //read in an .md file and then process it
 //This could return an Array of Books, not one.
 
-public Book parseMDfile(EventHandler pb,EventHandler db,String contents) {
+public Book parseMDfile(MainStage myStage, EventHandler pb,EventHandler db,String contents) {
 	this.PressBox=pb;
 	this.DragBox=db;
+	this.mainstage=myStage;
     System.out.println("Begin parsing MD file");
     // for now, no processing of contents
     //Book newNode = new Book("Test",contents,"notes");
@@ -471,7 +473,8 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		Book newNode=new Book(this.PressBox,this.DragBox,label2,contents,notes); //constructor: make new meta data with label of book
 		newNode.seturlpath(urlString);
 		newNode.setdocfilepath(filepathString);//filepath,urlpath,
-		newNode.setXY(x,y); //x,y  must be doubles
+		newNode.setXY(x,y); //x,y  must be doubles		
+		this.mainstage.snapYtoShelf(newNode,y); //check y and set shelf number
 		//At present visibility reflects the last markdown # code detected in file.
 		newNode.setVisible(true);
 		//convert contents to html for initial 'preview'

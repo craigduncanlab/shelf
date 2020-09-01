@@ -559,7 +559,6 @@ public void restoreBookMeta() {
         //RHS
         //dynamic update of Book's HTML data
         updateHTMLpreview(updateNode);
-        htmlEditor.setHtmlText(updateNode.getHTML());
 }
 
 public void updateBookMeta() {
@@ -568,7 +567,7 @@ public void updateBookMeta() {
         //System.exit(0);
         thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),codeNotesTextArea.getText());
         thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
-         //some kind of refresh needed?
+        updateHTMLpreview(thisBook); //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
         //System.exit(0);
     }
@@ -856,6 +855,7 @@ private void makeSceneForBookMetaView() {
 public void updateHTMLpreview(Book myBook){
     String newHTML=getHTMLfromContents(myBook);
     myBook.setHTML(newHTML);
+    htmlEditor.setHtmlText(newHTML);
 }
 
 //Convert the MD section of current Book to some HTML and update the HTML parameter     

@@ -1,7 +1,7 @@
 //(c) Craig Duncan 2017-2020
 
 //import utilities needed for Arrays lists etc
-import java.util.*;
+import java.util.*; //collections too
 //JavaFX
 import javafx.stage.Stage;
 import javafx.stage.Screen;
@@ -222,7 +222,7 @@ public void processMarkdown(File file) {
       if (length>0) {
         Iterator<String> iter = blocklist.iterator(); 
           while (iter.hasNext()) {
-              Book newBook=myParser.parseMDfile(PressBox,DragBox,iter.next());
+              Book newBook=myParser.parseMDfile(MainStage.this,PressBox,DragBox,iter.next());
               if (newBook!=null) {
                 System.out.println("Starting iteration of block lines in MD");
                 AddNewBookFromParser(newBook);
@@ -248,9 +248,10 @@ public File openMarkdown() {
 }
 
 public void writeFileOut() {
+    //
     String filepath=this.getFilename();
     System.out.println("Saving: "+filepath);
-    ArrayList<Book> mySaveBooks = getBooksOnShelf();
+    ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
     Iterator<Book> myIterator = mySaveBooks.iterator();
     String myOutput="";
          while (myIterator.hasNext()) {
@@ -263,6 +264,48 @@ public void writeFileOut() {
         basicFileWriter(myOutput,filepath);
         //System.out.println(myOutput);
         //System.exit(0);
+}
+
+//sort books by shelf order
+public ArrayList<Book> listBooksShelfOrder() {
+    ArrayList<Book> myBooksonShelves = getBooksOnShelf();
+    ArrayList<Integer> scoreIndexes = new ArrayList();
+    Integer booknum=myBooksonShelves.size();
+    for (int x=0;x<booknum;x++) {
+        Book item = myBooksonShelves.get(x);
+        Integer score=item.getShelfScore();
+        scoreIndexes.add(score);
+    }
+    Collections.sort(scoreIndexes); //performs a sort
+    //System.out.println(scoreIndexes);
+    //System.exit(0);
+    System.out.println("Books num: "+booknum);
+    ArrayList<Book> sortedBooks = new ArrayList<Book>();
+    Iterator<Integer> myIterator = scoreIndexes.iterator();
+    //System.out.println("Book score printout:\n");
+         while (myIterator.hasNext()) {
+            Integer targetscore = myIterator.next();
+            System.out.println("target:"+targetscore);
+            Iterator<Book> bookIterator = myBooksonShelves.iterator();
+            while (bookIterator.hasNext()) {
+                Book item = bookIterator.next();
+                Integer test = item.getShelfScore();
+                System.out.println("test score:"+test);
+                if (test.equals(targetscore)) {
+                    System.out.println("matched");
+                    sortedBooks.add(item);
+                }
+            }
+        }
+        /*Iterator<Book> bookIterator=sortedBooks.iterator();
+        while (bookIterator.hasNext()) {
+            Book item = bookIterator.next();
+            String label = item.getLabel();
+            System.out.println(label);
+        }
+        System.exit(0);
+        */
+        return sortedBooks;
 }
 
 //Convert this book meta into a String of markdown.  Only write links if data is there.
@@ -768,33 +811,37 @@ private String getTitleText(String myString) {
    
 }
 
-public double snapYtoShelf(double newTranslateY){
+public double snapYtoShelf(Book myBook, double newTranslateY){
     Integer shelf1 = 200;
     Integer shelf2=2*shelf1;
     Integer shelf3=3*shelf2;
     Integer bookiconheight=150;
-    Integer offset1=20;
-    Integer overshoot=20;
+    Integer offset1=40;
+    //Integer overshoot=20;
     Integer offset2=offset1+200;
     Integer offset3=offset2+200;
     Integer offset4=offset3+200;
     /* --- SNAP TO GRID --- */
     //if release points don't fit shelf range, simulate 'gravity' to shelf below
-    if (newTranslateY<=offset1+overshoot) {
+    if (newTranslateY<=offset1) {
         System.out.println("Put on shelf 1");
-         newTranslateY=offset1;
+         newTranslateY=offset1-20;
+         myBook.setShelf(1);
     }
-    else if (newTranslateY>offset1+overshoot && newTranslateY<=offset2) {
+    else if (newTranslateY>offset1 && newTranslateY<=offset2) {
         System.out.println("Put on shelf 2");
-         newTranslateY=offset2;
+         newTranslateY=offset2-20;
+         myBook.setShelf(2);
     }
-    else if (newTranslateY>offset2+overshoot && newTranslateY<=offset3) {
+    else if (newTranslateY>offset2 && newTranslateY<=offset3) {
         System.out.println("Put on shelf 3");
-        newTranslateY=offset3;
+        newTranslateY=offset3-20;
+        myBook.setShelf(3);
     }
-    else if (newTranslateY>offset3+overshoot) {
+    else if (newTranslateY>offset3) {
         System.out.println("Put on shelf 4");
-        newTranslateY=offset4;
+        newTranslateY=offset4-20;
+        myBook.setShelf(4);
     }
     return newTranslateY;
 }
@@ -841,7 +888,7 @@ EventHandler<MouseEvent> DragBox =
                     System.out.println("release position: x "+newTranslateX+" y "+newTranslateY);
                     //shelf parameters
                                        
-                    newTranslateY=MainStage.this.snapYtoShelf(newTranslateY);
+                    newTranslateY=MainStage.this.snapYtoShelf(currentBook,newTranslateY);
                     //System.exit(0);
                     currentBook.setTranslateX(newTranslateX);
                     currentBook.setTranslateY(newTranslateY);
@@ -1202,6 +1249,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
              @Override
              public void handle(KeyEvent ke) {
                  System.out.println("Key pressed on workspace stage " + ke.getSource());
+                 System.out.println("KeyCode: "+ke.getCode());
                  //open book if CMD-O
                  if (ke.isMetaDown() && ke.getCode().getName().equals("I")) {
                     System.out.println("CMD-I pressed (will open metadata inspector stage)");
@@ -1213,6 +1261,18 @@ private Scene makeWorkspaceScene(Group myGroup) {
                         //do nothing
                     }
                 }
+                //On Mac keyboards the 'delete' key activates as 'BACK_SPACE'
+                if (ke.getCode()==KeyCode.DELETE || ke.getCode()==KeyCode.BACK_SPACE) {
+                    System.out.println("BS/DELETE pressed (will delete book with focus)");
+                    try {
+                        Book myBook= MainStage.this.getActiveBook();
+                        MainStage.this.removeBookFromStage(myBook);
+                    }
+                    catch (NullPointerException e) {
+                        //do nothing
+                    }
+                    //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
+                }
                 if (ke.getCode()==KeyCode.SPACE) {
                     System.out.println("SPACEBAR pressed (will open metadata inspector stage)");
                     try {
@@ -1223,7 +1283,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                         //do nothing
                     }
                     //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
-                    }
+                }
                 //This operates independently to save event handler passed to bookmetastage
                 if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
                      System.out.println("CMD-S pressed for save");
@@ -1318,8 +1378,9 @@ private void addBookToStage(Book myBook) {
     this.spriteGroup.getChildren().add(myBook);
     this.booksOnShelf.add(myBook);  //add to metadata collection TO DO: cater for deletions.
     setActiveBook(myBook); //local information
-    positionBookOnStage(myBook);
-    advanceBookPositionHor(); //default is to space along shelf
+    advanceBookPositionHor();
+    positionBookOnStage(myBook); //snap to shelf after horizontal move
+   //default is to space along shelf
     
 }
 
@@ -1343,15 +1404,19 @@ public ArrayList<Book> getBooksOnShelf() {
 public void positionBookOnStage(Book myBook) {
         
     if (myBook.getY()!=0) {
-        double ypos=snapYtoShelf(myBook.getY());
+        double ypos=snapYtoShelf(myBook,myBook.getY());
         myBook.setY(ypos);
-        myBook.setTranslateY(myBook.getY());
-        myBook.setTranslateX(myBook.getX());
     }
     else {
-        myBook.setTranslateX(this.spriteX);
-        myBook.setTranslateY(this.spriteY);
+        myBook.setX(this.spriteX);
+        double ypos=snapYtoShelf(myBook,this.spriteY);
+        this.spriteY=(int)ypos;
+        myBook.setY(ypos);
+        //myBook.setTranslateX(this.spriteX);
+        //myBook.setTranslateY(this.spriteY);
     }
+    myBook.setTranslateY(myBook.getY());
+    myBook.setTranslateX(myBook.getX());
 }
 
 public void resetBookOrigin() {
@@ -1370,7 +1435,7 @@ private void newBookColumn() {
 private void advanceBookPositionHor() {
         if (this.spriteX>880) {
                 this.spriteY=spriteY+this.shelf1_Y; //drop down
-                this.spriteX=0;
+                this.spriteX=100;
             }
             else {
                 this.spriteX = this.spriteX+65; //uniform size for now
