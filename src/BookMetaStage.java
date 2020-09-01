@@ -156,8 +156,8 @@ public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, Event
     //store event handlers as local instance variables
     setPressBox(PressBox);
     setDragBox(DragBox);
-    //setKeyPress(NodeKeyHandler); //this can be different for workspace
     setKeyPress(SaveKeyEvent); //save key event common to both shelf and inspector views
+    setKeyPress(NodeKeyHandler); //this can be different for workspace
     //position
     setEditWindowPosition();
     //data: new 'parent' node based on category alone
