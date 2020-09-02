@@ -162,6 +162,7 @@ public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, Event
     //view
     setJavaFXStageParent(parent);
     this.mainStage=parent;
+    //this.localStage.initOwner(parent);
     //store event handlers as local instance variables
     setPressBox(PressBox);
     setDragBox(DragBox);
@@ -936,8 +937,23 @@ public String getHTMLfromContents(Book myBook) {
         String thisLine=scanner1.nextLine();
         logString=logString+prefix+thisLine+suffix;
      }
-     logString=logString+"</body></html>";
-     System.out.println(logString);
+     String linkpath=myBook.getdocfilepath();
+     if (linkpath.length()>0) {
+         String linkprefix="<p><span style=\"font-family: Arial;\"><a href=\"";
+         String linksuffix="\">Filelink</a></span></p>";
+         String linkfile = linkprefix+linkpath+linksuffix;
+         logString=logString+linkfile;
+    }
+    //embedded links will probably only open www addresses in the inbuilt JavaFX WebView.  You can open these from the Button in edit view.
+    String urlpath=myBook.geturlpath();
+     if (urlpath.length()>0) {
+         String urlprefix="<p><span style=\"font-family: Arial;\"><a href=\"";
+         String urlsuffix="\">weblink</a></span></p>";
+         String urlfile = urlprefix+urlpath+urlsuffix;
+         logString=logString+urlfile;
+    }
+    logString=logString+"</body></html>";
+    System.out.println(logString);
     return logString;
     }
 

@@ -73,6 +73,8 @@ import javafx.scene.input.TransferMode;
 //File i/o
 import java.io.*;
 import java.io.File;
+//Desktop etc and file chooser
+import java.awt.Desktop;
 
 /* Stages will always be on top of the parent window.  This is important for layout
 Make sure the smaller windows are owned by the larger window that is always visible
@@ -695,7 +697,6 @@ public void setCurrentXY(double x, double y) {
 private void setMetaStageParams(BookMetaStage newInspectorStage) {
     Stage myMainStage = getStage(); 
     Stage myLocalStage = newInspectorStage.getStage();
-    myLocalStage.initOwner(myMainStage);
     //centred on screen dimensions, not on the parent stage
     myLocalStage.setX((ScreenBounds.getWidth() - myLocalStage.getWidth()) / 2); 
     myLocalStage.setY((ScreenBounds.getHeight() -myLocalStage.getHeight()) / 2); 
@@ -916,6 +917,7 @@ EventHandler<MouseEvent> processLocalBoxClick =
 };
 
 
+//TO DO: check Book isn't the basis for inspector stage before opening new stage.
 private void OpenRedBookNow(Book currentBook) {
      //Book currentBook= getActiveBook(); //currentBook.getBoxNode();
      bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
@@ -1219,7 +1221,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                     //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
                 }
                 if (ke.getCode()==KeyCode.SPACE) {
-                    System.out.println("SPACEBAR pressed (will open metadata inspector stage)");
+                    System.out.println("SPACEBAR pressed (will open stage to inspect HTML in built-in Web Browser)");
                     try {
                         Book myBook= MainStage.this.getActiveBook();
                         myBook.setUserView("HTMLonly");
