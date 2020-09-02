@@ -119,31 +119,20 @@ public class Main extends Application {
     TextArea authorEdit;
     TextArea notesEdit;
     TextArea CCdateEdit;
-    Book myEditCC;
+    
     //Group editGroup_root;
     Stage editorStage;
     Pane editGroup_root;
     //document loaded sequence
     int loaddocnum=0;
     int libdocnum=0;
-    //move active sprite tracking to here from spritemanager class (redundant)
-    Book activeSprite;
-    SpriteTracker myTracker; // = new SpriteTracker();
-    //STAGE IDS
-    int location = 0;
+    
     //Menus that need to be individually referenced/updated
     Menu theRecentMenu;
     Recents theRecent;
 
-    ArrayList<NodeCategory> nodeCatList;
-
     //To hold Stage with open node that is current
     BookMetaStage bookshelfInspectorStage;  
-    Book NodeTarget;
-    //to hold Master Node for project i.e. data
-    Book masterNode = new Book();
-    //
-    WhiteBoard mainWhiteBoard = new WhiteBoard();
     //File input/output
     File currentOpenFile;
 
@@ -307,7 +296,7 @@ Currently this looks at all Sprite Boxes globally (regardless of viewer/location
 private void moveAlertFromBooktoBook(Book hadFocus, Book myBook) {
 
     if (Stage_WS.getActiveBook()==null) {
-            System.out.println("ActiveSprite is null move alert");
+            System.out.println("activeBook is null move alert");
             System.exit(0);
         }
     Stage_WS.setActiveBook(myBook);
@@ -318,14 +307,13 @@ private void moveAlertFromBooktoBook(Book hadFocus, Book myBook) {
 
 private void setActiveBook(Book myBook) {
     if (Stage_WS.getActiveBook()==null) {
-            System.out.println("ActiveSprite is null set current sprite");
+            System.out.println("activeBook is null set current sprite");
             System.exit(0);
         }
     Stage_WS.setActiveBook(myBook);
 }
 
 private Book getActiveBook() {
-    //return this.activeSprite;
     return Stage_WS.getActiveBook();  
 }
 
@@ -351,23 +339,12 @@ public void deleteSpriteGUI(Book myBook) {
     public void start(Stage primaryStage) {
        
         /* This only affects the primary stage set by the application */
-        primaryStage.setTitle("Powerdock App");
+        primaryStage.setTitle("Shelf App");
         primaryStage.hide();
         
         ParentStage = new Stage();
-
-        //master Node for save all workspace
-        //masterNode.updateText("<html><body></body></html>","workspace","workspace(saved)","input","output");
-        System.out.println("masterNode created.");
-        
-        //nodeCatList = makeLawWorldCategories(); <---optional, to restore NodeCats
-        //
         MenuBar myMenu = makeMenuBar();
-        this.myTracker = new SpriteTracker();
-        if (this.myTracker==null) {
-            System.out.println("MyTRK is null start application");
-            System.exit(0);
-        }
+       
         //The main Stage for Workspace.  
         Stage_WS = new MainStage("Workspace", myMenu,Main.this);  //sets up GUI for view
         

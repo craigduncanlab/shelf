@@ -39,31 +39,21 @@ String booklabel="";
 String heading="";
 String date="";
 String output="";
-
-String nodecategory = "";
-//counters
-int count=0; //general purpose counter for node
-int branchcount=0; //general purpose counter for this branch of node
-//html text
 String htmlString="";
 String mdString="";
-//depth, level count for DFS
-// Visibility
 Boolean visible = true;
-//OLD spritebook variables
-Text bookspinetext = new Text ("new book");//Default label text for every SpriteBox
-//String contents;  // Text for the SpriteBox outside of Clause objects.  Currently unused.
+Text bookspinetext = new Text ("new book");//Default label text for every Book
 double myXpos = 100; //default for shelves. not needed?
 double myYpos = 50;
 Boolean isAlert=false;
-//
 Color defaultColour=Color.WHITE;
 Color userColour=Color.LIGHTBLUE;
 Color alertColour=Color.RED;
 BookIcon myBookIcon;
 String userMetaView; //how to display metadata
 Integer shelfNumber;
-
+EventHandler myPressBox;
+EventHandler myDragBox;
 //empty constructor no arguments
 public Book() {
 
@@ -78,10 +68,12 @@ public Book(EventHandler PressBox, EventHandler DragBox, String label, String te
 	setDocName(label); //to be phased out.  It's just a MD section.
     setLabel(label);
     setOutputText("");
+    setPressBox(PressBox); //local
+    setDragBox(DragBox);
     //Works with MainStage object
-    Book.this.setOnMousePressed(PressBox);
-    Book.this.setOnMouseDragged(DragBox);
-    Book.this.setOnMouseReleased(DragBox); 
+    //Book.this.setOnMousePressed(myPressBox);
+   	//Book.this.setOnMouseDragged(myDragBox);
+    //Book.this.setOnMouseReleased(myDragBox); 
     FXsetup();
 }
 
@@ -101,8 +93,6 @@ public void updateEditedText(String filepath,String urlpath,String label, String
 	setLabel(label);
 	setMD(mdtext);
     setNotes(note);
-    //setOutputText(outputtext);
-    //setHTML(htmltext);
 }
 
 //return the meta info regarding filepath
@@ -270,6 +260,22 @@ public String getDocName () {
 	return this.docname;
 }
 
+public void setdate (String myString) {
+	this.date = myString;
+}
+
+public String getdate () {
+	return this.date;
+}
+
+public void setdocauthor (String myString) {
+	this.docauthor = myString;
+}
+
+public String getdocauthor () {
+	return this.docauthor;
+}
+
 public void setOutputText(String myString) {
 	this.output = myString;
 }
@@ -293,14 +299,44 @@ private String getthisOutputText() {
 	return this.output;
 }
 
+public void setPressBox(EventHandler myPB){
+	this.myPressBox=myPB;
+	Book.this.setOnMousePressed(this.myPressBox);
+}
 
+public void setDragBox(EventHandler myDB) {
+	this.myDragBox=myDB;
+	Book.this.setOnMouseDragged(this.myDragBox);
+    Book.this.setOnMouseReleased(this.myDragBox); 
+}
+
+//clone - uses simple constructor so must duplicate constructor functions
 public Book cloneBook() {
 	Book clone = new Book();
 	clone.setHTML(this.htmlString); 
 	clone.setLabel(this.booklabel);
 	clone.setMD(this.mdString);
-	clone.setDocName(this.docname); //to hold the container name or filename
 	clone.setNotes(this.docnotes);
+	clone.setdocfilepath(this.docxfilepath);
+	clone.seturlpath(this.urlpath);
+	clone.setDocName(this.docname);
+	clone.setdocauthor(this.docauthor);
+	clone.setDocName(this.docname); //to hold the container name or filename
+	clone.setShortname(this.shortname);
+	clone.setLabel(this.booklabel);
+	clone.setHeading(this.heading);
+	clone.setdate(this.date);
+	clone.setOutputText(this.output);
+	clone.setHTML(this.htmlString);
+	clone.setVisible(this.visible);
+	clone.setX(this.myXpos+50); //small offset
+	clone.setY(this.myYpos);
+	clone.setAlert(this.isAlert);
+	clone.setUserView(this.userMetaView);
+	clone.setShelf(this.shelfNumber);
+	clone.setPressBox(this.myPressBox);
+	clone.setDragBox(this.myDragBox);
+	clone.FXsetup();
 	return clone;
 }
 
@@ -372,6 +408,10 @@ public void doAlert() {
  public void endAlert() {
     this.isAlert=false;
     updateAppearance();
+}
+
+public void setAlert(Boolean alertState){
+	this.isAlert=alertState;
 }
 
 private void updateAppearance() {

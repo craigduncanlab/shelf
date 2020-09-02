@@ -104,13 +104,13 @@ ScrollPane spriteScrollPane;
 Pane spritePane;
 Scene localScene;
 Book focusBook; //for holding active sprite in this scene.  Pass to app.
-//Book parentBox;//to hold the calling box for this viewer.  
-//Do not create new object here or circular constructors! Do in constructor
+Book clipboardBook; //for cut,copy and paste
+//To hold Stage with open node that is current
+BookMetaStage bookMetaInspectorStage; 
 
 String filename = "";
 String shortfilename=""; //current filename for saving this stage's contents
-//STAGE IDS
-int location = 0;
+
 String category="";
 //Displayed Book (i.e. Node).  Will be updated through GUI.
 //Book displayNode = new Book();
@@ -143,8 +143,7 @@ MenuBar localmenubar;
  final HTMLEditor htmlEditor = new HTMLEditor();
 //visibility checkbox
 CheckBox visibleCheck = new CheckBox("Visible");
- //To hold Stage with open node that is current
-BookMetaStage bookMetaInspectorStage; 
+
 Integer shelf1_Y;
 Integer shelfthickness=15;
 /*
@@ -1263,6 +1262,25 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      myBook.setUserView("metaedit");
                      MainStage.this.OpenRedBookNow(myBook);
                 }
+                //copy
+                if (ke.isMetaDown() && ke.getCode().getName().equals("C")) {
+                     System.out.println("CMD-C pressed for copy book");
+                     Book myBook= MainStage.this.getActiveBook();
+                     MainStage.this.clipboardBook=myBook.cloneBook();  //pointer to book, but memory doesn't survive this ?
+                     System.out.println(MainStage.this.clipboardBook+", old: "+myBook);
+                     //System.exit(0);
+                }
+                //paste
+                if (ke.isMetaDown() && ke.getCode().getName().equals("V")) {
+                     System.out.println("CMD-V pressed for paste book");
+                     //cf try
+                     if (MainStage.this.clipboardBook!=null) {
+                        Book myBook = MainStage.this.clipboardBook;
+                        System.out.println(MainStage.this.clipboardBook+", check: "+myBook);
+                        MainStage.this.AddNewBookFromParser(MainStage.this.clipboardBook);
+                        //System.exit(0);
+                     }  
+                }
             }
         });
         
@@ -1271,12 +1289,26 @@ private Scene makeWorkspaceScene(Group myGroup) {
 
 //set active sprite.  if problem with tracker, ignore.
 public void setActiveBook(Book b) {
-    if (this.focusBook!=null) {
-        Book hadFocus = this.focusBook;
-        hadFocus.endAlert();
+    System.out.println("Set Active Book b1:"+b);
+    try {
+        System.out.println("Set Active Book b2:"+b);
+        if (this.focusBook!=null) {
+            Book hadFocus = this.focusBook;
+            hadFocus.endAlert();
+            System.out.println("Set Active Book b3:"+b);
+        }
     }
+    catch (Exception e) {
+         System.out.println("Set Active Book b4:"+b);
+         System.out.println("Exception in setActiveBook");
+         e.printStackTrace(new java.io.PrintStream(System.out));
+         System.exit(0);
+    }
+    System.out.println("Set Active Book b5:"+b);
     this.focusBook=b;
+    System.out.println("Set Active Book b6:"+b);
     this.focusBook.doAlert();
+    System.out.println("Alert done. Finished setActiveBook");
 }
 
 //set active sprite.  if problem with tracker, ignore.
@@ -1294,12 +1326,14 @@ public void AddNewBookFromParser(Book newBook) throws NullPointerException {
     System.out.println("SpriteGroup in AddNewBookFromParser");
     System.out.println(this.spriteGroup);
     //System.exit(0);
-    System.out.println("addBookToStage...");
+    System.out.println("addBookToStage...:"+newBook);
     try {
         addBookToStage(newBook);
         System.out.println(newBook.toString());
+        //System.exit(0);
     }
     catch (NullPointerException e) {
+        System.out.println("NullPointerException in AddNewBookFromParser");
         System.exit(0);
     } 
 }
@@ -1341,9 +1375,20 @@ private void addBookToStage(Book myBook) {
     
     this.spriteGroup.getChildren().add(myBook);
     this.booksOnShelf.add(myBook);  //add to metadata collection TO DO: cater for deletions.
-    setActiveBook(myBook); //local information
+    System.out.println("addingBookToStage...1:"+myBook);
+    try { 
+        setActiveBook(myBook); 
+        }
+    catch (NullPointerException e ){
+        System.out.println("NullPointer Stage...1:");
+        System.exit(0);
+    }//local information
+
+    System.out.println("addingBookToStage...2");
     advanceBookPositionHor();
+    System.out.println("addingBookToStage...3");
     positionBookOnStage(myBook); //snap to shelf after horizontal move
+    System.out.println("addingBookToStage...4");
    //default is to space along shelf
     
 }
