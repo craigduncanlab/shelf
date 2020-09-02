@@ -1289,26 +1289,19 @@ private Scene makeWorkspaceScene(Group myGroup) {
 
 //set active sprite.  if problem with tracker, ignore.
 public void setActiveBook(Book b) {
-    System.out.println("Set Active Book b1:"+b);
     try {
-        System.out.println("Set Active Book b2:"+b);
         if (this.focusBook!=null) {
             Book hadFocus = this.focusBook;
             hadFocus.endAlert();
-            System.out.println("Set Active Book b3:"+b);
         }
     }
     catch (Exception e) {
-         System.out.println("Set Active Book b4:"+b);
          System.out.println("Exception in setActiveBook");
          e.printStackTrace(new java.io.PrintStream(System.out));
          System.exit(0);
     }
-    System.out.println("Set Active Book b5:"+b);
     this.focusBook=b;
-    System.out.println("Set Active Book b6:"+b);
     this.focusBook.doAlert();
-    System.out.println("Alert done. Finished setActiveBook");
 }
 
 //set active sprite.  if problem with tracker, ignore.
@@ -1325,8 +1318,6 @@ public Book getActiveBook() {
 public void AddNewBookFromParser(Book newBook) throws NullPointerException {
     System.out.println("SpriteGroup in AddNewBookFromParser");
     System.out.println(this.spriteGroup);
-    //System.exit(0);
-    System.out.println("addBookToStage...:"+newBook);
     try {
         addBookToStage(newBook);
         System.out.println(newBook.toString());
@@ -1375,22 +1366,15 @@ private void addBookToStage(Book myBook) {
     
     this.spriteGroup.getChildren().add(myBook);
     this.booksOnShelf.add(myBook);  //add to metadata collection TO DO: cater for deletions.
-    System.out.println("addingBookToStage...1:"+myBook);
     try { 
         setActiveBook(myBook); 
         }
     catch (NullPointerException e ){
         System.out.println("NullPointer Stage...1:");
         System.exit(0);
-    }//local information
-
-    System.out.println("addingBookToStage...2");
+    }
     advanceBookPositionHor();
-    System.out.println("addingBookToStage...3");
-    positionBookOnStage(myBook); //snap to shelf after horizontal move
-    System.out.println("addingBookToStage...4");
-   //default is to space along shelf
-    
+    positionBookOnStage(myBook); //snap to shelf after horizontal move    
 }
 
 public void removeBookFromStage(Book thisBook) {
