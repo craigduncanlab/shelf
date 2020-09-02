@@ -62,6 +62,7 @@ import java.io.File;
 
 //File chooser
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 //key events
 import javafx.scene.input.KeyEvent;
 //Desktop etc and file chooser
@@ -213,15 +214,15 @@ private MenuBar makeMenuBar() {
         Menu menuFile = new Menu("File");
         //setFileMenu(menuFile);
         MenuItem OpenTempl = new MenuItem("Open MD document");
-        MenuItem SaveName = new MenuItem("Save (current bookshelf)");
-        MenuItem SaveTempl = new MenuItem("Save As (selected)");
+        MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
+        MenuItem SaveAsMenuItem = new MenuItem("Save As (CMD-SHIFT-S)");
         MenuItem ClearBookshelfMenuItem = new MenuItem("Clear Bookshelf");
         MenuItem OutputWork = new MenuItem("Output as Text");
         MenuItem PrintTree = new MenuItem("Print as HTML");
         //PrintTree.setOnAction(writeHTML);
         
         //there is no Stage_WS defined at this point
-        this.theRecentMenu = new Menu("Open Recent $");
+        //this.theRecentMenu = new Menu("Open Recent $");
         //refreshRecentMenu();
         MenuItem exit = new MenuItem("Exit");
         exit.setOnAction(new EventHandler<ActionEvent>() {
@@ -229,7 +230,7 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-         menuFile.getItems().addAll(OpenTempl,this.theRecentMenu,SaveName,SaveTempl,ClearBookshelfMenuItem,
+         menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,ClearBookshelfMenuItem,
             OutputWork,
             PrintTree,exit);
         
@@ -243,8 +244,8 @@ private MenuBar makeMenuBar() {
         
          // --- TEXT MENU ---
         MenuItem FileOpen = new MenuItem("FileOpen");
-        SaveName.setOnAction(saveTemplate);
-        SaveTempl.setOnAction(saveTemplate); //docname
+        SaveShelf.setOnAction(SaveHandler);
+        SaveAsMenuItem.setOnAction(SaveAsHandler); //docname
         OpenTempl.setOnAction(openTemplate);
         ClearBookshelfMenuItem.setOnAction(clearBookShelf);
        
@@ -257,7 +258,7 @@ private MenuBar makeMenuBar() {
          public void handle(MouseEvent mouseEvent) {
             System.out.println("MenuBar click detected! " + mouseEvent.getSource());
             
-            refreshRecentMenu();
+            //refreshRecentMenu();
              }
         });
 
@@ -396,6 +397,12 @@ public void deleteSpriteGUI(Book myBook) {
         this.Stage_WS.writeFileOut();
     }
 
+     public void saveAsFileSaver() {
+        this.Stage_WS.setFilename(this.currentOpenFile.getPath());
+        this.Stage_WS.setShortFilename(this.currentOpenFile.getName());
+        this.Stage_WS.saveAs();
+    }
+
     // --- EVENT HANDLERS
 
     // new Book on stage
@@ -453,24 +460,21 @@ public void deleteSpriteGUI(Book myBook) {
                 }
             };
 
-        //save  template
-        EventHandler<ActionEvent> saveDocName = 
-        new EventHandler<ActionEvent>() {
-        @Override 
-        public void handle(ActionEvent event) {
-            if (Main.this.getActiveBook()!=null) {
-                Book thisNode = Main.this.getActiveBook();
-                //Main.this.saveDocTree(thisNode);
-            }
-                }
-            }; 
-
-         //save As template
-        EventHandler<ActionEvent> saveTemplate = 
+        //save 
+        EventHandler<ActionEvent> SaveHandler = 
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
             Main.this.mainFileSaver();
+                }
+            }; 
+
+        //save As template
+        EventHandler<ActionEvent> SaveAsHandler = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Main.this.saveAsFileSaver();
                 }
             }; 
 

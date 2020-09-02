@@ -12,7 +12,9 @@ import java.net.URISyntaxException;
 //JavaFX
 import javafx.stage.Stage;
 import javafx.stage.Screen;
-import javafx.stage.FileChooser; //for choosing files
+//File chooser
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 //Screen positioning
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.Insets;
@@ -296,6 +298,7 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
     System.out.println("KeyPress (as source): " + ke.getSource());
     System.out.println("KeyPress (as higher-level event type): " + ke.getEventType());
     System.out.println("KeyPress (unicode): " + ke.getCharacter());
+    System.out.println("is Shift Down: " + ke.isShiftDown());
     System.out.println("is Control Down: " + ke.isControlDown());
     System.out.println("is Meta(Command) Down: " + ke.isMetaDown());
     //'live' conversion of typing into HTML (not as efficient but typists don't notice)
@@ -475,11 +478,16 @@ public MenuBar getMenuBar() {
     return this.localmenubar;
 }
 
-//FILE LOADERS
+//FILE LOADERS -To browse for files to add to links.  No filters?  or just PDF .docx, html etc?
 public void mainFilepathLoader() {
     final FileChooser fileChooser = new FileChooser();
     Stage myStage = new Stage();
     myStage.setTitle("Get Filepath");
+    /*
+    List<String> myList = new List<String>("*.<md>");
+    FlieChooser.ExtensionFilter myFilter = new FileChooser.ExtensionFilter("Shelf(markdown)",myList);
+    filechooser.setSelectedExtensionFilter(myFilter); 
+    */  
     File file = fileChooser.showOpenDialog(myStage);
     if (file != null) {
       processFilepath(file);

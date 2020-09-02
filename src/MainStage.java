@@ -104,7 +104,8 @@ Book focusBook; //for holding active sprite in this scene.  Pass to app.
 //Book parentBox;//to hold the calling box for this viewer.  
 //Do not create new object here or circular constructors! Do in constructor
 
-String filename = ""; //current filename for saving this stage's contents
+String filename = "";
+String shortfilename=""; //current filename for saving this stage's contents
 //STAGE IDS
 int location = 0;
 String category="";
@@ -157,6 +158,8 @@ double orgSceneY;
 double orgTranslateX;
 double orgTranslateY;
 Main parentStage;
+FileChooser currentFileChooser = new FileChooser();
+FileChooser.ExtensionFilter myExtFilter = new FileChooser.ExtensionFilter("Shelf markdown","*.md");
 
 //Track current stage that is open.  Class variables
 static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
@@ -196,11 +199,8 @@ public MainStage(String title, MenuBar myMenu, Main parentStage) {
     System.out.println("Reference of this stage object MainStage");
     System.out.println(MainStage.this);
     resetBookOrigin();
-    //This is for the 'Book node?'
-    //setWSNode(baseNode); 
-    //data
-    //Book WorkspaceNode = ;
-    //setWSNode(new Book(myCategory,"The workspace is base node of project.","myWorkspace")); //data
+    //fileops
+    this.currentFileChooser.getExtensionFilters().add(myExtFilter);
 }
 
 
@@ -236,19 +236,52 @@ public void processMarkdown(File file) {
 }
 
 public File openMarkdown() {
-         final FileChooser fileChooser = new FileChooser();
+        // final FileChooser fileChooser = new FileChooser();
+        File file = new File (this.getFilename());
+        if (file==null) {
+            file = new File ("untitled.md");
+        } 
         Stage myStage = new Stage();
         myStage.setTitle("Open File");
-        File file = fileChooser.showOpenDialog(myStage);
-        if (file != null) {
+        this.currentFileChooser.setTitle("Open A Shelf File");
+        //this.currentFileChooser.setSelectedExtensionFilter(this.myExtFilter);   
+        this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
+        File tryfile = currentFileChooser.showOpenDialog(myStage);
+        if (tryfile != null) {
+          file = tryfile;
           processMarkdown(file);
+          setFilename(file.getPath());
+          setShortFilename(file.getName());
         } 
-        setFilename(file.getPath());
+        else {
+            //DO SOMETHING
+        }
     return file;
 }
 
+//for save as
+public void saveAs() {
+    Stage myStage = new Stage();
+    myStage.setTitle("Save As ...");
+    String myFilename=getShortFilename(); //SaveAs will use current path so only name is needed
+    this.currentFileChooser.setTitle("Save Shelf File As");
+    this.currentFileChooser.setInitialFileName(myFilename);  
+    this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
+    //System.exit(0);
+    File file = currentFileChooser.showSaveDialog(myStage);
+    if (file != null) {
+        setFilename(file.getPath());
+        setShortFilename(file.getName());
+        writeFileOut();
+        } 
+        else {
+            //DO SOMETHING
+        }
+    }
+
+//for direct save
 public void writeFileOut() {
-    //
+    //using existing filename
     String filepath=this.getFilename();
     System.out.println("Saving: "+filepath);
     ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
@@ -415,6 +448,15 @@ public String getFilename() {
 public void setFilename(String myFile) {
     this.filename = myFile;
     this.shelfFileName.setText(this.filename);
+}
+
+public void setShortFilename(String myFile) {
+    this.shortfilename = myFile;
+    //this.shelfFileName.setText(this.filename);
+}
+
+public String getShortFilename() {
+    return this.shortfilename;
 }
 
 public int getDocCount() {
@@ -853,14 +895,14 @@ public double snapYtoShelf(Book myBook, double newTranslateY){
         //Book hasFocus = Main.this.getcurrentBook();
         Book hadFocus=null;
         Book currentBook = MainStage.this.getActiveBook(); //clicksource
+            //in Edit Stage only a straight "Save" not SaveAs is checked for
             if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
                  System.out.println("CMD-S pressed for save");
                  MainStage.this.bookMetaInspectorStage.updateBookMeta(); //update inspector edits first
                  MainStage.this.writeFileOut();
                  //currentBook.cycleBookColour();
             }
-
-        }
+                    }
     };
 
 //This event handler is sent to the Sprites, but it can access variables from this object
@@ -1109,12 +1151,8 @@ private Group makeWorkspaceTree() {
         //make up a pane to display filename of bookshelf
         Pane shelfFilePane = new Pane();
         shelfFilePane.getChildren().add(this.shelfFileTextArea);
-        this.shelfFileTextArea.setText("default.md");
-        
-        shelfFileName = new Text("default.md");
-        shelfFileName.setY(20.0);
-        shelfFileName.setX(250.0); //575
-
+        //set name of current file in 
+        displayFileNameOnStage("untitled1.md"); //Also set filename?
         //setArcWidth(60);  //do this enough you get a circle.  option
         //setArcHeight(60);                
        
@@ -1149,6 +1187,13 @@ private Group makeWorkspaceTree() {
         //for box placement within the Scene - attach them to the correct Node.
         return myGroup_root;  
     }
+
+private void displayFileNameOnStage(String filename) {
+        this.shelfFileTextArea.setText(filename);
+        shelfFileName = new Text(filename);
+        shelfFileName.setY(20.0);
+        shelfFileName.setX(250.0); //575
+}
 
 private Rectangle makeNewShelf(Integer x, Integer y) {
         
@@ -1287,8 +1332,13 @@ private Scene makeWorkspaceScene(Group myGroup) {
                     //MainStage.this.bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox);
                 }
                 //This operates independently to save event handler passed to bookmetastage
-                if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
-                     System.out.println("CMD-S pressed for save");
+                if (ke.isMetaDown() && ke.isShiftDown() && ke.getCode().getName().equals("S")) {
+                    ke.consume();
+                    System.out.println("CMD-SHIFT-S pressed for save");
+                    MainStage.this.saveAs();
+                }
+                else if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
+                    System.out.println("CMD-S pressed for save");
                     MainStage.this.writeFileOut();
                      //currentBook.cycleBookColour();
                 }
@@ -1305,6 +1355,10 @@ private Scene makeWorkspaceScene(Group myGroup) {
                 if (ke.isMetaDown() && ke.getCode().getName().equals("N")) {
                      System.out.println("CMD-N pressed for new book");
                      MainStage.this.addNewBookToView();
+                     //then to open new link automatically for editing
+                     Book myBook= MainStage.this.getActiveBook();
+                     myBook.setUserView("metaedit");
+                     MainStage.this.OpenRedBookNow(myBook);
                 }
             }
         });
@@ -1352,7 +1406,7 @@ public void AddNewBookFromParser(Book newBook) throws NullPointerException {
 public void addNewBookToView () {
     //Book b = makeBoxWithNode(myNode); //relies on Main, event handlers x
     
-    Book b = new Book(PressBox,DragBox,"label","text","note");
+    Book b = new Book(PressBox,DragBox,"untitled","","");
 
     //adjusthorizontal
     double xpos=b.getX();
