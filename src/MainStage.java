@@ -123,7 +123,7 @@ TextArea headingTextArea = new TextArea();
 TextArea inputTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
 TextArea shelfFileTextArea = new TextArea();
-Text shelfFileName = new Text("default.md");
+Text shelfFileName = new Text("untitled.md");
 Text parentBoxText;
 Text headingBoxText;
 Text inputBoxText;
@@ -1251,8 +1251,8 @@ private Scene makeWorkspaceScene(Group myGroup) {
                  System.out.println("Key pressed on workspace stage " + ke.getSource());
                  System.out.println("KeyCode: "+ke.getCode());
                  //open book if CMD-O
-                 if (ke.isMetaDown() && ke.getCode().getName().equals("I")) {
-                    System.out.println("CMD-I pressed (will open metadata inspector stage)");
+                 if (ke.isMetaDown() && ke.getCode().getName().equals("I") || ke.getCode()==KeyCode.ENTER) {
+                    System.out.println("CMD-I or ENTER pressed (will open metadata inspector stage)");
                     try {
                         Book myBook= MainStage.this.getActiveBook();
                         myBook.setUserView("metaedithtml");

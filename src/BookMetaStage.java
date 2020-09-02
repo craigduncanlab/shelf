@@ -50,6 +50,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
+//Robot to simulate user key typing
+import javafx.scene.robot.Robot;
 // event handlers
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -67,6 +69,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
+//skins for TextArea
+import javafx.scene.control.skin.TextAreaSkin;
 //html editor
 import javafx.scene.web.HTMLEditor;
 //Drag n Drop events
@@ -120,6 +124,7 @@ TextArea mdTextArea = new TextArea();
 TextArea bookLabelTextArea = new TextArea();
 TextArea codeNotesTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
+Integer textFocus=0;
 Text filepathText;
 Text bookLabelText;
 Text multiLineNotesText;
@@ -318,6 +323,38 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
     if (ke.getCode()==KeyCode.SPACE && targetBook.getUserView()=="HTMLonly") {
         closeThisStage();
     }
+    //to help with editor navigation.  cascading tab presses
+    if (ke.getCode()==KeyCode.TAB) {
+        ke.consume(); //so the TAB doesn't actually 'land' as a keystroke in the TextArea
+        if (BookMetaStage.this.localScene.focusOwnerProperty().get() instanceof TextArea) {
+                TextArea focusedTextArea = (TextArea)BookMetaStage.this.localScene.focusOwnerProperty().get();
+              
+            if (focusedTextArea==bookLabelTextArea) {
+                mdTextArea.requestFocus();
+            }
+            else if (focusedTextArea==mdTextArea) {
+                filepathTextArea.requestFocus();
+            }
+            else if (focusedTextArea==filepathTextArea) {
+                urlTextArea.requestFocus();
+            }
+            else if (focusedTextArea==urlTextArea) {
+                codeNotesTextArea.requestFocus();
+            }
+            else if (focusedTextArea==codeNotesTextArea) {
+                bookLabelTextArea.requestFocus();
+            }
+        }  
+    }
+    /*
+    if (ke.getCode()==KeyCode.TAB) {
+        Robot myUser = new Robot(); //requires accessibility features 'on'
+        myUser.keyPress(KeyCode.CONTROL);
+        myUser.keyPress(KeyCode.TAB); 
+        myUser.keyRelease(KeyCode.TAB); //since in JavaFX this works like 'Tab' in other apps
+        myUser.keyRelease(KeyCode.CONTROL);
+    }
+    */
  }
 };
 
@@ -724,10 +761,13 @@ private void makeSceneForBookMetaView() {
         int winHeight=700;
         int scenewidth=winWidth;
         
-        //TEXT AREAS
+        //TEXT AREAS INITIALISATION
+        String terminalStyle="-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #ffffff; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; ";
         bookLabelTextArea.setPrefRowCount(1);
+        bookLabelTextArea.setStyle(terminalStyle);
         mdTextArea.setPrefRowCount(20); //for markdown.  Add to boxPane
         mdTextArea.setWrapText(true);
+        mdTextArea.setStyle(terminalStyle);
         filepathTextArea.setPrefRowCount(1);
         urlTextArea.setPrefRowCount(1);
         outputTextArea.setPrefRowCount(1);
@@ -777,7 +817,7 @@ private void makeSceneForBookMetaView() {
         }
         //compare states and update view
         if (getActiveBook().getUserView().equals("metaedit")) {
-            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             vertFrame.setPrefSize(winWidth,winHeight);
             setTitle(getTitleText(" - Meta Edit View"));
             //htmlEditor.setPrefSize(winWidth,winHeight);
@@ -786,7 +826,7 @@ private void makeSceneForBookMetaView() {
             scenewidth=winWidth;
         }
         else if (getActiveBook().getUserView().equals("metaedithtml")) {
-            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
             htmlEditor.setPrefSize(winWidth,winHeight);
             vertFrame.setPrefSize(winWidth,winHeight);//both, with equal width to HTML
