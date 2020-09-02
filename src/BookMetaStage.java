@@ -160,7 +160,6 @@ public BookMetaStage() {
 //standard open node viewer constructor.  Used by 'OpenRedNodeNow' method in Main
 public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, EventHandler DragBox, EventHandler SaveKeyEvent) {
     //view
-    setJavaFXStageParent(parent);
     this.mainStage=parent;
     //this.localStage.initOwner(parent);
     //store event handlers as local instance variables
@@ -169,7 +168,7 @@ public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, Event
     setKeyPress(SaveKeyEvent); //save key event common to both shelf and inspector views
     setKeyPress(NodeKeyHandler); //this can be different for workspace
     //position
-    setEditWindowPosition();
+    // setEditWindowPosition();  //nb: set this in calling function to avoid setting twice
     //data: new 'parent' node based on category alone
     setActiveBook(myBook);
     updateCurrentBookMetaView(); //updates contents but doesn't show stage unless requested
@@ -665,21 +664,6 @@ public void setCurrentXY(double x, double y) {
     this.latestY=y;
 }
 
-/*Method to set parent stage.  Call this before showing stage 
-
-This is for GUI relationships, not data tree relationships.
-
-nb If the stage has been called from a Book, the tree parent is the box, but
-that box lies within a stage that can be used as parent stage here
-(or make all stages the child of Stage_WS)
-*/
-
-private void setJavaFXStageParent(MainStage parent) {
-    //Stage topStage = BookMetaStage.this.getParentStage().getStage();
-    //Stage Parent = ParentSM.getStage();
-    //myStage.initOwner(parent);
-}
-
 /* 
 
 The order in which the Stages are created and set will determine initial z order for display
@@ -1002,7 +986,7 @@ EventHandler<ActionEvent> closeWindow =
         }
     };
 
-private void closeThisStage() {
+public void closeThisStage() {
     //BookMetaStage.this.getParentStage().getStage().show();
            //this.myTrk.setCurrentFocus(BookMetaStage.this);
     getStage().close();

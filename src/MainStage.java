@@ -700,6 +700,7 @@ private void setMetaStageParams(BookMetaStage newInspectorStage) {
     //centred on screen dimensions, not on the parent stage
     myLocalStage.setX((ScreenBounds.getWidth() - myLocalStage.getWidth()) / 2); 
     myLocalStage.setY((ScreenBounds.getHeight() -myLocalStage.getHeight()) / 2); 
+    myLocalStage.setAlwaysOnTop(true);
 }
 
 //STAGE MANAGEMENT FUNCTIONS
@@ -920,6 +921,7 @@ EventHandler<MouseEvent> processLocalBoxClick =
 //TO DO: check Book isn't the basis for inspector stage before opening new stage.
 private void OpenRedBookNow(Book currentBook) {
      //Book currentBook= getActiveBook(); //currentBook.getBoxNode();
+     //bookMetaInspectorStage.closeThisStage(); //close open stage.  No save checks? //TO DO: close all child stages
      bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
      setMetaStageParams(bookMetaInspectorStage);
 
@@ -1281,7 +1283,7 @@ public void setActiveBook(Book b) {
 public Book getActiveBook() {
     if (this.focusBook==null) {
         System.out.println("No book in setActiveBook method");
-        System.exit(0);
+        return null;//just creates one
     }
     return this.focusBook;
 }
