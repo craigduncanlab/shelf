@@ -1,9 +1,8 @@
+//(C) Craig Duncan 2017-2020
+//www.craigduncan.com.au
 
 //import utilities needed for Arrays lists etc
 import java.util.*;
-//package should include the Definition class
-//(C) Craig Duncan 2017-2020
-//-old spritebox
 //FX and events
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -29,13 +28,7 @@ import javafx.stage.Stage;
 
 public class Book extends StackPane {
 
-//mark this class this to allow for changes to variables in class (refactoring)
-//private static final long serialVersionUID = -64702044414208496L;
-
-
-//This book's metadata
-int numClauses=0; //this will hold number of clauses
-//NODE INPUT FIELDS
+//INSTANCE PARAMETERS
 String docxfilepath="";
 String urlpath = "";
 String docname=""; //to hold the container name or filename
@@ -45,15 +38,7 @@ String shortname="";
 String booklabel="";
 String heading="";
 String date="";
-//this book's local reference for input/ouput
-int noderef=0;
-//Book OUTPUT FIELDS
 String output="";
- 
-//NODE CATEGORIES (FOR WORLD NODES) TO DO: Turn into a Book array
-ArrayList<NodeCategory> nodeCatList = new ArrayList<NodeCategory>();
-//This node's data and level in tree:
-Clause dataClause = new Clause(); 
 
 String nodecategory = "";
 //counters
@@ -308,19 +293,11 @@ private String getthisOutputText() {
 	return this.output;
 }
 
-//THIS NODE'S CLAUSE DATA (OBSOLETE)
-/*
-public void addNodeClause(Clause thisClause) {
-	this.dataClause = thisClause;
-}
 
-public Clause getNodeClause() {
-	return this.dataClause;
-}
-*/
 public Book cloneBook() {
 	Book clone = new Book();
 	clone.setHTML(this.htmlString); 
+	clone.setLabel(this.booklabel);
 	clone.setMD(this.mdString);
 	clone.setDocName(this.docname); //to hold the container name or filename
 	clone.setNotes(this.docnotes);

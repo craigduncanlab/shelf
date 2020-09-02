@@ -1,4 +1,5 @@
 //(c) Craig Duncan 2017-2020
+//www.craigduncan.com.au
 
 //import utilities needed for Arrays lists etc
 import java.util.*;
@@ -482,12 +483,7 @@ public MenuBar getMenuBar() {
 public void mainFilepathLoader() {
     final FileChooser fileChooser = new FileChooser();
     Stage myStage = new Stage();
-    myStage.setTitle("Get Filepath");
-    /*
-    List<String> myList = new List<String>("*.<md>");
-    FlieChooser.ExtensionFilter myFilter = new FileChooser.ExtensionFilter("Shelf(markdown)",myList);
-    filechooser.setSelectedExtensionFilter(myFilter); 
-    */  
+    myStage.setTitle("Get Filepath"); 
     File file = fileChooser.showOpenDialog(myStage);
     if (file != null) {
       processFilepath(file);

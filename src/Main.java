@@ -1,4 +1,5 @@
 //(c) Craig Duncan 2017-2020 
+//www.craigduncan.com.au
 
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -213,10 +214,10 @@ private MenuBar makeMenuBar() {
         // --- FILE MENU ---
         Menu menuFile = new Menu("File");
         //setFileMenu(menuFile);
-        MenuItem OpenTempl = new MenuItem("Open MD document");
+        MenuItem OpenTempl = new MenuItem("Open (CMD-O)");
         MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
         MenuItem SaveAsMenuItem = new MenuItem("Save As (CMD-SHIFT-S)");
-        MenuItem ClearBookshelfMenuItem = new MenuItem("Clear Bookshelf");
+        MenuItem ClearBookshelfMenuItem = new MenuItem("Close (CMD-W)");
         MenuItem OutputWork = new MenuItem("Output as Text");
         MenuItem PrintTree = new MenuItem("Print as HTML");
         //PrintTree.setOnAction(writeHTML);
@@ -230,9 +231,12 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-         menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,ClearBookshelfMenuItem,
+        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,ClearBookshelfMenuItem,exit);
+
+        /*menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,ClearBookshelfMenuItem,
             OutputWork,
             PrintTree,exit);
+            */
         
         //--- MENU CONCEPTS
         Menu menuBooks = new Menu("Books");
@@ -287,9 +291,12 @@ private void refreshRecentMenu() {
 //clearBooksFromShelf
 public void clearBooksFromShelf() {
     //clear filepath too, to prevent saving over?
-    this.currentOpenFile = new File ("default.md");
-    //Stage_WS.clearAllBooks(); //do not call - circular reference
+    Stage_WS.clearAllBooks(); //do not call - circular reference
     //Stage_WS.resetBookOrigin();
+}
+
+public void resetFileNames() {
+    this.currentOpenFile = new File ("untitled.md");
     Stage_WS.setFilename(this.currentOpenFile.getPath());
 }
 

@@ -1,4 +1,5 @@
 //(c) Craig Duncan 2017-2020
+//www.craigduncan.com.au
 
 //import utilities needed for Arrays lists etc
 import java.util.*; //collections too
@@ -660,7 +661,7 @@ public void clearAllBooks() {
     this.spriteGroup.getChildren().clear();
     this.booksOnShelf.clear(); 
     this.resetBookOrigin();
-    this.parentStage.clearBooksFromShelf(); //to update general file name etc
+    this.parentStage.resetFileNames(); //to update general file name etc
 }
 
 public void swapSpriteGroup(Group myGroup) {
@@ -690,120 +691,17 @@ public void setCurrentXY(double x, double y) {
     this.latestY=y;
 }
 
-/*Method to set parent stage.  Call this before showing stage 
-
-This is for GUI relationships, not data tree relationships.
-
-nb If the stage has been called from a Book, the tree parent is the box, but
-that box lies within a stage that can be used as parent stage here
-(or make all stages the child of Stage_WS)
-*/
-private void setJavaFXStageParent(BookMetaStage ParentSM) {
-    Stage myStage = getStage(); 
-    Stage Parent = ParentSM.getStage();
-    myStage.initOwner(Parent);
+//method to fix the BookMetaStage instance position relative to screen dimensions
+private void setMetaStageParams(BookMetaStage newInspectorStage) {
+    Stage myMainStage = getStage(); 
+    Stage myLocalStage = newInspectorStage.getStage();
+    myLocalStage.initOwner(myMainStage);
+    //centred on screen dimensions, not on the parent stage
+    myLocalStage.setX((ScreenBounds.getWidth() - myLocalStage.getWidth()) / 2); 
+    myLocalStage.setY((ScreenBounds.getHeight() -myLocalStage.getHeight()) / 2); 
 }
 
-/* 
-
-The order in which the Stages are created and set will determine initial z order for display
-Earliest z is toward back
-The workspace (WS) is, in effect, a large window placed at back.
-TO DO: check x y and within tolerable limits
-
-*/
-private void setEditWindowPosition() {
-    setStagePosition(100,300);
-    stageFront();
-    }
-
-//set workspace Window Position
-private void setWorkspaceWindowPosition() {
-   setStagePosition(0,0);
-   stageBack();
-}
-
-//toolbars and other misc output
-private void setToolBarWindowPosition() {
-    setStagePosition(800,300);
-    stageFront();
-}
-/* 
-
-The order in which the Stages are created and set will determine initial z order for display
-Earliest z is toward back
-The workspace (WS) is, in effect, a large window placed at back.
-TO DO: Make the MenuBar etc attach to a group that is at back,
-then add WIP spritexboxes to a 'Document Group' that replaces Workspace with 'Document' menu
-
-
-
-//TO DO: set position based on NodeCat.
-public void setPositionArchived() {
-
-     switch(this.stageName){
-
-            case "workspace":
-                setStagePosition(0,0);
-                stageBack();
-                break;
-
-            case "editor":
-                //myStage.initOwner(Parent);  //this must be called before '.show()' on child
-                setStagePosition(850,0);
-                stageFront();
-                break;
-
-            case "project":
-                setStagePosition(800,300);
-                stageFront();
-                break;
-
-            case "project library":
-                setStagePosition(800,300);
-                stageFront();
-                break;
-
-            case "library":
-                setStagePosition(1000,300);
-                stageFront();
-                break;
-
-            case "collection":
-                setStagePosition(800,100);
-                stageFront();
-                break;
-                
-            case "document":
-                setStagePosition(400,200);
-                stageFront();
-                break;
-
-            case "Toolbar":
-                setStagePosition(1000,50);
-                stageFront();
-                break;
-
-            case "Output":  
-                setStagePosition(150,550);
-                stageFront();
-                break;
-
-            case "Import":
-                setStagePosition(800,200);
-                stageFront();
-                break;
-            
-            default:
-                setStagePosition(200,200);
-                stageFront();
-                break;
-    }
-    
-}
- */
 //STAGE MANAGEMENT FUNCTIONS
-
 
 public void showStage() {
     this.localStage.show(); 
@@ -828,6 +726,7 @@ public void toggleStage() {
     }
 }
 
+/*
 //The scene only contains a pane to display sprite boxes
 private Scene makeSceneForBoxes(ScrollPane myPane) {
         
@@ -843,7 +742,7 @@ private Scene makeSceneForBoxes(ScrollPane myPane) {
         updateScene(tempScene);
         return tempScene;
 }
-
+*/
 
 //Method to change title depending on data mode the node is in.
 private String getTitleText(String myString) {
@@ -1020,6 +919,7 @@ EventHandler<MouseEvent> processLocalBoxClick =
 private void OpenRedBookNow(Book currentBook) {
      //Book currentBook= getActiveBook(); //currentBook.getBoxNode();
      bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
+     setMetaStageParams(bookMetaInspectorStage);
 
 }
 /*switch(clickcount) {
@@ -1086,8 +986,6 @@ EventHandler<MouseEvent> mouseEnterEventHandler =
 
 
 private void closeThisStage() {
-    //BookMetaStage.this.getParentStage().getStage().show();
-           //this.myTrk.setCurrentFocus(BookMetaStage.this);
     getStage().close();
 }
 
@@ -1100,7 +998,8 @@ private void newWorkstageFromGroup() {
     Stage myStage = new Stage();
     setStage(myStage);
     updateScene(myScene);
-    setWorkspaceWindowPosition();
+    setStagePosition(0,0);
+    stageBack();
     showStage();
 }
 
@@ -1503,11 +1402,6 @@ private void advanceBookPositionHor() {
             }
 }
 
-//TO DO: Reset sprite positions when re-loading display.  To match a Grid Layout.
-//This function runs new boxes down vertically
-//The alternative to this is to package boxes in a list view.
-//"A ListView displays a horizontal or vertical list of items from which the user may select, or with which the user may interact."
-//Observable List https://docs.oracle.com/javase/8/javafx/api/javafx/scene/control/ListView.html
 private void advanceBookPositionVert() {
         if (this.spriteY>660) {
                 this.spriteY=spriteY+this.shelf1_Y;
