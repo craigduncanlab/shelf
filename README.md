@@ -88,19 +88,25 @@ Choose Book--> New to add a new Book to Bookshelf.
 
 ## Bookshelf view key commands:
 
-CMD-O: open a new bookshelf file (.md)
+CMD-O: Open a new bookshelf file (.md)
 
-CMD-I: Inspect a book's metadata
+CMD-N: Put a new book on bookshelf.
 
-CMD-S: Save bookshelf data (to current file).  This saves book position on shelf.
-
-CMD-W: Clear the bookshelf.
-
-CMD-N: New book on bookshelf.
+CMD-C: Copy selected Book to clipboard.
 
 DELETE: Delete currently selected book.
 
-SPACE: Open Book's HTML preview (and close it).
+CMD-V: Paste clipboard as New Book to bookshelf.
+
+CMD-S: Save bookshelf data (to current file).  This saves all book positions on shelf, and text file is written in shelved order.
+
+CMD-W: Clear the bookshelf from memory (Close).
+
+## View options
+
+CMD-I: Inspect a book's metadata
+
+SPACE: Open Book's HTML text preview (press SPACE again to close it).
 
 # Book Inspector
 
