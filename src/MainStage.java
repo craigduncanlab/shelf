@@ -146,7 +146,7 @@ CheckBox visibleCheck = new CheckBox("Visible");
 
 Integer margin_yaxis;
 Integer margin_xaxis;
-Integer cellcols=12;
+Integer cellcols=15;
 Integer cellrows=8;
 Integer cellgap_x=80; //cellwidth x dimension
 Integer cellgap_y=100; //cell width y dimension
@@ -1106,7 +1106,7 @@ private Group makeWorkspaceTree() {
 
         ArrayList<Line> myColLines=new ArrayList<Line>();
         double startY=0.0+cellrowoffset_y;
-        double endY=this.cellrows*this.cellgap_y;
+        double endY=this.cellrows*this.cellgap_y+(cellrowoffset_y);
         //we need 2 extra lines
         for (int i=0;i<this.cellcols+3;i++) {
             Line line = new Line(i*this.cellgap_x, startY,i*this.cellgap_x,endY);
