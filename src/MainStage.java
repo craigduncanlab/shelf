@@ -99,7 +99,7 @@ String stageTitle = "";
 //Book reference_ParentNode = new Book();
 Stage localStage = new Stage();
 Node rootNode; //Use Javafx object type
-Group spriteGroup;
+Group bookgroupNode;
 ScrollPane spriteScrollPane;
 Pane spritePane;
 Scene localScene;
@@ -211,8 +211,8 @@ public MainStage(String title, MenuBar myMenu, Main parentStage) {
     //we need to set sprite group etc
 
     newWorkstageFromGroup();
-    System.out.println ("The initial spritegroup...");
-    System.out.println (this.spriteGroup);
+    System.out.println ("The initial bookgroupNode...");
+    System.out.println (this.bookgroupNode);
     System.out.println("Reference of this stage object MainStage");
     System.out.println(MainStage.this);
     resetBookOrigin();
@@ -651,20 +651,13 @@ public Stage getStage() {
 /*
 setter for the Group sprite boxes will be added to
 */
-public void setSpriteGroup(Group myGroup) {
-    this.spriteGroup = myGroup;
+
+public void setGridGroup(Group myGroup) {
+    this.bookgroupNode = myGroup;
 }
 
-public Group getSpriteGroup() {
-    return this.spriteGroup;
-}
-
-public void setSpritePane(Pane myPane) {
-    this.spritePane = myPane;
-}
-
-public Pane getSpritePane() {
-    return this.spritePane;
+public Group getGridGroup() {
+    return this.bookgroupNode;
 }
 
 public void setSpriteScrollPane(ScrollPane myPane) {
@@ -677,18 +670,20 @@ public ScrollPane getSpriteScrollPane() {
 
 
 public void clearAllBooks() {
-    this.spriteGroup.getChildren().clear();
+    this.bookgroupNode.getChildren().clear();
     this.booksOnShelf.clear(); 
     this.resetBookOrigin();
     this.parentStage.resetFileNames(); //to update general file name etc
 }
 
-public void swapSpriteGroup(Group myGroup) {
+/*
+public void swapbookgroupNode(Group myGroup) {
     Pane myPane = getSpritePane();
-    myPane.getChildren().remove(getSpriteGroup());
-    setSpriteGroup(myGroup);
+    myPane.getChildren().remove(getbookgroupNode());
+    setbookgroupNode(myGroup);
     myPane.getChildren().addAll(myGroup);
 }
+*/
 
 private void setStagePosition(double x, double y) {
     this.localStage.setX(x);
@@ -788,7 +783,7 @@ public double snapYtoShelf(Book myBook, double newTranslateY){
         quotY=(this.cellrows-1);
     }
     myBook.setRow(quotY);
-    newTranslateY=(this.cellgap_y*quotY)+this.boxtopmargin;
+    newTranslateY=(this.cellgap_y*quotY)+this.cellrowoffset_y+this.boxtopmargin;
     return newTranslateY;
 }
 
@@ -983,7 +978,7 @@ private void OpenRedBookNow(Book currentBook) {
 /*Mouse event handler - to deal with boxes being dragged over this stage manager and release
 If this is attached to the panel in the GUI where the child nodes sit, it is easy to handle a 'drop'
 Currently utilises the 'makeScrollGroup' and addNewSpriteToStage methods.
-The setSpriteGroup group must also add this event handler to that group.
+The setbookgroupNode group must also add this event handler to that group.
 */
 
 EventHandler<MouseEvent> mouseEnterEventHandler = 
@@ -993,7 +988,7 @@ EventHandler<MouseEvent> mouseEnterEventHandler =
         public void handle(MouseEvent t) {
             //Book currentBook = ((Book)(t.getSource()));
             //TO DO: check if mouse is dragging/pressed
-            //System.out.println("Detected mouse released - Stage Manager Group"+BookMetaStage.this.getSpriteGroup().toString());
+            //System.out.println("Detected mouse released - Stage Manager Group"+BookMetaStage.this.getbookgroupNode().toString());
             //t.consume();//check
         }
     };
@@ -1007,7 +1002,7 @@ EventHandler<MouseEvent> mouseEnterEventHandler =
         public void handle(MouseEvent t) {
             //Book currentBook = ((Book)(t.getSource()));
             //TO DO: check if mouse is dragging/pressed
-            //System.out.println("Detected mouse drag - Stage Manager Group"+BookMetaStage.this.getSpriteGroup().toString());
+            //System.out.println("Detected mouse drag - Stage Manager Group"+BookMetaStage.this.getbookgroupNode().toString());
             //t.consume();//check
         }
     };
@@ -1043,29 +1038,46 @@ Sets up workspace stage with 2 subgroups for vertical separation:
 This method does not update content of the Sprite-display GUI node.
 
 */
-
+//myGroup_root--->
+//myBP(top)-->menuBarGroup-->myMenu
+//myBP(center)-->workspacePane-->displayAreaGroup (for BookIcons etc to be added)
 private Group makeWorkspaceTree() {
 
         Group myGroup_root = new Group(); //for root node of Scene
-        BorderPane myBP = new BorderPane(); //holds the menubar, spritegroup
+        BorderPane myBP = new BorderPane(); //holds the menubar at top, workspace in center of BorderPane
         Group menubarGroup = new Group(); //subgroup
         MenuBar myMenu = getMenuBar();
         menubarGroup.getChildren().addAll(myMenu);
-        
-        //the Pane holding the group allows movement of Bookes independently, without relative movement
-        
-        Pane workspacePane = new Pane(); //to hold a group, holding a spritegroup
-        //This is empty initially...
+        Pane workspacePane = new Pane(); 
+        //the Pane holding the group allows movement of Books independently, without relative movement
+         /*ScrollPane boxPane = makeScrollGroup();
+        boxPane.setPannable(true);
+        boxPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
+        boxPane.setVmax(500);
+        */
         Group displayAreaGroup = new Group(); //subgroup of Pane; where Sprites located
-        
+        //myScrollPane.getChildren().addAll(displayAreaGroup);
+        ScrollPane myScrollPane = new ScrollPane(workspacePane);
+        myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
+        myScrollPane.setVmax(500);
         workspacePane.getChildren().addAll(displayAreaGroup);
-        setSpritePane(workspacePane); //store for later use
-        setSpriteGroup(displayAreaGroup); //store for later use
+        //ScrollPane myScrollPane= new ScrollPane();
+        myScrollPane.setPannable(true);
+        String scrollpaneStyle="-fx-background-color:transparent; ";
+        myScrollPane.setStyle(scrollpaneStyle);
+        setGridGroup(displayAreaGroup); //store as instance variable for referencing elsewhere
+        //myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
+       // myScrollPane.setVmax(500);
+        //Pane workspacePane = new Pane(); //to hold a group, holding a bookgroupNode
+        //This is empty initially...
 
+        //setSpritePane(workspacePane); //store for later use
+        
         myBP.setTop(menubarGroup);
-       //myBP.setMargin(workspacePane, new Insets(50,50,50,50)); //i.e. Y=-50='translateX=0'
-        myBP.setMargin(workspacePane, new Insets(0,0,0,0));
-        myBP.setCenter(workspacePane);
+        //myBP.setMargin(workspacePane, new Insets(50,50,50,50)); //i.e. Y=-50='translateX=0'
+        myBP.setMargin(myScrollPane, new Insets(0,0,0,0));
+        myBP.setCenter(myScrollPane);
+        //myBP.setCenter(myScrollPane);
         //workspacePane.setPadding(new Insets(150,150,150,150));
         //
         //Make horizontal lines for grid, and add to FX root node for this Stage
@@ -1088,7 +1100,8 @@ private Group makeWorkspaceTree() {
         for (int i=0;i<this.cellcols+2;i++) {
             Line line = new Line(startX,(i*cellgap_y)+cellrowoffset_y,endX,(i*cellgap_y)+cellrowoffset_y);
             myRowLines.add(line); //future use
-            myGroup_root.getChildren().add(line);
+            workspacePane.getChildren().add(line); //put them here so they are not 'erased' and remains visible
+            //displayAreaGroup.getChildren().add(line);
         }
 
         ArrayList<Line> myColLines=new ArrayList<Line>();
@@ -1098,7 +1111,8 @@ private Group makeWorkspaceTree() {
         for (int i=0;i<this.cellcols+3;i++) {
             Line line = new Line(i*this.cellgap_x, startY,i*this.cellgap_x,endY);
             myColLines.add(line); //future use
-            myGroup_root.getChildren().add(line);
+            workspacePane.getChildren().add(line);
+            //displayAreaGroup.getChildren().add(line);
         }
 
         //make up a pane to display filename of bookshelf (not used)
@@ -1331,8 +1345,8 @@ public Book getActiveBook() {
 
 //Called by LoadSave and iterates through the nodes in the parsed MD file.
 public void AddNewBookFromParser(Book newBook) throws NullPointerException {
-    System.out.println("SpriteGroup in AddNewBookFromParser");
-    System.out.println(this.spriteGroup);
+    System.out.println("bookgroupNode in AddNewBookFromParser");
+    System.out.println(this.bookgroupNode);
     try {
         addBookToStage(newBook);
         System.out.println(newBook.toString());
@@ -1363,8 +1377,8 @@ public void addNewBookToView () {
         System.exit(0);
     }
    
-    System.out.println("SpriteGroup in addnodetoview");
-    System.out.println(this.spriteGroup);  
+    System.out.println("bookgroupNode in addnodetoview");
+    System.out.println(this.bookgroupNode);  
 }
 
 /*
@@ -1379,7 +1393,7 @@ private void addBookToStage(Book myBook) {
         System.exit(0);
     }
     
-    this.spriteGroup.getChildren().add(myBook);
+    this.bookgroupNode.getChildren().add(myBook);
     this.booksOnShelf.add(myBook);  //add to metadata collection TO DO: cater for deletions.
     try { 
         setActiveBook(myBook); 
@@ -1394,7 +1408,7 @@ private void addBookToStage(Book myBook) {
 
 public void removeBookFromStage(Book thisBook) {
     //TO DO: remove Node (data) ? is it cleaned up by GUI object removal?
-    this.spriteGroup.getChildren().remove(thisBook); //view/GUI
+    this.bookgroupNode.getChildren().remove(thisBook); //view/GUI
     this.booksOnShelf.remove(thisBook);
     //to do: remove Book from ArrayList too.
     getStage().show(); //refresh GUI

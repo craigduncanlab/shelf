@@ -798,7 +798,7 @@ private void makeSceneForBookMetaView() {
         HBox filepathBox = new HBox(0,filepathTextArea,btnBrowseFilepath,btnOpenDoc);
         HBox urlpathBox = new HBox(0,urlTextArea,btnOpenURL);
         HBox widebox = new HBox(0,htmlEditor); //default - can change as below
-        
+        BorderPane borderPane = new BorderPane();
         //handle null case
         if (getActiveBook().getUserView()==null) {
             getActiveBook().setUserView("metaedithtml");
@@ -809,7 +809,6 @@ private void makeSceneForBookMetaView() {
             vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             vertFrame.setPrefSize(winWidth,winHeight);
             setTitle(getTitleText(" - Meta Edit View"));
-            //htmlEditor.setPrefSize(winWidth,winHeight);
             widebox = new HBox(0,vertFrame);
             widebox.setPrefSize(winWidth,winHeight); 
             scenewidth=winWidth;
@@ -817,41 +816,25 @@ private void makeSceneForBookMetaView() {
         else if (getActiveBook().getUserView().equals("metaedithtml")) {
             vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
-            htmlEditor.setPrefSize(winWidth,winHeight);
+            //htmlEditor.setPrefSize(winWidth,winHeight);  //use BorderPanes for better resizing.
             vertFrame.setPrefSize(winWidth,winHeight);//both, with equal width to HTML
             widebox = new HBox(0,vertFrame,htmlEditor);
             widebox.setPrefSize(dblwidth,winHeight);
             scenewidth=dblwidth;
         }
-           
         else if(getActiveBook().getUserView().equals("HTMLonly")) {
             //vertFrame = new VBox(0,this.codeNotesTextArea,hboxButtons); //lose buttons?
             //vertFrame.setPrefSize(dblwidth,winHeight);
-            htmlEditor.setPrefSize(dblwidth,winHeight);
+            htmlEditor.setPrefSize(dblwidth,winHeight); //if you don't set this it will resize to widebox as needed.
+
             setTitle(getTitleText(" - HTML View"));
             widebox = new HBox(0,htmlEditor); //htmlEditor is itself a component for view
-            widebox.setPrefSize(dblwidth,winHeight); //whole dbl width devoted to htmlEditor
+            //widebox.setPrefSize(dblwidth,winHeight); //whole dbl width devoted to htmlEditor
             scenewidth=dblwidth;
             //System.exit(0);
         }
-        
-         //this is now the default?
-        /*
-            else {
-            vertFrame = new VBox(0,visiblebox,filepathText,filepathBox,urlText,urlpathBox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,multiLineNotesText,this.codeNotesTextArea,hboxButtons);
-            setTitle(getTitleText(" - Full View"));
-            vertFrame.setPrefSize(winWidth,winHeight);
-            widebox = new HBox(0,vertFrame,htmlEditor);
-            widebox.setPrefSize(dblwidth,winHeight);
-            scenewidth=dblwidth;
-            //widebox.getChildren().add()
-        }
-        */
-        //
-        Pane largePane = new Pane();
-        largePane.setPrefSize(scenewidth, winHeight);
-        largePane.getChildren().add(widebox); //toggle option? 
-        Scene tempScene = new Scene (largePane,scenewidth,winHeight); //default width x height (px)
+        borderPane.setCenter(widebox);  
+        Scene tempScene = new Scene (borderPane,scenewidth,winHeight); //default width x height (px)
         //add event handler for mouse released event
         tempScene.addEventFilter(MouseEvent.MOUSE_RELEASED, mouseEnterEventHandler);
          //add event handler for mouse dragged  event
