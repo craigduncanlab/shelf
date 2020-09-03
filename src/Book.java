@@ -51,7 +51,9 @@ Color userColour=Color.LIGHTBLUE;
 Color alertColour=Color.RED;
 BookIcon myBookIcon;
 String userMetaView; //how to display metadata
-Integer shelfNumber;
+Integer rowNumber=0;
+Integer columnNumber=0;
+Integer stdWidth=80; //same as BookIcon width.
 EventHandler myPressBox;
 EventHandler myDragBox;
 //empty constructor no arguments
@@ -151,19 +153,27 @@ public double getY() {
 
 }
 
-public void setShelf(Integer myShelf) {
-	this.shelfNumber=myShelf;
+public void setRow(Integer myShelf) {
+	this.rowNumber=myShelf;
 }
 
-public Integer getShelf() {
-	return this.shelfNumber;
+public Integer getRow() {
+	return this.rowNumber;
+}
+
+public void setCol(Integer myCol) {
+	this.columnNumber=myCol;
+}
+
+public Integer getCol() {
+	return this.columnNumber;
 }
 
 //create a Score that will rank all Books by Shelf position lowest (top left) to highest (bottom right)
-public Integer getShelfScore(){
+public Integer getRowScore(){
 	Integer myScore=0;
 	try {
-		double dScore=getShelf()*1000+getX();
+		double dScore=getRow()*1000+getX();
 		myScore = (int)dScore;
 	}
 	catch (NullPointerException e) {
@@ -333,7 +343,8 @@ public Book cloneBook() {
 	clone.setY(this.myYpos);
 	clone.setAlert(this.isAlert);
 	clone.setUserView(this.userMetaView);
-	clone.setShelf(this.shelfNumber);
+	clone.setRow(this.rowNumber);
+	clone.setCol(this.columnNumber);
 	clone.setPressBox(this.myPressBox);
 	clone.setDragBox(this.myDragBox);
 	clone.FXsetup();
@@ -346,11 +357,11 @@ Position can also be set externally by the calling class */
 
 public void FXsetup() {
     this.myBookIcon = new BookIcon();   //Uses defaults.
-    Font boxfont=Font.font ("Verdana", 12); //check this size on monitor/screen
+    Font boxfont=Font.font ("Arial", 12); //check this size on monitor/screen.  cf Verdana
     this.bookspinetext.setFont(boxfont);
-    this.bookspinetext.setRotate(270); 
+    //this.bookspinetext.setRotate(270); //for vertical text
     this.bookspinetext.setFill(myBookIcon.colourPicker("black")); //black Text
-    this.bookspinetext.setWrappingWidth(130);
+    this.bookspinetext.setWrappingWidth(this.stdWidth);
     this.setCursor(Cursor.HAND);
     //add these other GUI child nodes to this Stackpane i.e. to this Object as a 'Stackpane' in JavaFX
     this.getChildren().addAll(myBookIcon,bookspinetext);  // - a BookIcon (type Rectangle) and a Text object

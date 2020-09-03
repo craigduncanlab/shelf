@@ -177,6 +177,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		Boolean filepathLine=false;
 		Boolean singlecodeline=false;
 		Boolean coord=false;
+		Boolean grid=false;
 		String label = "";
 		int nl=0;
 		try {
@@ -193,6 +194,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 				filepathLine=false;
 				urlLine=false;
 				coord=false;
+				grid=false;
 				//Array currentNotes[] = new Array(2);
 				String thisRow=scanner1.nextLine();
 				//Scanner scanner2= new Scanner(thisRow).useDelimiter("#");
@@ -235,6 +237,11 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		            	} 
 		            	else if (prefix.equals("[x,y](")) {
 		            		coord=true;
+		            		System.out.println(prefix);
+		            		
+		            	}
+		            	else if (prefix.equals("[r,c](")) {
+		            		grid=true;
 		            		System.out.println(prefix);
 		            		
 		            	}
@@ -313,6 +320,9 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 	                    	else if(coord==true){
 	                    		fileindex.add(8);//8=coordinates
 	                    	}
+	                    	else if(grid==true){
+	                    		fileindex.add(9);//9=grid coord
+	                    	}
 	                    	else {
 	                    		if (thisRow.length()>0) {
 	                    			fileindex.add(1); //md
@@ -361,6 +371,8 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		String filepathString="";
 		double x=0.0;
 		double y=0.0;
+		Integer row=0;
+		Integer col=0;
 		try {
 				Scanner scanner2 = new Scanner(input); //default delimiter is EOL?
 				if (scanner2==null) {
@@ -440,6 +452,25 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				  }
 				  if(y<0) {
 				  	y=0;
+				  }
+				}
+				//grid coordinates line
+				if(fileindex.get(nl)==9) {
+				  String restart=thisLine.replace("[r,c](","");
+				  String restart2=restart.replace(")","");
+				  String restart3=restart2.replace("]",",");
+				  Scanner scanner3= new Scanner(restart3).useDelimiter(",");
+				  String rc=scanner3.next();
+				  String cc=scanner3.next();
+				  System.out.println(rc+","+cc);
+				  row = (int)Double.parseDouble(rc);
+				  col = (int)Double.parseDouble(cc);
+				  System.out.println(row+","+col);
+				  if (row<0) {
+				  	row=0;
+				  }
+				  if(col<0) {
+				  	col=0;
 				  }
 				}
 				nl++;

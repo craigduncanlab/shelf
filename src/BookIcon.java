@@ -8,10 +8,14 @@ import javafx.scene.paint.ImagePattern;
 import java.util.*;
 
 
+
+
 public class BookIcon extends Rectangle{   
     //set default or current colour here?
     String boxcolour; //to hold String with colour description.
     Integer colourIndex;
+    Integer stdWith=80;
+    Integer stdHeight=80;
     /* Some sample colours:
     "chocolate", "salmon", "gold", "coral", "darkorchid",
             "darkgoldenrod", "lightsalmon", "black", "rosybrown", "blue",
@@ -19,10 +23,10 @@ public class BookIcon extends Rectangle{
     */
 
 //default constructor
-    public BookIcon() {
+public BookIcon() {
     	this.setColour(Color.WHITE); //default
-        this.setWidth(40);
-        this.setHeight(150);
+        this.setWidth(this.stdWith); //was (40,150) (width,height)
+        this.setHeight(this.stdHeight);
         //setArcWidth(60);  //do this enough you get a circle.  option
         //setArcHeight(60);                
         setStroke(Color.BLACK); //stroke is border colour
@@ -34,8 +38,8 @@ public class BookIcon extends Rectangle{
         //default
         
         //this.setColour(mycol);
-        setWidth(40);
-        setHeight(150);
+        this.setWidth(this.stdWith); //was (40,150) (width,height)
+        this.setHeight(this.stdHeight);
         /* image too.  
         //This works but proportions must be correct for rectangle if image used as a fill
         Image img = new Image("paper.png");

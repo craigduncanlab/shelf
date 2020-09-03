@@ -144,8 +144,23 @@ MenuBar localmenubar;
 //visibility checkbox
 CheckBox visibleCheck = new CheckBox("Visible");
 
-Integer shelf1_Y;
-Integer shelfthickness=15;
+Integer margin_yaxis;
+Integer margin_xaxis;
+Integer cellcols=12;
+Integer cellrows=8;
+Integer cellgap_x=80; //cellwidth x dimension
+Integer cellgap_y=100; //cell width y dimension
+Integer firstcell_x=this.cellgap_x;
+Integer firstcell_y=0;
+Integer gridwidth=1000;
+Integer gridlineheight=1;
+Integer filenameoffset_y=20;
+Integer filenameoffset_x=250;
+Integer cellrowoffset_y=30;
+Integer boxtopmargin=10;
+Color shelfborder=Color.BLACK;
+Color shelffill=Color.DARKSLATEGREY;
+
 /*
 Data collection will parallel GUI display of boxes. Provided stage manager can be serialised?
 Can GUI info be transient or should it be serialised?
@@ -308,7 +323,7 @@ public ArrayList<Book> listBooksShelfOrder() {
     Integer booknum=myBooksonShelves.size();
     for (int x=0;x<booknum;x++) {
         Book item = myBooksonShelves.get(x);
-        Integer score=item.getShelfScore();
+        Integer score=item.getRowScore();
         scoreIndexes.add(score);
     }
     Collections.sort(scoreIndexes); //performs a sort
@@ -324,7 +339,7 @@ public ArrayList<Book> listBooksShelfOrder() {
             Iterator<Book> bookIterator = myBooksonShelves.iterator();
             while (bookIterator.hasNext()) {
                 Book item = bookIterator.next();
-                Integer test = item.getShelfScore();
+                Integer test = item.getRowScore();
                 System.out.println("test score:"+test);
                 if (test.equals(targetscore)) {
                     System.out.println("matched");
@@ -357,6 +372,9 @@ public String convertBookMetaToString(Book myNode) {
              myOutput=myOutput+"\n";
         }; 
         */
+    }
+    if (myNode.getRow()>=0 && myNode.getCol()>=0) {
+        myOutput=myOutput+"[r,c]("+myNode.getRow()+","+myNode.getCol()+")"+System.getProperty("line.separator");
     }
     if (myNode.geturlpath().length()>6) {
         myOutput=myOutput+"[url]("+myNode.geturlpath()+")"+System.getProperty("line.separator");
@@ -753,39 +771,46 @@ private String getTitleText(String myString) {
    
 }
 
+//snap to grid - move to nearest cell based on <= 50% out of position
 public double snapYtoShelf(Book myBook, double newTranslateY){
-    Integer shelf1 = 200;
-    Integer shelf2=2*shelf1;
-    Integer shelf3=3*shelf2;
-    Integer bookiconheight=150;
-    Integer offset1=40;
-    //Integer overshoot=20;
-    Integer offset2=offset1+200;
-    Integer offset3=offset2+200;
-    Integer offset4=offset3+200;
-    /* --- SNAP TO GRID --- */
-    //if release points don't fit shelf range, simulate 'gravity' to shelf below
-    if (newTranslateY<=offset1) {
-        System.out.println("Put on shelf 1");
-         newTranslateY=offset1-20;
-         myBook.setShelf(1);
+    Integer modY=(int)newTranslateY%(int)this.cellgap_y;
+    Integer quotY=(int)((newTranslateY-modY)/this.cellgap_y);
+    Integer half = (int)this.cellgap_y/2;
+    System.out.println("Num: "+newTranslateY+"cellgapY: "+this.cellgap_y+" quot:"+quotY+" mod:"+modY);
+    if (modY>half) {
+        quotY=quotY+1;
     }
-    else if (newTranslateY>offset1 && newTranslateY<=offset2) {
-        System.out.println("Put on shelf 2");
-         newTranslateY=offset2-20;
-         myBook.setShelf(2);
+    //checkbounds
+    if (quotY<0) {
+        quotY=0;
     }
-    else if (newTranslateY>offset2 && newTranslateY<=offset3) {
-        System.out.println("Put on shelf 3");
-        newTranslateY=offset3-20;
-        myBook.setShelf(3);
+    if(quotY>(this.cellrows-1)) {
+        quotY=(this.cellrows-1);
     }
-    else if (newTranslateY>offset3) {
-        System.out.println("Put on shelf 4");
-        newTranslateY=offset4-20;
-        myBook.setShelf(4);
-    }
+    myBook.setRow(quotY);
+    newTranslateY=(this.cellgap_y*quotY)+this.boxtopmargin;
     return newTranslateY;
+}
+
+//snap to grid - move to nearest cell based on <= 50% out of position
+public double snapXtoShelf(Book myBook, double newTranslateX){
+    Integer modX=(int)newTranslateX%(int)this.cellgap_x;
+    Integer quotX=(int)((newTranslateX-modX)/this.cellgap_x);
+    Integer half = (int)this.cellgap_x/2;
+    System.out.println("Num: "+newTranslateX+"cellgapX: "+this.cellgap_x+" quot:"+quotX+" mod:"+modX);
+    if (modX>half) {
+        quotX=quotX+1;
+    }
+    //checkbounds
+    if (quotX<0) {
+        quotX=0;
+    }
+    if(quotX>this.cellcols+1) {
+        quotX=this.cellcols+1;
+    }
+    myBook.setCol(quotX);
+    newTranslateX=this.cellgap_x*quotX;
+    return newTranslateX;
 }
 
 /* New Local mouse event handler */
@@ -826,11 +851,11 @@ EventHandler<MouseEvent> DragBox =
                 //release situation
                 if (t.MOUSE_RELEASED == TYPE) { //DRAG_
                     System.out.println("Mouse released");
-                    //System.out.println("shelf 1 Y"+MainStage.this.shelf1_Y);
                     System.out.println("release position: x "+newTranslateX+" y "+newTranslateY);
                     //shelf parameters
                                        
                     newTranslateY=MainStage.this.snapYtoShelf(currentBook,newTranslateY);
+                    newTranslateX=MainStage.this.snapXtoShelf(currentBook,newTranslateX);
                     //System.exit(0);
                     currentBook.setTranslateX(newTranslateX);
                     currentBook.setTranslateY(newTranslateY);
@@ -1042,75 +1067,65 @@ private Group makeWorkspaceTree() {
         myBP.setMargin(workspacePane, new Insets(0,0,0,0));
         myBP.setCenter(workspacePane);
         //workspacePane.setPadding(new Insets(150,150,150,150));
-        //Add some shelves
-        //rectangle
-        Integer offset = 0;
-        this.shelf1_Y=200;
-        Rectangle shelf1 = makeNewShelf(100,this.shelf1_Y+offset); 
-        Rectangle shelf2 = makeNewShelf(100,2*this.shelf1_Y+offset); 
-        Rectangle shelf3 = makeNewShelf(100,3*this.shelf1_Y+offset);
-        Rectangle shelf4 = makeNewShelf(100,4*this.shelf1_Y+offset); 
-        //make up a pane to display filename of bookshelf
+        //
+        //Make horizontal lines for grid, and add to FX root node for this Stage
+        this.shelfFileName.setY(this.filenameoffset_y);
+        this.shelfFileName.setX(this.filenameoffset_x); 
+        myGroup_root.getChildren().add(this.shelfFileName);
+        //set name of current file in 
+       
+        /*ArrayList<Rectangle> myRowLines=new ArrayList<Rectangle>();
+        for (int i=0;i<this.cellrows;i++) {
+            Rectangle shelf1 = makeNewShelf(this.firstcell_x,i*this.cellgap_y+cellrowoffset_y); 
+            myRowLines.add(shelf1); //future use
+            myGroup_root.getChildren().add(shelf1);
+        }
+        */
+
+        ArrayList<Line> myRowLines=new ArrayList<Line>();
+        double startX=0.0; //+cellrowoffset_y;
+        double endX=(this.cellcols+2)*this.cellgap_x;
+        for (int i=0;i<this.cellcols+2;i++) {
+            Line line = new Line(startX,(i*cellgap_y)+cellrowoffset_y,endX,(i*cellgap_y)+cellrowoffset_y);
+            myRowLines.add(line); //future use
+            myGroup_root.getChildren().add(line);
+        }
+
+        ArrayList<Line> myColLines=new ArrayList<Line>();
+        double startY=0.0+cellrowoffset_y;
+        double endY=this.cellrows*this.cellgap_y;
+        //we need 2 extra lines
+        for (int i=0;i<this.cellcols+3;i++) {
+            Line line = new Line(i*this.cellgap_x, startY,i*this.cellgap_x,endY);
+            myColLines.add(line); //future use
+            myGroup_root.getChildren().add(line);
+        }
+
+        //make up a pane to display filename of bookshelf (not used)
         Pane shelfFilePane = new Pane();
         shelfFilePane.getChildren().add(this.shelfFileTextArea);
-        //set name of current file in 
-        displayFileNameOnStage("untitled1.md"); //Also set filename?
-        //setArcWidth(60);  //do this enough you get a circle.  option
-        //setArcHeight(60);                
-       
-       //Color myColour = Color.BLACK;
-        //this.boxcolour=mycol;//not updated yet?
-        //Creating a line object
-        Line line = new Line(); 
-        //line thickness?
-        //Setting the properties to a line 
-        Integer lm=100;
-        line.setStartX(250.0+lm); 
-        line.setStartY(50.0); 
-        line.setEndX(250.0+lm); 
-        line.setEndY(800.0); 
-        Line line2 = new Line();  //line thickness?
-        line2.setStartX(500.0+lm); 
-        line2.setStartY(50.0); 
-        line2.setEndX(500.0+lm); 
-        line2.setEndY(800.0); 
-        Line line3 = new Line();  //line thickness?
-        line3.setStartX(750.0+lm); 
-        line3.setStartY(50.0); 
-        line3.setEndX(750.0+lm); 
-        line3.setEndY(800.0); 
-        
+                
         //add the Border Pane and branches to root Group 
         myGroup_root.getChildren().addAll(myBP);
         //putting lines first means they appear at back
-        myGroup_root.getChildren().addAll(line,line2,line3,shelf1,shelf2,shelf3,shelf4,shelfFileName); //line and shelf 1
+      
         //store the root node for future use
         setSceneRoot(myGroup_root); //store 
         //for box placement within the Scene - attach them to the correct Node.
         return myGroup_root;  
     }
 
-private void displayFileNameOnStage(String filename) {
-        this.shelfFileTextArea.setText(filename);
-        shelfFileName = new Text(filename);
-        shelfFileName.setY(20.0);
-        shelfFileName.setX(250.0); //575
-}
-
 private Rectangle makeNewShelf(Integer x, Integer y) {
         
         Rectangle shelf1= new Rectangle();
-        shelf1.setFill(Color.BROWN); //default
-        shelf1.setStroke(Color.BLACK); //stroke is border colour
-        shelf1.setWidth(1000);
-        shelf1.setHeight(15);
+        shelf1.setFill(this.shelffill); //default
+        shelf1.setStroke(this.shelfborder); //stroke is border colour
+        shelf1.setWidth(this.gridwidth);
+        shelf1.setHeight(this.gridlineheight);
         shelf1.setX(x);
         shelf1.setY(y);
         return shelf1;
     }
-       
-
-
 
 private Scene makeWorkspaceScene(Group myGroup) {
         
@@ -1398,10 +1413,12 @@ public void positionBookOnStage(Book myBook) {
         
     if (myBook.getY()!=0) {
         double ypos=snapYtoShelf(myBook,myBook.getY());
+        double xpos=snapXtoShelf(myBook,myBook.getX()); //
         myBook.setY(ypos);
+        myBook.setX(xpos);
     }
     else {
-        myBook.setX(this.spriteX);
+        myBook.setX(this.spriteX); //xpos advances according to advance method
         double ypos=snapYtoShelf(myBook,this.spriteY);
         this.spriteY=(int)ypos;
         myBook.setY(ypos);
@@ -1413,35 +1430,25 @@ public void positionBookOnStage(Book myBook) {
 }
 
 public void resetBookOrigin() {
-    this.spriteY=20;
-    this.spriteX=100;
+    this.spriteY=firstcell_y;
+    this.spriteX=firstcell_x;
 }
 
 //new 'shelf'??
 private void newBookColumn() {
-    this.spriteY=this.spriteY+this.shelf1_Y;
-    this.spriteX=100;
+    this.spriteY=this.spriteY+this.cellgap_y;
+    this.spriteX=firstcell_x;
 }
 
 //TO DO: Reset sprite positions when re-loading display.  To match a Grid Layout.
 //Layout horizontall on one shelf.
 private void advanceBookPositionHor() {
-        if (this.spriteX>880) {
-                this.spriteY=spriteY+this.shelf1_Y; //drop down
-                this.spriteX=100;
+        if (this.spriteX>((this.cellcols+1)*this.cellgap_x)) {
+                this.spriteY=spriteY+this.cellgap_y; //drop down
+                this.spriteX=firstcell_x;
             }
             else {
-                this.spriteX = this.spriteX+65; //uniform size for now
-            }
-}
-
-private void advanceBookPositionVert() {
-        if (this.spriteY>660) {
-                this.spriteY=spriteY+this.shelf1_Y;
-                this.spriteX=0;
-            }
-            else {
-                this.spriteY = this.spriteY+this.shelf1_Y;
+                this.spriteX = this.spriteX+this.cellgap_x; //uniform size for now
             }
 }
 
