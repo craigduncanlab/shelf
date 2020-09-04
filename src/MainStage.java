@@ -150,7 +150,7 @@ CheckBox visibleCheck = new CheckBox("Visible");
 
 Integer margin_yaxis;
 Integer margin_xaxis;
-Integer cellcols=25;
+Integer cellcols=50;
 Integer cellrows=20;
 Integer cellgap_x=80; //cellwidth x dimension
 Integer cellgap_y=100; //cell width y dimension
@@ -1177,7 +1177,7 @@ private Group makeWorkspaceTree() {
         ArrayList<Line> myRowLines=new ArrayList<Line>();
         double startX=0.0; //+cellrowoffset_y;
         double endX=(this.cellcols+2)*this.cellgap_x;
-        for (int i=0;i<this.cellcols+2;i++) {
+        for (int i=0;i<this.cellrows+2;i++) {
             Line line = new Line(startX,(i*cellgap_y)+cellrowoffset_y,endX,(i*cellgap_y)+cellrowoffset_y);
             myRowLines.add(line); //future use
             workspacePane.getChildren().add(line); //put them here so they are not 'erased' and remains visible
@@ -1187,7 +1187,7 @@ private Group makeWorkspaceTree() {
         double startY=0.0+this.cellrowoffset_y;
         double endY=((this.cellrows+2)*this.cellgap_y)+this.cellrowoffset_y;
         //we need 2 extra lines
-        for (int i=0;i<this.cellrows+3;i++) {
+        for (int i=0;i<this.cellcols+3;i++) {
             System.out.println(cellrows+", i:"+i+" startY:"+startY+" endY:"+endY);
             Line line2 = new Line(i*this.cellgap_x,startY,i*this.cellgap_x,endY);
             myColLines.add(line2); //future use
