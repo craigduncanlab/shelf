@@ -1188,7 +1188,7 @@ private Group makeWorkspaceTree() {
         double endY=((this.cellrows+2)*this.cellgap_y)+this.cellrowoffset_y;
         //we need 2 extra lines
         for (int i=0;i<this.cellcols+3;i++) {
-            System.out.println(cellrows+", i:"+i+" startY:"+startY+" endY:"+endY);
+            //System.out.println(cellrows+", i:"+i+" startY:"+startY+" endY:"+endY);
             Line line2 = new Line(i*this.cellgap_x,startY,i*this.cellgap_x,endY);
             myColLines.add(line2); //future use
             workspacePane.getChildren().add(line2);

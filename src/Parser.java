@@ -27,11 +27,11 @@ public Book parseMDfile(MainStage myStage, EventHandler pb,EventHandler db,Strin
 	this.PressBox=pb;
 	this.DragBox=db;
 	this.mainstage=myStage;
-    System.out.println("Begin parsing MD file");
+    //System.out.println("Begin parsing MD file");
     // for now, no processing of contents
     //Book newNode = new Book("Test",contents,"notes");
     Book newBook = parseMDblock(contents);
-    System.out.println("Finished parsing MD file");
+    //System.out.println("Finished parsing MD file");
     return newBook;
 }
 
@@ -39,7 +39,7 @@ public Book parseMDfileAsRow(MainStage myStage, EventHandler pb,EventHandler db,
 	this.PressBox=pb;
 	this.DragBox=db;
 	this.mainstage=myStage;
-    System.out.println("Begin parsing MD file");
+    //System.out.println("Begin parsing MD file");
     // for now, no processing of contents
     //Book newNode = new Book("Test",contents,"notes");
     Book newBook = parseMDblock(contents);
@@ -47,7 +47,7 @@ public Book parseMDfileAsRow(MainStage myStage, EventHandler pb,EventHandler db,
     newBook.setXY(0,0);
     newBook.setRow(0);
     newBook.setCol(0);
-    System.out.println("Finished parsing MD file as Row");
+    //System.out.println("Finished parsing MD file as Row");
     return newBook;
 }
 

@@ -304,8 +304,6 @@ public void importAsRowBelowMethod() {
     Integer newRow=row+1;
     insertRowAfterMethod(row); //clear out the row.
     //to do - see if 'length' of array with Books from Row x+1 is zero.  If so, just import.  If not, 'insert' row first.
-    System.out.println("Attempting to import into Row:"+newRow);
-    //Stage_WS.openMarkdown(newRow); //OpenMarkdown uses x,y
     Stage_WS.openMarkdownAsRow(newRow);
 }
 
