@@ -90,6 +90,10 @@ String StageFocus = "";
 Rectangle2D ScreenBounds = Screen.getPrimary().getVisualBounds();
 double myBigX = ScreenBounds.getWidth();
 double myBigY = ScreenBounds.getHeight();
+double wsPaneWidth=0.8*myBigX;
+double wsPaneHeight=0.8*myBigY;
+double scrollSceneWidth=0.8*myBigX;
+double scrollSceneHeight=0.8*myBigY;
 ArrayList<Stage> myStageList = new ArrayList<Stage>();
 int spriteX = 0;
 int spriteY = 0;
@@ -146,8 +150,8 @@ CheckBox visibleCheck = new CheckBox("Visible");
 
 Integer margin_yaxis;
 Integer margin_xaxis;
-Integer cellcols=15;
-Integer cellrows=8;
+Integer cellcols=25;
+Integer cellrows=20;
 Integer cellgap_x=80; //cellwidth x dimension
 Integer cellgap_y=100; //cell width y dimension
 Integer firstcell_x=this.cellgap_x;
@@ -1016,8 +1020,8 @@ private void closeThisStage() {
 
 //MainStage setup function
 private void newWorkstageFromGroup() {
-    Group myGroup = makeWorkspaceTree();
-    Scene myScene = makeWorkspaceScene(myGroup);
+    Group myGroup = makeWorkspaceTree(); //myGroup_root
+    Scene myScene = makeWorkspaceScene(myGroup); //new scene with myGroup_root = this.localscene
     Stage myStage = new Stage();
     setStage(myStage);
     updateScene(myScene);
@@ -1049,22 +1053,36 @@ private Group makeWorkspaceTree() {
         MenuBar myMenu = getMenuBar();
         menubarGroup.getChildren().addAll(myMenu);
         Pane workspacePane = new Pane(); 
+        //workspacePane.setPrefWidth(this.wsPaneWidth);
+        //workspacePane.setPrefHeight(this.wsPaneHeight);
         //the Pane holding the group allows movement of Books independently, without relative movement
          /*ScrollPane boxPane = makeScrollGroup();
         boxPane.setPannable(true);
         boxPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
         boxPane.setVmax(500);
         */
-        Group displayAreaGroup = new Group(); //subgroup of Pane; where Sprites located
+        Group displayAreaGroup = new Group(); //subgroup of Pane; where Squares/Boxes located
         //myScrollPane.getChildren().addAll(displayAreaGroup);
-        ScrollPane myScrollPane = new ScrollPane(workspacePane);
-        myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
-        myScrollPane.setVmax(500);
+
+       // --- IF USING A SCROLLPANE HERE, ADD THAT TO THE BP
+        ScrollPane myScrollPane = new ScrollPane(workspacePane); //content is the workspacePane
+        myScrollPane.setPrefViewportWidth(this.scrollSceneWidth);
+        myScrollPane.setPrefViewportHeight(this.scrollSceneHeight);
+        myScrollPane.pannableProperty().set(false);  //to prevent panning by mouse
+        myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS")); //AS_NEEDED or ALWAYS
+        myScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
+        //myScrollPane.setStyle(scrollpaneStyle);
+        myBP.setMargin(myScrollPane, new Insets(0,0,0,0));
+        myBP.setCenter(myScrollPane);
+
+        //--- IF USING A PANE
+
+        //myScrollPane.setVmax(500);
         workspacePane.getChildren().addAll(displayAreaGroup);
+         //make it big enough for number of rows/cols
         //ScrollPane myScrollPane= new ScrollPane();
-        myScrollPane.setPannable(true);
         String scrollpaneStyle="-fx-background-color:transparent; ";
-        myScrollPane.setStyle(scrollpaneStyle);
+        
         setGridGroup(displayAreaGroup); //store as instance variable for referencing elsewhere
         //myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
        // myScrollPane.setVmax(500);
@@ -1084,16 +1102,7 @@ private Group makeWorkspaceTree() {
         this.shelfFileName.setY(this.filenameoffset_y);
         this.shelfFileName.setX(this.filenameoffset_x); 
         myGroup_root.getChildren().add(this.shelfFileName);
-        //set name of current file in 
        
-        /*ArrayList<Rectangle> myRowLines=new ArrayList<Rectangle>();
-        for (int i=0;i<this.cellrows;i++) {
-            Rectangle shelf1 = makeNewShelf(this.firstcell_x,i*this.cellgap_y+cellrowoffset_y); 
-            myRowLines.add(shelf1); //future use
-            myGroup_root.getChildren().add(shelf1);
-        }
-        */
-
         ArrayList<Line> myRowLines=new ArrayList<Line>();
         double startX=0.0; //+cellrowoffset_y;
         double endX=(this.cellcols+2)*this.cellgap_x;
@@ -1103,18 +1112,18 @@ private Group makeWorkspaceTree() {
             workspacePane.getChildren().add(line); //put them here so they are not 'erased' and remains visible
             //displayAreaGroup.getChildren().add(line);
         }
-
         ArrayList<Line> myColLines=new ArrayList<Line>();
-        double startY=0.0+cellrowoffset_y;
-        double endY=this.cellrows*this.cellgap_y+(cellrowoffset_y);
+        double startY=0.0+this.cellrowoffset_y;
+        double endY=((this.cellrows+2)*this.cellgap_y)+this.cellrowoffset_y;
         //we need 2 extra lines
-        for (int i=0;i<this.cellcols+3;i++) {
-            Line line = new Line(i*this.cellgap_x, startY,i*this.cellgap_x,endY);
-            myColLines.add(line); //future use
-            workspacePane.getChildren().add(line);
+        for (int i=0;i<this.cellrows+3;i++) {
+            System.out.println(cellrows+", i:"+i+" startY:"+startY+" endY:"+endY);
+            Line line2 = new Line(i*this.cellgap_x,startY,i*this.cellgap_x,endY);
+            myColLines.add(line2); //future use
+            workspacePane.getChildren().add(line2);
             //displayAreaGroup.getChildren().add(line);
         }
-
+              
         //make up a pane to display filename of bookshelf (not used)
         Pane shelfFilePane = new Pane();
         shelfFilePane.getChildren().add(this.shelfFileTextArea);
@@ -1129,21 +1138,10 @@ private Group makeWorkspaceTree() {
         return myGroup_root;  
     }
 
-private Rectangle makeNewShelf(Integer x, Integer y) {
-        
-        Rectangle shelf1= new Rectangle();
-        shelf1.setFill(this.shelffill); //default
-        shelf1.setStroke(this.shelfborder); //stroke is border colour
-        shelf1.setWidth(this.gridwidth);
-        shelf1.setHeight(this.gridlineheight);
-        shelf1.setX(x);
-        shelf1.setY(y);
-        return shelf1;
-    }
-
 private Scene makeWorkspaceScene(Group myGroup) {
         
         //construct scene with its root node Color.DARKSLATEGREY
+       
         Scene workspaceScene = new Scene (myGroup,getBigX(),getBigY(), Color.WHITE);
 
         
