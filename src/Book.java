@@ -339,7 +339,7 @@ public Book cloneBook() {
 	clone.setOutputText(this.output);
 	clone.setHTML(this.htmlString);
 	clone.setVisible(this.visible);
-	clone.setX(this.myXpos+50); //small offset
+	clone.setX(this.myXpos); //small offset
 	clone.setY(this.myYpos);
 	clone.setAlert(this.isAlert);
 	clone.setUserView(this.userMetaView);

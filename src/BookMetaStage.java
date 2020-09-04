@@ -168,7 +168,6 @@ public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, Event
     setKeyPress(SaveKeyEvent); //save key event common to both shelf and inspector views
     setKeyPress(NodeKeyHandler); //this can be different for workspace
     //position
-    // setEditWindowPosition();  //nb: set this in calling function to avoid setting twice
     //data: new 'parent' node based on category alone
     setActiveBook(myBook);
     updateCurrentBookMetaView(); //updates contents but doesn't show stage unless requested
@@ -350,15 +349,6 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
             }
         }  
     }
-    /*
-    if (ke.getCode()==KeyCode.TAB) {
-        Robot myUser = new Robot(); //requires accessibility features 'on'
-        myUser.keyPress(KeyCode.CONTROL);
-        myUser.keyPress(KeyCode.TAB); 
-        myUser.keyRelease(KeyCode.TAB); //since in JavaFX this works like 'Tab' in other apps
-        myUser.keyRelease(KeyCode.CONTROL);
-    }
-    */
  }
 };
 
@@ -662,25 +652,6 @@ public void setCurrentXY(double x, double y) {
 
 	this.latestX=x;
     this.latestY=y;
-}
-
-/* 
-
-The order in which the Stages are created and set will determine initial z order for display
-Earliest z is toward back
-MainStage(Stage_WS) is, in effect, a large window placed at back.
-TO DO: check x y and within tolerable limits
-
-*/
-private void setEditWindowPosition() {
-    setStagePosition(100,300);
-    stageFront();
-    }
-
-//set workspace Window Position
-private void setWorkspaceWindowPosition() {
-   setStagePosition(0,0);
-   stageBack();
 }
 
 //STAGE MANAGEMENT FUNCTIONS

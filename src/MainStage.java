@@ -256,7 +256,49 @@ public void processMarkdown(File file) {
     }
 }
 
+public void processMarkdownAsRow(File file) {
+  //String filename=System.out.print(file.toString()); // this is full path
+    String thefilename=file.getName();
+    String last=thefilename.substring(thefilename.length() - 3);
+    if (last.equals(".md")==true) {
+      TemplateUtil myUtil = new TemplateUtil();
+      String contents = myUtil.getFileText(file);
+      this.shelfFileName.setText(thefilename); //update name on shelf view
+      //Recents myR = new Recents();
+      //myR.updateRecents(file.getName());
+      Parser myParser=new Parser();
+      // Split the MD file.  blocklist is list of 
+      ArrayList<String> blocklist= myParser.splitMDfile(contents); //should return file split into blocks per #
+      int length = blocklist.size();  // number of blocks
+      System.out.println(length);
+      if (length>0) {
+        Iterator<String> iter = blocklist.iterator(); 
+          while (iter.hasNext()) {
+              Book newBook=myParser.parseMDfileAsRow(MainStage.this,PressBox,DragBox,iter.next());
+              if (newBook!=null) {
+                System.out.println("Starting iteration of block lines in MD");
+                AddNewBookFromParser(newBook);
+              }
+         } //end while
+      } //end if
+      
+      System.out.println("Finished parse in 'open button' makeStage");
+      //LoadSave.this.ListOfFiles();// print out current directory
+    }
+}
+
+public Integer getRowofActiveBook() {
+    Integer row=0;
+    Book thisBook = getActiveBook();
+    if (thisBook!=null) {
+        row=thisBook.getRow();
+    }
+    return row;
+}
+
+//use row for positions
 public File openMarkdown() {
+        //System.exit(0);
         // final FileChooser fileChooser = new FileChooser();
         File file = new File (this.getFilename());
         if (file==null) {
@@ -271,6 +313,35 @@ public File openMarkdown() {
         if (tryfile != null) {
           file = tryfile;
           processMarkdown(file);
+          setFilename(file.getPath());
+          setShortFilename(file.getName());
+        } 
+        else {
+            //DO SOMETHING
+        }
+    return file;
+}
+
+//use row for positions
+public File openMarkdownAsRow(Integer row) {
+        this.spriteX=(int)convertColtoX(0);
+        this.spriteY=(int)convertRowtoY(row);
+        System.out.println("Row check:"+row+", spriteY:"+this.spriteY);
+        //System.exit(0);
+        // final FileChooser fileChooser = new FileChooser();
+        File file = new File (this.getFilename());
+        if (file==null) {
+            file = new File ("untitled.md");
+        } 
+        Stage myStage = new Stage();
+        myStage.setTitle("Open File");
+        this.currentFileChooser.setTitle("Open A Shelf File");
+        //this.currentFileChooser.setSelectedExtensionFilter(this.myExtFilter);   
+        this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
+        File tryfile = currentFileChooser.showOpenDialog(myStage);
+        if (tryfile != null) {
+          file = tryfile;
+          processMarkdownAsRow(file);
           setFilename(file.getPath());
           setShortFilename(file.getName());
         } 
@@ -363,13 +434,13 @@ public ArrayList<Book> listBooksShelfOrder() {
 }
 
 //Convert this book meta into a String of markdown.  Only write links if data is there.
-public String convertBookMetaToString(Book myNode) {
-    String myOutput="# "+trim(myNode.getLabel()); //check on EOL
-    String markdown=myNode.getMD();
+public String convertBookMetaToString(Book myBook) {
+    String myOutput="# "+trim(myBook.getLabel()); //check on EOL
+    String markdown=myBook.getMD();
     String filteredMD=trim(markdown); //trims but inserts EOL
     myOutput=myOutput+filteredMD; //check on EOL
-    if (myNode.getdocfilepath().length()>5) {
-        String tmp = myNode.getdocfilepath();
+    if (myBook.getdocfilepath().length()>5) {
+        String tmp = myBook.getdocfilepath();
         Integer len = tmp.length();
         myOutput=myOutput+"[filepath]("+tmp+")"+System.getProperty("line.separator");
         /*if (tmp.substring(len-1,len)!="\n") {
@@ -377,17 +448,17 @@ public String convertBookMetaToString(Book myNode) {
         }; 
         */
     }
-    if (myNode.getRow()>=0 && myNode.getCol()>=0) {
-        myOutput=myOutput+"[r,c]("+myNode.getRow()+","+myNode.getCol()+")"+System.getProperty("line.separator");
+    if (myBook.getRow()>=0 && myBook.getCol()>=0) {
+        myOutput=myOutput+"[r,c]("+myBook.getRow()+","+myBook.getCol()+")"+System.getProperty("line.separator");
     }
-    if (myNode.geturlpath().length()>6) {
-        myOutput=myOutput+"[url]("+myNode.geturlpath()+")"+System.getProperty("line.separator");
+    if (myBook.geturlpath().length()>6) {
+        myOutput=myOutput+"[url]("+myBook.geturlpath()+")"+System.getProperty("line.separator");
     }
-    if (myNode.getX()>0 || myNode.getY()>0) {
-        myOutput=myOutput+"[x,y]("+myNode.getX()+","+myNode.getY()+")"+System.getProperty("line.separator");
+    if (myBook.getX()>0 || myBook.getY()>0) {
+        myOutput=myOutput+"[x,y]("+myBook.getX()+","+myBook.getY()+")"+System.getProperty("line.separator");
     }
-    if (myNode.getthisNotes().length()>0) {
-        String notes = myNode.getthisNotes();
+    if (myBook.getthisNotes().length()>0) {
+        String notes = myBook.getthisNotes();
         String filteredNote=trim(notes);
         myOutput=myOutput+"```"+System.getProperty("line.separator")+filteredNote+"```"+System.getProperty("line.separator");
     }
@@ -711,11 +782,11 @@ public void setCurrentXY(double x, double y) {
 
 //method to fix the BookMetaStage instance position relative to screen dimensions
 private void setMetaStageParams(BookMetaStage newInspectorStage) {
-    Stage myMainStage = getStage(); 
+    //Stage myMainStage = getStage(); 
     Stage myLocalStage = newInspectorStage.getStage();
     //centred on screen dimensions, not on the parent stage
-    myLocalStage.setX((ScreenBounds.getWidth() - myLocalStage.getWidth()) / 2); 
-    myLocalStage.setY((ScreenBounds.getHeight() -myLocalStage.getHeight()) / 2); 
+    //myLocalStage.setX((ScreenBounds.getWidth() - myLocalStage.getWidth()) / 2); 
+    //myLocalStage.setY((ScreenBounds.getHeight()-(myLocalStage.getHeight()) / 2); 
     myLocalStage.setAlwaysOnTop(true);
 }
 
@@ -1277,6 +1348,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                 }
                 if (ke.isMetaDown() && ke.getCode().getName().equals("O")) {
                      System.out.println("CMD-O pressed for open");
+                     Integer row = 0;
                      MainStage.this.openMarkdown();
                      //currentBook.cycleBookColour();
                 }
@@ -1303,6 +1375,8 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      //cf try
                      if (MainStage.this.clipboardBook!=null) {
                         Book myBook = MainStage.this.clipboardBook;
+                        double xp=MainStage.this.clipboardBook.getX();
+                        MainStage.this.clipboardBook.setX(xp+cellgap_x); //offset
                         System.out.println(MainStage.this.clipboardBook+", check: "+myBook);
                         MainStage.this.AddNewBookFromParser(MainStage.this.clipboardBook);
                         //System.exit(0);
@@ -1362,7 +1436,14 @@ public void addNewBookToView () {
     //Book b = makeBoxWithNode(myNode); //relies on Main, event handlers x
     
     Book b = new Book(PressBox,DragBox,"untitled","","");
-
+    //
+    Book lastBook=getActiveBook();
+    if (lastBook!=null) {
+        double xp=lastBook.getX();
+        double yp=lastBook.getY();
+        b.setX(xp+cellgap_x); //offset
+        b.setY(yp); //same
+    }
     //adjusthorizontal
     double xpos=b.getX();
     double ypos=b.getY();
@@ -1417,6 +1498,32 @@ public void setBooksOnShelf(ArrayList<Book> inputObject) {
     this.booksOnShelf = inputObject;
 }
 
+public void insertRow(Integer firstrow){
+    ArrayList<Book> bookList =getBooksOnShelf();
+    Iterator<Book> myIterator=bookList.iterator();
+    while(myIterator.hasNext()) {
+        Book item = myIterator.next();
+        Integer checkRow=item.getRow();
+        if (checkRow>firstrow) {
+            checkRow=checkRow+1;
+            item.setRow(checkRow);
+            double newY=convertRowtoY(checkRow);
+            item.setY(newY);
+            System.out.println("Set a row for a Book to +1");
+        }
+    }
+}
+
+public double convertRowtoY(Integer myRow){
+     double newY=(myRow*this.cellgap_y)+this.cellrowoffset_y+this.boxtopmargin;
+     return newY;
+}
+
+public double convertColtoX(Integer myCol) {
+    double newX=(myCol*this.cellgap_x);
+    return newX;
+}
+
 public ArrayList<Book> getBooksOnShelf() {
     return this.booksOnShelf;
 }
@@ -1430,9 +1537,13 @@ public void positionBookOnStage(Book myBook) {
         myBook.setX(xpos);
     }
     else {
-        myBook.setX(this.spriteX); //xpos advances according to advance method
-        double ypos=snapYtoShelf(myBook,this.spriteY);
+        //myBook.setX(this.spriteX); //xpos advances according to advance method
+        //TO DO?  set column for this book?
+        double xpos=snapXtoShelf(myBook,this.spriteX); //
+        double ypos=snapYtoShelf(myBook,this.spriteY); //does setRow
         this.spriteY=(int)ypos;
+        this.spriteX=(int)xpos;
+        myBook.setX(xpos);
         myBook.setY(ypos);
         //myBook.setTranslateX(this.spriteX);
         //myBook.setTranslateY(this.spriteY);

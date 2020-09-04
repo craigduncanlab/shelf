@@ -207,6 +207,7 @@ private MenuBar makeMenuBar() {
         MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
         MenuItem SaveAsMenuItem = new MenuItem("Save As (CMD-SHIFT-S)");
         MenuItem ClearBookshelfMenuItem = new MenuItem("Close (CMD-W)");
+        MenuItem importAsRowBelow = new MenuItem("Import as Row Below");
         MenuItem OutputWork = new MenuItem("Output as Text");
         MenuItem PrintTree = new MenuItem("Print as HTML");
         //PrintTree.setOnAction(writeHTML);
@@ -220,13 +221,19 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,ClearBookshelfMenuItem,exit);
+        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
+        SaveShelf.setOnAction(SaveHandler);
+        SaveAsMenuItem.setOnAction(SaveAsHandler); //docname
+        OpenTempl.setOnAction(openTemplate);
+        ClearBookshelfMenuItem.setOnAction(clearBookShelf);
+        importAsRowBelow.setOnAction(importAsRowHandler);
 
-        /*menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,ClearBookshelfMenuItem,
-            OutputWork,
-            PrintTree,exit);
-            */
-        
+        //MENU GRID
+        Menu menuGrid = new Menu("Grid");
+        MenuItem insertRowItem = new MenuItem("InsertRowAfter");
+        menuGrid.getItems().addAll(insertRowItem);
+        insertRowItem.setOnAction(insertRowAfterHandler);
+
         //--- MENU CONCEPTS
         Menu menuBooks = new Menu("Books");
         MenuItem addNewBook = new MenuItem("New Book");
@@ -236,14 +243,11 @@ private MenuBar makeMenuBar() {
         menuBooks.getItems().addAll(addNewBook,bookDeleteMenuItem);
         
          // --- TEXT MENU ---
-        MenuItem FileOpen = new MenuItem("FileOpen");
-        SaveShelf.setOnAction(SaveHandler);
-        SaveAsMenuItem.setOnAction(SaveAsHandler); //docname
-        OpenTempl.setOnAction(openTemplate);
-        ClearBookshelfMenuItem.setOnAction(clearBookShelf);
+        //MenuItem FileOpen = new MenuItem("FileOpen");
+        
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile, menuBooks);     
+        menuBar.getMenus().addAll(menuFile, menuGrid, menuBooks);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
@@ -282,6 +286,36 @@ public void clearBooksFromShelf() {
     //clear filepath too, to prevent saving over?
     Stage_WS.clearAllBooks(); //do not call - circular reference
     //Stage_WS.resetBookOrigin();
+}
+
+public Integer getRowofActiveBook() {
+    Integer row=0;
+    Book thisBook = getActiveBook();
+    if (thisBook!=null) {
+        row=thisBook.getRow();
+    }
+    return row;
+}
+
+//clearBooksFromShelf
+public void importAsRowBelowMethod() {
+    //clear filepath too, to prevent saving over?
+    Integer row = getRowofActiveBook();
+    Integer newRow=row+1;
+    insertRowAfterMethod(row); //clear out the row.
+    //to do - see if 'length' of array with Books from Row x+1 is zero.  If so, just import.  If not, 'insert' row first.
+    System.out.println("Attempting to import into Row:"+newRow);
+    //Stage_WS.openMarkdown(newRow); //OpenMarkdown uses x,y
+    Stage_WS.openMarkdownAsRow(newRow);
+}
+
+//inserts a row after input row
+public void insertRowAfterMethod(Integer firstrow) {
+    if (firstrow<0) {
+        firstrow=0;
+    }
+    Stage_WS.insertRow(firstrow);
+    //update appearance?
 }
 
 public void resetFileNames() {
@@ -371,7 +405,7 @@ public void deleteSpriteGUI(Book myBook) {
 
     //FILE LOADERS AND SAVERS
     public void mainFileLoader() {
-          this.currentOpenFile=Main.this.Stage_WS.openMarkdown();
+        this.currentOpenFile=Main.this.Stage_WS.openMarkdown();
     }
 
     //if we have a list of the Book objects inside the Bookes, and they have the relevant metadata (including x,y),
@@ -418,6 +452,26 @@ public void deleteSpriteGUI(Book myBook) {
             }
         };
 
+        //to 
+        EventHandler<ActionEvent> importAsRowHandler = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Main.this.importAsRowBelowMethod();
+           
+            }
+        };
+
+        //insertRowAfterHandler
+        EventHandler<ActionEvent> insertRowAfterHandler = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Integer row=Main.this.getRowofActiveBook();
+            Main.this.insertRowAfterMethod(row);
+           
+            }
+        };
         //to load a new filepath
         EventHandler<ActionEvent> getFilepath = 
         new EventHandler<ActionEvent>() {

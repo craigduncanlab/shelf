@@ -35,6 +35,22 @@ public Book parseMDfile(MainStage myStage, EventHandler pb,EventHandler db,Strin
     return newBook;
 }
 
+public Book parseMDfileAsRow(MainStage myStage, EventHandler pb,EventHandler db,String contents) {
+	this.PressBox=pb;
+	this.DragBox=db;
+	this.mainstage=myStage;
+    System.out.println("Begin parsing MD file");
+    // for now, no processing of contents
+    //Book newNode = new Book("Test",contents,"notes");
+    Book newBook = parseMDblock(contents);
+    //set position to 0,0 so that it will be processed as if a file without coordinates nb 'positionBookOnStage' checks Y values only
+    newBook.setXY(0,0);
+    newBook.setRow(0);
+    newBook.setCol(0);
+    System.out.println("Finished parsing MD file as Row");
+    return newBook;
+}
+
 /*
 Parsing algo:
 1. read file
