@@ -1467,22 +1467,29 @@ i.e. this adds a specific object, rather than updating the view from whole under
 */
 
 private void addBookToStage(Book myBook) {
+
     if (myBook==null) {
         System.out.println("addBookToStage.  No Book to add");
         System.exit(0);
     }
+    Book newBook = myBook;
+
+    //if trying to paste into scene twice...FX error  OK but need to deal with it.
+    if (this.booksOnShelf.contains(myBook)) {
+      newBook = myBook.cloneBook(); //make a new object to add to avoid object duplication.
+    } 
     
-    this.bookgroupNode.getChildren().add(myBook);
-    this.booksOnShelf.add(myBook);  //add to metadata collection TO DO: cater for deletions.
+    this.bookgroupNode.getChildren().add(newBook);
+    this.booksOnShelf.add(newBook);  //add to metadata collection TO DO: cater for deletions.
     try { 
-        setActiveBook(myBook); 
+        setActiveBook(newBook); 
         }
     catch (NullPointerException e ){
         System.out.println("NullPointer Stage...1:");
         System.exit(0);
     }
     advanceBookPositionHor();
-    positionBookOnStage(myBook); //snap to shelf after horizontal move    
+    positionBookOnStage(newBook); //snap to shelf after horizontal move    
 }
 
 public void removeBookFromStage(Book thisBook) {
