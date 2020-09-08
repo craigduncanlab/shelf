@@ -871,12 +871,33 @@ public String getHTMLfromContents(Book myBook) {
     Scanner scanner1 = new Scanner(input);
     String prefix = "<p><span style=\"font-family: Arial;\">";
     String suffix="</span></p>";
-
+    // filter md content for h2 or p
+    String h2code="## ";
+    String h2prefix="<H2><span style=\"font-family: Arial;\">";
+    String h2suffix="<span style=\"font-family: Arial;\"></H2>";
+    int mdFormatCode=0;
+    String balanceString="";
      while (scanner1.hasNextLine()) {
-        //just make paragraphs for now
+        //just make paragraphs for now, unless h2
         String thisLine=scanner1.nextLine();
-        logString=logString+prefix+thisLine+suffix;
-     }
+        int testlength=thisLine.length();
+        if (testlength>3) {
+            String testString=thisLine.substring(0,3);
+            balanceString=thisLine.substring(3,testlength);
+        //System.out.println(testString);
+            if (testString.equals(h2code)) {
+                mdFormatCode=2;
+            }
+        }  //end length if
+        if (mdFormatCode==2) {
+            logString=logString+h2prefix+balanceString+h2suffix;
+            mdFormatCode=0; //reset
+        }
+        else {
+             logString=logString+prefix+thisLine+suffix; //normal paragraph
+        }
+       
+     } //end while
      String linkpath=myBook.getdocfilepath();
      if (linkpath.length()>0) {
          String linkprefix="<p><span style=\"font-family: Arial;\"><a href=\"";

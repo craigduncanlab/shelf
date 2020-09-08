@@ -229,10 +229,12 @@ private MenuBar makeMenuBar() {
         importAsRowBelow.setOnAction(importAsRowHandler);
 
         //MENU GRID
-        Menu menuGrid = new Menu("Grid");
-        MenuItem insertRowItem = new MenuItem("InsertRowAfter");
-        menuGrid.getItems().addAll(insertRowItem);
-        insertRowItem.setOnAction(insertRowAfterHandler);
+        Menu menuGrid = new Menu("Insert");
+        MenuItem insertRowAfterItem = new MenuItem("Row (After)");
+         MenuItem insertRowBeforeItem = new MenuItem("Row (Before)");
+        menuGrid.getItems().addAll(insertRowBeforeItem,insertRowAfterItem);
+        insertRowBeforeItem.setOnAction(insertRowBeforeHandler);
+        insertRowAfterItem.setOnAction(insertRowAfterHandler);
 
         //--- MENU CONCEPTS
         Menu menuBooks = new Menu("Books");
@@ -307,11 +309,21 @@ public void importAsRowBelowMethod() {
     Stage_WS.openMarkdownAsRow(newRow);
 }
 
+//inserts a row before input row
+public void insertRowBeforeMethod(Integer firstrow) {
+    if (firstrow<0) {
+        firstrow=0;
+    }
+    Stage_WS.insertRow(firstrow);
+    //update appearance?
+}
+
 //inserts a row after input row
 public void insertRowAfterMethod(Integer firstrow) {
     if (firstrow<0) {
         firstrow=0;
     }
+    firstrow=firstrow+1;
     Stage_WS.insertRow(firstrow);
     //update appearance?
 }
@@ -467,6 +479,15 @@ public void deleteSpriteGUI(Book myBook) {
         public void handle(ActionEvent event) {
             Integer row=Main.this.getRowofActiveBook();
             Main.this.insertRowAfterMethod(row);
+           
+            }
+        };
+        EventHandler<ActionEvent> insertRowBeforeHandler = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Integer row=Main.this.getRowofActiveBook();
+            Main.this.insertRowBeforeMethod(row);
            
             }
         };

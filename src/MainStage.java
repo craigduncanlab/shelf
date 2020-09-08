@@ -1512,7 +1512,7 @@ public void insertRow(Integer firstrow){
     while(myIterator.hasNext()) {
         Book item = myIterator.next();
         Integer checkRow=item.getRow();
-        if (checkRow>firstrow) {
+        if (checkRow>=firstrow) {
             checkRow=checkRow+1;
             item.setRow(checkRow);
             double newY=convertRowtoY(checkRow);
