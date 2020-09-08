@@ -787,7 +787,8 @@ private void setMetaStageParams(BookMetaStage newInspectorStage) {
     //centred on screen dimensions, not on the parent stage
     //myLocalStage.setX((ScreenBounds.getWidth() - myLocalStage.getWidth()) / 2); 
     //myLocalStage.setY((ScreenBounds.getHeight()-(myLocalStage.getHeight()) / 2); 
-    myLocalStage.setAlwaysOnTop(true);
+    //myLocalStage.setAlwaysOnTop(true); //<---- No, it's sometimes useful, more often annoying.  Tie to the base scene (myBP?)
+    //myLocalStage.initOwner(this.localStage); //init owner must be the window (a Stage).  Do this before .show()
 }
 
 //STAGE MANAGEMENT FUNCTIONS
@@ -1016,7 +1017,8 @@ EventHandler<MouseEvent> processLocalBoxClick =
 private void OpenRedBookNow(Book currentBook) {
      //Book currentBook= getActiveBook(); //currentBook.getBoxNode();
      //bookMetaInspectorStage.closeThisStage(); //close open stage.  No save checks? //TO DO: close all child stages
-     bookMetaInspectorStage = new BookMetaStage(MainStage.this, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
+     Stage parent = this.localStage; // the Stage associated with this object, not the MainStage object itself.
+     bookMetaInspectorStage = new BookMetaStage(parent, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
      setMetaStageParams(bookMetaInspectorStage);
 
 }
@@ -1214,8 +1216,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
         //construct scene with its root node Color.DARKSLATEGREY
        
         Scene workspaceScene = new Scene (myGroup,getBigX(),getBigY(), Color.WHITE);
-
-        
+                
         //nb do not change focus unless click on sprite group
         //Nodes etc inherit Event Target so you can check it in the event chain.
         

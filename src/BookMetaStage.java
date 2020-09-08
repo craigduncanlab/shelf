@@ -119,7 +119,7 @@ String filename = ""; //current filename for saving this stage's contents
 int location = 0;
 String category="";
 //Displayed Book (i.e. Node).  Will be updated through GUI.
-MainStage mainStage;
+Stage mainStage; //the parent's stage.  i.e Stage associated with MainStage object.
 Book activeBook;
 TextArea filepathTextArea = new TextArea();
 TextArea urlTextArea = new TextArea();
@@ -158,9 +158,11 @@ public BookMetaStage() {
 }
 
 //standard open node viewer constructor.  Used by 'OpenRedNodeNow' method in Main
-public BookMetaStage(MainStage parent, Book myBook, EventHandler PressBox, EventHandler DragBox, EventHandler SaveKeyEvent) {
-    //view
-    this.mainStage=parent;
+public BookMetaStage(Stage parent, Book myBook, EventHandler PressBox, EventHandler DragBox, EventHandler SaveKeyEvent) {
+    //views and parent-child stage relationships
+    this.mainStage=parent; //we need the Stage object inside the MainStage object.
+    Stage currentStage = this.localStage; //created as an instance variable on this object creation.
+    currentStage.initOwner(this.mainStage); //do this before Show.  This keeps this Stage on top of the parent.  use MODAL for further behaviour config
     //this.localStage.initOwner(parent);
     //store event handlers as local instance variables
     setPressBox(PressBox);
