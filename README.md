@@ -75,35 +75,30 @@ Books will be displayed on the shelf, and you can drag them to different locatio
 
 Choose Book--> New to add a new Book to Bookshelf.
 
-## Bookshelf view key commands:
+| KeyCode | Action | 
+| :------------- | :---------- | 
+| CMD-O |Open a new bookshelf file (.md)|
+| CMD-N |Put a new book on bookshelf |
+| CMD-C | Copy selected Book to clipboard |
+| DELETE | Delete box with focus |
+| CMD-V | Paste clipboard as New Book |
+| CMD-S | Save bookshelf data (to current file)|
+|       | This saves all book positions on shelf, and text file is written in shelved order|
+| CMD-W | Clear the bookshelf from memory (Close).
+| CMD-E | Nudge focus box left |
+| CMD-R | Nudge focus box right |
+| LEFT | Move focus to previous box |
+| RIGHT | Move focus to next box |
+| **Views** |
+| CMD-I | Edit/Inspect a book's metadata |
+| SPACE | Open HTML text preview (press SPACE again to close it) |
 
-CMD-O: Open a new bookshelf file (.md)
+# In the Editor/Inspector
 
-CMD-N: Put a new book on bookshelf.
+| KeyCode | Action | 
+| :------------- | :---------- | 
+| CMD-S | General save |
+| CMD-W | Close inspector |
+| CMD-Z | Toggle grid/inspector/preview |
 
-CMD-C: Copy selected Book to clipboard.
-
-DELETE: Delete currently selected book.
-
-CMD-V: Paste clipboard as New Book to bookshelf.
-
-CMD-S: Save bookshelf data (to current file).  This saves all book positions on shelf, and text file is written in shelved order.
-
-CMD-W: Clear the bookshelf from memory (Close).
-
-## View options
-
-CMD-I: Inspect a book's metadata
-
-SPACE: Open Book's HTML text preview (press SPACE again to close it).
-
-# Book Inspector
-
-## Book metadata view key commands
-
-CMD-S: Save the updated book metadata (and saves all other bookshelf data)
-
-CMD-W or CMD-I: Close the metadata view.
-
-CMD-Z: Toggles the view to show/hide the HTML preview.
 
