@@ -1517,7 +1517,48 @@ public void insertRow(Integer firstrow){
             item.setRow(checkRow);
             double newY=convertRowtoY(checkRow);
             item.setY(newY);
-            System.out.println("Set a row for a Book to +1");
+            //System.out.println("Set a row for a Book to +1");
+        }
+    }
+}
+
+//nudge cell right
+public void insertCellInRow(Integer firstrow, Integer firstcol){
+    ArrayList<Book> bookList =getBooksOnShelf();
+    Iterator<Book> myIterator=bookList.iterator();
+    while(myIterator.hasNext()) {
+        Book item = myIterator.next();
+        Integer checkRow=item.getRow();
+        Integer checkCol=item.getCol();
+        if (checkRow==firstrow && checkCol>=firstcol) {
+            checkCol=checkCol+1;
+            item.setCol(checkCol);
+            double newX=convertColtoX(checkCol);
+            item.setX(newX);
+            double newY=convertRowtoY(checkRow);
+            item.setY(newY);
+            System.out.println("Set a col for a Book to +1");
+        }
+    }
+}
+
+//nudgeCellLeftInRow
+
+public void nudgeCellLeftInRow(Integer firstrow, Integer firstcol){
+    ArrayList<Book> bookList =getBooksOnShelf();
+    Iterator<Book> myIterator=bookList.iterator();
+    while(myIterator.hasNext()) {
+        Book item = myIterator.next();
+        Integer checkRow=item.getRow();
+        Integer checkCol=item.getCol();
+        if (checkRow==firstrow && checkCol>=firstcol && firstcol>0) {
+            checkCol=checkCol-1;
+            item.setCol(checkCol);
+            double newX=convertColtoX(checkCol);
+            item.setX(newX);
+            double newY=convertRowtoY(checkRow);
+            item.setY(newY);
+            System.out.println("Set a col for a Book to -1");
         }
     }
 }

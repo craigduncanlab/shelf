@@ -228,13 +228,17 @@ private MenuBar makeMenuBar() {
         ClearBookshelfMenuItem.setOnAction(clearBookShelf);
         importAsRowBelow.setOnAction(importAsRowHandler);
 
-        //MENU GRID
-        Menu menuGrid = new Menu("Insert");
-        MenuItem insertRowAfterItem = new MenuItem("Row (After)");
-         MenuItem insertRowBeforeItem = new MenuItem("Row (Before)");
-        menuGrid.getItems().addAll(insertRowBeforeItem,insertRowAfterItem);
+        //MENU GRID : BOX MOVEMENTS
+        Menu menuGrid = new Menu("Move");
+        MenuItem insertRowAfterItem = new MenuItem("Insert Row (After)");
+        MenuItem insertRowBeforeItem = new MenuItem("Insert Row (Before)");
+        MenuItem insertCellShiftRightItem = new MenuItem("Nudge (Shift Right)");
+        MenuItem nudgeCellShiftLeftItem = new MenuItem("Nudge (Shift Left)");
+        menuGrid.getItems().addAll(insertRowBeforeItem,insertRowAfterItem,nudgeCellShiftLeftItem,insertCellShiftRightItem);
         insertRowBeforeItem.setOnAction(insertRowBeforeHandler);
         insertRowAfterItem.setOnAction(insertRowAfterHandler);
+        insertCellShiftRightItem.setOnAction(insertCellShiftRightHandler);
+        nudgeCellShiftLeftItem.setOnAction(nudgeCellShiftLeftHandler);
 
         //--- MENU CONCEPTS
         Menu menuBooks = new Menu("Books");
@@ -299,6 +303,15 @@ public Integer getRowofActiveBook() {
     return row;
 }
 
+public Integer getColofActiveBook() {
+    Integer col=0;
+    Book thisBook = getActiveBook();
+    if (thisBook!=null) {
+        col=thisBook.getCol();
+    }
+    return col;
+}
+
 //clearBooksFromShelf
 public void importAsRowBelowMethod() {
     //clear filepath too, to prevent saving over?
@@ -325,6 +338,32 @@ public void insertRowAfterMethod(Integer firstrow) {
     }
     firstrow=firstrow+1;
     Stage_WS.insertRow(firstrow);
+    //update appearance?
+}
+
+//insertCellShiftRightMethod
+public void insertCellShiftRightMethod(Integer firstrow, Integer firstcol) {
+    if (firstrow<0) {
+        firstrow=0;
+    }
+    if (firstcol<0) {
+        firstcol=0;
+    }
+    //firstcol=firstcol+1;
+    Stage_WS.insertCellInRow(firstrow,firstcol);
+    //update appearance?
+}
+
+//nudgeCellShiftLeftMethod
+public void nudgeCellShiftLeftMethod(Integer firstrow, Integer firstcol) {
+    if (firstrow<0) {
+        firstrow=0;
+    }
+    if (firstcol<0) {
+        firstcol=0;
+    }
+    //firstcol=firstcol+1;
+    Stage_WS.nudgeCellLeftInRow(firstrow,firstcol);
     //update appearance?
 }
 
@@ -491,6 +530,31 @@ public void deleteSpriteGUI(Book myBook) {
            
             }
         };
+
+        //insertCellShiftRightHandler
+        EventHandler<ActionEvent> insertCellShiftRightHandler = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Integer row=Main.this.getRowofActiveBook();
+            Integer col=Main.this.getColofActiveBook();
+            Main.this.insertCellShiftRightMethod(row,col);
+           
+            }
+        };
+
+        //nudgeCellShiftLeftHandler
+        EventHandler<ActionEvent> nudgeCellShiftLeftHandler = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Integer row=Main.this.getRowofActiveBook();
+            Integer col=Main.this.getColofActiveBook();
+            Main.this.nudgeCellShiftLeftMethod(row,col);
+           
+            }
+        };
+
         //to load a new filepath
         EventHandler<ActionEvent> getFilepath = 
         new EventHandler<ActionEvent>() {
