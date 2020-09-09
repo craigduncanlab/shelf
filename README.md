@@ -61,13 +61,7 @@ runprog
 
 # Start
 
-To begin, press CMD-N for new box/book and then do File-->Save As.
-
-Alternatively, to work with an existing markdown document:
-
-File --> Open MD Document.
-
-It will detect # divisions in a text/markdown file and interpret those as book divisions.
+To begin, press CMD-N for new box/book and then do File-->Save As (CMD-SHIFT-S).
 
 You can drag books/boxes to different locations in the grid workspace.
 
@@ -76,6 +70,18 @@ You can also CMD-C and CMD-V to copy and paste existing boxes.
 Press DEL on box/book with focus to delete.
 
 CMD-W to close the workspace (will not save).  To save first, CMD-S.
+
+Markdown file will save in same order as boxes (reading across rows left to right).
+
+# Open a markdown file
+
+Alternatively, to work with an existing markdown document:
+
+File --> Open MD Document.
+
+It will detect # divisions in a text/markdown file and interpret those as book divisions.
+
+If file has previously been saved with this app, it will re-open the box positions as saved.
 
 # Importing
 
