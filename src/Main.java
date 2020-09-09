@@ -350,7 +350,7 @@ public void insertCellShiftRightMethod(Integer firstrow, Integer firstcol) {
         firstcol=0;
     }
     //firstcol=firstcol+1;
-    Stage_WS.insertCellInRow(firstrow,firstcol);
+    Stage_WS.nudgeCellRightInRow(firstrow,firstcol);
     //update appearance?
 }
 

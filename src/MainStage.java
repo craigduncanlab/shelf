@@ -1383,6 +1383,27 @@ private Scene makeWorkspaceScene(Group myGroup) {
                         //System.exit(0);
                      }  
                 }
+                //nudge left
+                if (ke.isMetaDown() && ke.getCode().getName().equals("E")) {
+                     System.out.println("CMD-E pressed for nudge left");
+                     
+                        Book myBook= MainStage.this.getActiveBook();
+                        Integer row=myBook.getRow();
+                        Integer col=myBook.getCol();
+                        MainStage.this.nudgeCellLeftInRow(row,col);
+                        //System.exit(0);
+                     
+                }
+                //nudge right
+                if (ke.isMetaDown() && ke.getCode().getName().equals("R")) {
+                     System.out.println("CMD-R pressed for nudge right");
+                     //cf try
+                        Book myBook= MainStage.this.getActiveBook();
+                        Integer row=myBook.getRow();
+                        Integer col=myBook.getCol();
+                        MainStage.this.nudgeCellRightInRow(row,col);
+                        //System.exit(0);
+                }
             }
         });
         
@@ -1523,7 +1544,7 @@ public void insertRow(Integer firstrow){
 }
 
 //nudge cell right
-public void insertCellInRow(Integer firstrow, Integer firstcol){
+public void nudgeCellRightInRow(Integer firstrow, Integer firstcol){
     ArrayList<Book> bookList =getBooksOnShelf();
     Iterator<Book> myIterator=bookList.iterator();
     while(myIterator.hasNext()) {
