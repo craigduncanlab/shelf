@@ -59,21 +59,31 @@ and this to run:
 runprog
 ```
 
-# --- Simple instructions ---
+# Start
 
-# Main Grid/Workspace
+To begin, press CMD-N for new box/book and then do File-->Save As.
 
-## Open previously created Shelf (markdown format)
+Alternatively, to work with an existing markdown document:
 
-Choose File --> Open MD Document.
+File --> Open MD Document.
 
-This will open up a markdown document.  It will detect # divisions in a text file and interpret those as book divisions.
+It will detect # divisions in a text/markdown file and interpret those as book divisions.
 
-Books will be displayed on the shelf, and you can drag them to different locations.
+You can drag books/boxes to different locations in the grid workspace.
 
-## New Books
+You can also CMD-C and CMD-V to copy and paste existing boxes.
 
-Choose Book--> New to add a new Book to Bookshelf.
+Press DEL on box/book with focus to delete.
+
+CMD-W to close the workspace (will not save).  To save first, CMD-S.
+
+# Importing
+
+File-->Import as new Row.
+
+Loads a markdown document as a row.  Alternative to File-->Open which will keep the positions previously saved.
+
+# General commands
 
 | KeyCode | Action | 
 | :------------- | :---------- | 
