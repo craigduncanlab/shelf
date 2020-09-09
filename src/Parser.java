@@ -191,6 +191,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		Boolean codeLine=false;
 		Boolean urlLine=false;
 		Boolean filepathLine=false;
+		Boolean imagepathLine=false; 
 		Boolean singlecodeline=false;
 		Boolean coord=false;
 		Boolean grid=false;
@@ -207,6 +208,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 			while (scanner1.hasNextLine()) {
 				codeLine=false;
 				singlecodeline = false;
+				imagepathLine=false;
 				filepathLine=false;
 				urlLine=false;
 				coord=false;
@@ -251,6 +253,11 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		            		System.out.println(prefix);
 		            		
 		            	} 
+		            	if (prefix.equals("[img](")){
+		            		imagepathLine=true;
+		            		System.out.println(prefix);
+		            		
+		            	}
 		            	else if (prefix.equals("[x,y](")) {
 		            		coord=true;
 		            		System.out.println(prefix);
@@ -333,6 +340,9 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 	                    	else if(urlLine==true) {
 	                    		fileindex.add(7); //7=url path
 	                    	}
+	                    	else if(imagepathLine==true) {
+	                    		fileindex.add(10); //10=img path
+	                    	}
 	                    	else if(coord==true){
 	                    		fileindex.add(8);//8=coordinates
 	                    	}
@@ -344,7 +354,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 	                    			fileindex.add(1); //md
 	                    		} 
 	                    		else {
-	                    			fileindex.add(10); //nothing
+	                    			fileindex.add(20); //nothing
 	                    		}
 	                    	}
 	                    	break;
@@ -385,6 +395,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		String label="";
 		String urlString="";
 		String filepathString="";
+		String imagepathString="";
 		double x=0.0;
 		double y=0.0;
 		Integer row=0;
@@ -470,6 +481,12 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				  	y=0;
 				  }
 				}
+				//img line
+				if(fileindex.get(nl)==10) {
+				  String suffix=thisLine.substring(6,thisLine.length());
+		          imagepathString=suffix.replace(")","");
+		          System.out.println(imagepathString);
+				}
 				//grid coordinates line
 				if(fileindex.get(nl)==9) {
 				  String restart=thisLine.replace("[r,c](","");
@@ -520,6 +537,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		Book newNode=new Book(this.PressBox,this.DragBox,label2,contents,notes); //constructor: make new meta data with label of book
 		newNode.seturlpath(urlString);
 		newNode.setdocfilepath(filepathString);//filepath,urlpath,
+		newNode.setimagefilepath(imagepathString);
 		newNode.setXY(x,y); //x,y  must be doubles		
 		this.mainstage.snapYtoShelf(newNode,y); //check y and set shelf number
 		//At present visibility reflects the last markdown # code detected in file.

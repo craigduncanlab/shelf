@@ -31,6 +31,7 @@ public class Book extends StackPane {
 //INSTANCE PARAMETERS
 String docxfilepath="";
 String urlpath = "";
+String imagepath="";
 String docname=""; //to hold the container name or filename
 String docauthor=""; //to hold author name
 String docnotes=""; //to hold Document notes
@@ -88,9 +89,10 @@ public void updateMDText(String label, String text, String note) {
 }
 
 //general update text function
-public void updateEditedText(String filepath,String urlpath,String label, String mdtext, String note) {
+public void updateEditedText(String filepath,String urlpath, String imagepath, String label, String mdtext, String note) {
 	//setDocName(name);
 	setdocfilepath(filepath);
+	setimagefilepath(imagepath);
 	seturlpath(urlpath);
 	setLabel(label);
 	setMD(mdtext);
@@ -115,6 +117,15 @@ public String geturlpath() {
 //store the meta info regarding filepath
 public void seturlpath(String up) {
 	this.urlpath = up;
+}
+
+//store the meta info regarding imagepath
+public void setimagefilepath(String ip) {
+	this.imagepath = ip;
+}
+
+public String getimagefilepath() {
+	return this.imagepath;
 }
 
 //DEFAULT USER VIEWS
@@ -330,6 +341,7 @@ public Book cloneBook() {
 	clone.setNotes(this.docnotes);
 	clone.setdocfilepath(this.docxfilepath);
 	clone.seturlpath(this.urlpath);
+	clone.setimagefilepath(this.imagepath);
 	clone.setDocName(this.docname);
 	clone.setdocauthor(this.docauthor);
 	clone.setDocName(this.docname); //to hold the container name or filename

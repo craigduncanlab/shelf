@@ -122,6 +122,7 @@ String category="";
 Stage mainStage; //the parent's stage.  i.e Stage associated with MainStage object.
 Book activeBook;
 TextArea filepathTextArea = new TextArea();
+TextArea imagepathTextArea = new TextArea();
 TextArea urlTextArea = new TextArea();
 TextArea mdTextArea = new TextArea();
 TextArea bookLabelTextArea = new TextArea();
@@ -129,6 +130,7 @@ TextArea codeNotesTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
 Integer textFocus=0;
 Text filepathText;
+Text imagepathText;
 Text bookLabelText;
 Text multiLineNotesText;
 Text visibleBlockText;
@@ -341,6 +343,9 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
                 filepathTextArea.requestFocus();
             }
             else if (focusedTextArea==filepathTextArea) {
+                imagepathTextArea.requestFocus();
+            }
+            else if (focusedTextArea==imagepathTextArea) {
                 urlTextArea.requestFocus();
             }
             else if (focusedTextArea==urlTextArea) {
@@ -482,6 +487,17 @@ public void mainFilepathLoader() {
     } 
 }
 
+//image path loader
+public void mainImagepathLoader() {
+    final FileChooser fileChooser = new FileChooser();
+    Stage myStage = new Stage();
+    myStage.setTitle("Get Image path"); 
+    File file = fileChooser.showOpenDialog(myStage);
+    if (file != null) {
+      processImagepath(file);
+    } 
+}
+
 private void processFilepath(File filepath){
   //String filename=System.out.print(file.toString()); // this is full path
     String name=filepath.getName();  //is this shortname?
@@ -489,6 +505,15 @@ private void processFilepath(File filepath){
     //System.out.println(filepath.getPath());
     //System.exit(0);
     setLocalFilepath(path);
+}
+
+private void processImagepath(File imagepath){
+  //String filename=System.out.print(file.toString()); // this is full path
+    String name=imagepath.getName();  //is this shortname?
+    String path=imagepath.getPath();//System.out.println(filepath.toString());
+    //System.out.println(filepath.getPath());
+    //System.exit(0);
+    setLocalImagepath(path);
 }
 
 // a File object is really a filepath class
@@ -567,6 +592,13 @@ public void setLocalURL (String filepath){
     urlTextArea.setText(getActiveBook().geturlpath());
 }
 
+public void setLocalImagepath (String imagepath){
+    Book myData = getActiveBook();
+    myData.setimagefilepath(imagepath);
+    //refresh
+    imagepathTextArea.setText(getActiveBook().getimagefilepath());
+}
+
 /* --- BASIC GUI SETUP FOR OPEN NODE VIEWERS --- */
 private void updateCurrentBookMetaView() {
     makeSceneForBookMetaView(); //sets up scene, not content
@@ -575,6 +607,7 @@ private void updateCurrentBookMetaView() {
     //provide information about path of current open node in tree
     String pathText = "Filepath:"+getActiveBook().getdocfilepath();
     filepathText.setText(pathText);
+    imagepathText.setText("Image path:");
     urlText.setText("URL path:");
     bookLabelText.setText("Book Label:");
     multiLineNotesText.setText("Multi-line notes:");
@@ -593,6 +626,7 @@ public void restoreBookMeta() {
         Book updateNode=getActiveBook();
 
         filepathTextArea.setText(updateNode.getdocfilepath());
+        imagepathTextArea.setText(updateNode.getimagefilepath());
         urlTextArea.setText(updateNode.geturlpath());
         bookLabelTextArea.setText(updateNode.getLabel());
         mdTextArea.setText(updateNode.getMD()); //update the markdown text
@@ -608,7 +642,7 @@ public void updateBookMeta() {
         Book thisBook=getActiveBook();
         System.out.println("This book box : "+thisBook.toString());
         //System.exit(0);
-        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),bookLabelTextArea.getText(),mdTextArea.getText(),codeNotesTextArea.getText());
+        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(), bookLabelTextArea.getText(),mdTextArea.getText(),codeNotesTextArea.getText());
         thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
         updateHTMLpreview(thisBook); //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
@@ -730,6 +764,7 @@ private void makeSceneForBookMetaView() {
         mdTextArea.setPrefRowCount(20); //for markdown.  Add to boxPane
         mdTextArea.setWrapText(true);
         mdTextArea.setStyle(terminalStyle);
+        imagepathTextArea.setPrefRowCount(1);
         filepathTextArea.setPrefRowCount(1);
         urlTextArea.setPrefRowCount(1);
         outputTextArea.setPrefRowCount(1);
@@ -754,6 +789,7 @@ private void makeSceneForBookMetaView() {
         btnOpenURL.setOnAction(OpenURLAction);
         //
         filepathText = new Text();
+        imagepathText = new Text();
         bookLabelText = new Text();
         multiLineNotesText = new Text();
         visibleBlockText = new Text();
@@ -768,7 +804,13 @@ private void makeSceneForBookMetaView() {
         btnBrowseFilepath.setTooltip(new Tooltip ("Browse files to set"));
         btnBrowseFilepath.setOnAction(fileChooseAction);
 
+        Button btnBrowseImagepath = new Button();
+        btnBrowseImagepath.setText("Browse");
+        btnBrowseImagepath.setTooltip(new Tooltip ("Browse images to set"));
+        btnBrowseImagepath.setOnAction(chooseImageAction);
+
         HBox filepathBox = new HBox(0,filepathTextArea,btnBrowseFilepath,btnOpenDoc);
+        HBox imagepathBox = new HBox(0,imagepathTextArea,btnBrowseImagepath);
         HBox urlpathBox = new HBox(0,urlTextArea,btnOpenURL);
         HBox widebox = new HBox(0,htmlEditor); //default - can change as below
         BorderPane borderPane = new BorderPane();
@@ -779,7 +821,7 @@ private void makeSceneForBookMetaView() {
         }
         //compare states and update view
         if (getActiveBook().getUserView().equals("metaedit")) {
-            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             vertFrame.setPrefSize(winWidth,winHeight);
             setTitle(getTitleText(" - Meta Edit View"));
             widebox = new HBox(0,vertFrame);
@@ -787,7 +829,7 @@ private void makeSceneForBookMetaView() {
             scenewidth=winWidth;
         }
         else if (getActiveBook().getUserView().equals("metaedithtml")) {
-            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
             //htmlEditor.setPrefSize(winWidth,winHeight);  //use BorderPanes for better resizing.
             vertFrame.setPrefSize(winWidth,winHeight);//both, with equal width to HTML
@@ -913,6 +955,29 @@ public String getHTMLfromContents(Book myBook) {
          String urlfile = urlprefix+urlpath+urlsuffix;
          logString=logString+urlfile;
     }
+    //link.  Can we show the image?
+    String imagepath=myBook.getimagefilepath();
+    //the image path must be converted to URI or URL so webView can read it
+     if (imagepath.length()>0) {
+        File myFile = new File (imagepath);
+        URI imageURI = myFile.toURI();
+        System.out.println(imageURI);
+        //<img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
+         String imgprefix="<p><img src=\"";
+         String imgsuffix="\" alt=\"user image\" width=\"600\"></p>";
+
+         String imgfile = imgprefix+imageURI+imgsuffix;
+         logString=logString+imgfile;
+    }
+    /*
+    String imagepath=myBook.getimagefilepath();
+     if (imagepath.length()>0) {
+         String imgprefix="<p><span style=\"font-family: Arial;\"><a href=\"";
+         String imgsuffix="\">imagelink</a></span></p>";
+         String imgfile = imgprefix+imagepath+imgsuffix;
+         logString=logString+imgfile;
+    }
+    */
     logString=logString+"</body></html>";
     System.out.println(logString);
     return logString;
@@ -1004,4 +1069,14 @@ EventHandler<ActionEvent> fileChooseAction =
             BookMetaStage.this.mainFilepathLoader();
             }
         };
+
+//chooseImageAction  
+EventHandler<ActionEvent> chooseImageAction = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            BookMetaStage.this.mainImagepathLoader();
+            }
+        };
+
 }

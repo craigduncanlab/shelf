@@ -452,7 +452,10 @@ public String convertBookMetaToString(Book myBook) {
     if (myBook.getRow()>=0 && myBook.getCol()>=0) {
         myOutput=myOutput+"[r,c]("+myBook.getRow()+","+myBook.getCol()+")"+System.getProperty("line.separator");
     }
-    if (myBook.geturlpath().length()>6) {
+    if (myBook.getimagefilepath().length()>6) {
+        myOutput=myOutput+"[img]("+myBook.getimagefilepath()+")"+System.getProperty("line.separator");
+    }
+     if (myBook.geturlpath().length()>6) {
         myOutput=myOutput+"[url]("+myBook.geturlpath()+")"+System.getProperty("line.separator");
     }
     if (myBook.getX()>0 || myBook.getY()>0) {
