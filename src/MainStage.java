@@ -159,7 +159,7 @@ Integer firstcell_y=0;
 Integer gridwidth=1000;
 Integer gridlineheight=1;
 Integer filenameoffset_y=20;
-Integer filenameoffset_x=250;
+Integer filenameoffset_x=350;
 Integer cellrowoffset_y=30;
 Integer boxtopmargin=10;
 Color shelfborder=Color.BLACK;
@@ -1404,7 +1404,36 @@ private Scene makeWorkspaceScene(Group myGroup) {
                         MainStage.this.nudgeCellRightInRow(row,col);
                         //System.exit(0);
                 }
-            }
+                //change focus to right
+                if (ke.getCode()==KeyCode.RIGHT) {
+                  ke.consume();
+                  System.out.println("Right key pressed for move right");
+                  Book myBook= MainStage.this.getActiveBook();
+                  MainStage.this.moveActiveRight(myBook);
+               }
+               //change focus to left
+               if (ke.getCode()==KeyCode.LEFT) {
+                  ke.consume();
+                  System.out.println("Left key pressed for move left");
+                  Book myBook= MainStage.this.getActiveBook();
+                  MainStage.this.moveActiveLeft(myBook);
+               }
+               //change focus up
+               if (ke.getCode()==KeyCode.UP) {
+                  ke.consume();
+                  System.out.println("Up key pressed");
+                  Book myBook= MainStage.this.getActiveBook();
+                  MainStage.this.moveActiveUp(myBook);
+               }
+               //change focus down
+               if (ke.getCode()==KeyCode.DOWN) {
+                  ke.consume();
+                  System.out.println("Down key pressed");
+                  Book myBook= MainStage.this.getActiveBook();
+                  MainStage.this.moveActiveDown(myBook);
+               }
+
+             }
         });
         
         return workspaceScene;
@@ -1558,7 +1587,7 @@ public void nudgeCellRightInRow(Integer firstrow, Integer firstcol){
             item.setX(newX);
             double newY=convertRowtoY(checkRow);
             item.setY(newY);
-            System.out.println("Set a col for a Book to +1");
+            //System.out.println("Set a col for a Book to +1");
         }
     }
 }
@@ -1579,10 +1608,90 @@ public void nudgeCellLeftInRow(Integer firstrow, Integer firstcol){
             item.setX(newX);
             double newY=convertRowtoY(checkRow);
             item.setY(newY);
-            System.out.println("Set a col for a Book to -1");
+            //System.out.println("Set a col for a Book to -1");
         }
     }
 }
+
+//moveactiveright
+public void moveActiveRight(Book myBook) {
+    System.out.println("move right...");
+    Integer row=myBook.getRow();
+    Integer col=myBook.getCol();
+    Boolean moved = false;
+    ArrayList<Book> sorted= listBooksShelfOrder();
+    Iterator <Book> myIterator = sorted.iterator();
+    while(myIterator.hasNext()) {
+      Book item = myIterator.next();
+      System.out.println(item+" "+item.getLabel());
+      if (item.getRow()==row && item.getCol()==col && moved==false) {
+          if (myIterator.hasNext()) {
+              MainStage.this.setActiveBook(myIterator.next());
+              moved=true;
+          }
+      }
+   }
+}
+
+//moveactiveright
+public void moveActiveLeft(Book myBook) {
+    //System.out.println("move left...");
+    Integer row=myBook.getRow();
+    Integer col=myBook.getCol();
+    Boolean moved = false;
+    ArrayList<Book> sorted= listBooksShelfOrder();
+    Integer mySize=sorted.size();
+    ListIterator <Book> myIterator = sorted.listIterator(mySize); //must pass argument at time of creation to set at right end
+    Boolean start=false;
+    while(myIterator.hasPrevious()) {
+      Book item = myIterator.previous();
+      if (item.getRow()==row && item.getCol()==col && moved==false) {
+        if (myIterator.hasPrevious()) {
+          MainStage.this.setActiveBook(myIterator.previous());
+          moved=true;
+        }  
+      }
+   }
+}
+
+//At present this function moves to existing 'boxes' not grid position
+public void moveActiveUp(Book myBook) {
+    //System.out.println("move left...");
+    Integer row=myBook.getRow();
+    Integer col=myBook.getCol();
+    Boolean moved = false;
+    ArrayList<Book> sorted= listBooksShelfOrder();
+    Integer mySize=sorted.size();
+    ListIterator <Book> myIterator = sorted.listIterator(mySize); //must pass argument at time of creation to set at right end
+    Boolean start=false;
+    while(myIterator.hasPrevious()) {
+      Book item = myIterator.previous();
+      if (item.getRow()<row && item.getCol()==col && moved==false) {
+          MainStage.this.setActiveBook(item);
+          moved=true;
+        }  
+   }
+}
+
+//At present this function moves to existing 'boxes' not grid position
+public void moveActiveDown(Book myBook) {
+    //System.out.println("move left...");
+    Integer row=myBook.getRow();
+    Integer col=myBook.getCol();
+    Boolean moved = false;
+    ArrayList<Book> sorted= listBooksShelfOrder();
+    Integer mySize=sorted.size();
+    Iterator <Book> myIterator = sorted.iterator(); //must pass argument at time of creation to set at right end
+    Boolean start=false;
+    while(myIterator.hasNext()) {
+      Book item = myIterator.next();
+      if (item.getRow()>row && item.getCol()==col && moved==false) {
+          MainStage.this.setActiveBook(item);
+          moved=true;
+        }  
+   }
+}
+
 
 public double convertRowtoY(Integer myRow){
      double newY=(myRow*this.cellgap_y)+this.cellrowoffset_y+this.boxtopmargin;

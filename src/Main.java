@@ -201,7 +201,7 @@ private MenuBar makeMenuBar() {
         //MENUBAR SETUP
         MenuBar menuBar = new MenuBar();
         // --- FILE MENU ---
-        Menu menuFile = new Menu("File");
+        Menu menuFile = new Menu("File Stuff");
         //setFileMenu(menuFile);
         MenuItem OpenTempl = new MenuItem("Open (CMD-O)");
         MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
@@ -229,7 +229,7 @@ private MenuBar makeMenuBar() {
         importAsRowBelow.setOnAction(importAsRowHandler);
 
         //MENU GRID : BOX MOVEMENTS
-        Menu menuGrid = new Menu("Move");
+        Menu menuGrid = new Menu("Move me!");
         MenuItem insertRowAfterItem = new MenuItem("Insert Row (After)");
         MenuItem insertRowBeforeItem = new MenuItem("Insert Row (Before)");
         MenuItem insertCellShiftRightItem = new MenuItem("Nudge (Shift Right)");
@@ -241,7 +241,7 @@ private MenuBar makeMenuBar() {
         nudgeCellShiftLeftItem.setOnAction(nudgeCellShiftLeftHandler);
 
         //--- MENU CONCEPTS
-        Menu menuBooks = new Menu("Books");
+        Menu menuBooks = new Menu("Add or Substract");
         MenuItem addNewBook = new MenuItem("New Book");
         addNewBook.setOnAction(addNewBookMaker);
         MenuItem bookDeleteMenuItem = new MenuItem("Delete Selected");
