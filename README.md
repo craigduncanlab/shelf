@@ -20,17 +20,6 @@ content : contains markdown files for input/output
 
 buildnotes: contains notes on Design, Classes.
 
-# Setup
-
-Default:
-
-```
- String projectfolder = "";  //This is the current top level folder with the src and fxlib folders in it
- String templatesfolder = projectfolder+"/templates/";
- String recentsfolder = projectfolder+"/config/";
-```
-e.g. with src folder for source files etc
-
 # Make sure you have JavaFX library available
 
 To use JavaFX you need to invoke it as a module when you compile and run.  It is no longer included with the Java SDK.
@@ -72,7 +61,7 @@ runprog
 
 # --- Simple instructions ---
 
-# Bookshelf
+# Main Grid/Workspace
 
 ## Open previously created Shelf (markdown format)
 
