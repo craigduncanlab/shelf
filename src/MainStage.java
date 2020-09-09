@@ -178,7 +178,8 @@ double orgSceneY;
 
 double orgTranslateX;
 double orgTranslateY;
-Main parentStage;
+Main parentClass;
+//Stage parentStage;
 FileChooser currentFileChooser = new FileChooser();
 FileChooser.ExtensionFilter myExtFilter = new FileChooser.ExtensionFilter("Shelf markdown","*.md");
 
@@ -195,13 +196,13 @@ public MainStage() {
 //workspace constructor.  Filename details will be inherited from loaded node.
 //Passes MenuBar from main application for now
 //Passes general eventhandlers from Main (at present, also uses these for the boxes)
-public MainStage(String title, MenuBar myMenu, Main parentStage) {
+public MainStage(String title, MenuBar myMenu, Main parent) {
     //Book baseNode, 
     //category
     //NodeCategory NC_WS = new NodeCategory ("workspace",99,"white");
     //view
-    this.parentStage=parentStage;
-    setTitle(title);
+    this.parentClass=parent;
+    //this.parentStage=parent.getStage();
     setMenuBar(myMenu);
     //TO DO: setLocalSpriteSelect(processLocalBoxClick);
     //set event handlers as local instance variables.  These are used at time of Book creation
@@ -214,7 +215,7 @@ public MainStage(String title, MenuBar myMenu, Main parentStage) {
     
     //we need to set sprite group etc
 
-    newWorkstageFromGroup();
+    newWorkstageFromGroup(title);
     System.out.println ("The initial bookgroupNode...");
     System.out.println (this.bookgroupNode);
     System.out.println("Reference of this stage object MainStage");
@@ -670,6 +671,7 @@ public String getStageName() {
 //probably redundant - keep name or title
 public void setTitle(String myTitle) {
     this.stageTitle = myTitle;
+    this.localStage.setTitle(myTitle); //update on screen
 }
 
 public String getTitle() {
@@ -748,7 +750,7 @@ public void clearAllBooks() {
     this.bookgroupNode.getChildren().clear();
     this.booksOnShelf.clear(); 
     this.resetBookOrigin();
-    this.parentStage.resetFileNames(); //to update general file name etc
+    this.parentClass.resetFileNames(); //to update general file name etc
 }
 
 /*
@@ -1092,11 +1094,12 @@ private void closeThisStage() {
 // INPUT / OUTPUT 
 
 //MainStage setup function
-private void newWorkstageFromGroup() {
+private void newWorkstageFromGroup(String title) {
     Group myGroup = makeWorkspaceTree(); //myGroup_root
     Scene myScene = makeWorkspaceScene(myGroup); //new scene with myGroup_root = this.localscene
     Stage myStage = new Stage();
     setStage(myStage);
+    setTitle(title);
     updateScene(myScene);
     setStagePosition(0,0);
     stageBack();

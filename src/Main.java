@@ -426,10 +426,11 @@ public void deleteSpriteGUI(Book myBook) {
         primaryStage.hide();
         
         ParentStage = new Stage();
+        ParentStage.setTitle("The Shelf App");
         MenuBar myMenu = makeMenuBar();
        
         //The main Stage for Workspace.  
-        Stage_WS = new MainStage("Workspace", myMenu,Main.this);  //sets up GUI for view
+        Stage_WS = new MainStage("Shelf App (c) Craig Duncan 2020", myMenu,Main.this);  //sets up GUI for view
         
         if (this.Stage_WS==null) {
             System.out.println("Stage_WS is null start application");

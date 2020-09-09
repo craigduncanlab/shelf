@@ -170,10 +170,11 @@ public Integer getCol() {
 }
 
 //create a Score that will rank all Books by Shelf position lowest (top left) to highest (bottom right)
+//The multiplier needs to be high enough that all rows are unique?
 public Integer getRowScore(){
 	Integer myScore=0;
 	try {
-		double dScore=getRow()*1000+getX();
+		double dScore=getRow()*10000+getX();
 		myScore = (int)dScore;
 	}
 	catch (NullPointerException e) {
