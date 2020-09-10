@@ -58,7 +58,6 @@ public String getFileText(File myFile) {
   catch (Throwable t)
   {
     t.printStackTrace();
-    //System.exit(0);
     return null;
   }
   return myText.toString();
@@ -87,21 +86,15 @@ public ArrayList<ZipEntry> readAndReplaceZip(String fileZip, String docxml, Stri
 
 	    	if (name.equals(target)) {
 				System.out.println(name);
-				//read in as uncompressed...
-
-				//we're going to replace the target document.xml with the input string
-				//out.putNextEntry(zipItem); //make use of the ZipEntry we read in from input.  Name.  NO.  need to make new one to rezie
 				ZipEntry newItem = new ZipEntry(target);
 				out.putNextEntry(newItem);
-				byte[] data = docxml.getBytes();  //turn String into bytes since that what ZipFileOutputStream wants
+				byte[] data = docxml.getBytes();  //turn String into bytes since thats what ZipFileOutputStream wants
    				newItem.setSize(data.length); //set size
 				System.out.println(docxml);
 				System.out.println(data.length);
 				System.out.println("About to write");
 				out.write(data);
-				//out.write(data, 0, data.length);  //writes this entry as compressed data bytes to the output file
 				out.closeEntry();
-				//System.exit(0);
 			}
 			//otherwise, we're going to write the ZipEntry file data back into the new file
 			else {
@@ -109,38 +102,26 @@ public ArrayList<ZipEntry> readAndReplaceZip(String fileZip, String docxml, Stri
 					ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     				int rdlength;
     				byte[] data = new byte[1024]; //size for the maximum bytes read at any time
-    				//check that the actual read bytes isn't empty and make sure UTF-8 is used.
-    				//while ((rdlength = zis.read(data,0,data.length)) != -1) {
-    				//rdlength = zis.read(data,0,data.length);
-    				//System.out.println(rdlength);
-    				
+    		    				
     				while ((rdlength = zis.read(data,0,data.length)) != -1) {
-    						//message = new String(result, 0, resultLength, "UTF-8");
     						buffer.write(data,0, rdlength); //add our latest bytes to the buffer
     				}
     				buffer.flush(); //finish buffering
-    				//byte[] tester = buffer.toByteArray();
 					byte[] byteArray = buffer.toByteArray(); //convert buffer back to byte array of actual length
 					String mystring = new String(byteArray, StandardCharsets.UTF_8);
     				System.out.println(mystring);
-					//System.out.println(tester.toString());
-						//decode with utf8 if string files
+					//decode with utf8 if string files
 					if (name.indexOf("xml") != -1 || name.indexOf("rels") != -1) {
         				System.out.println("This is a string not binary file: "+name);
-        				
    					}
    					//images etc
    					if (name.indexOf("xml") == -1 && name.indexOf("rels") == -1) {
         				System.out.println("This is a binary file: "+name);
-        				//System.exit(0);
    					}
-   					//we have our new bytearray (for contents) rather than a file per se.
-   					//new ZipEntry for output
    					ZipEntry zipOutItem = new ZipEntry(name);
    					zipOutItem.setSize(byteArray.length); //set size
     				out.putNextEntry(zipOutItem); //
 					out.write(byteArray);
-					//out.write(byteArray,0,byteArray.length); //now write out the contents of byte array
     				out.closeEntry();  //optional if you use 'get next entry'
 	    		}	
 	    		zipItem = zis.getNextEntry();
@@ -174,56 +155,38 @@ public ArrayList<ZipEntry> readAndWriteZip(String fileZip){
 	    ZipEntry zipItem = zis.getNextEntry();
 	    int count=0;
 	    while (zipItem!= null) {
-	    		 //a ZipEntry is used in the Zip file system.  automatically closes last entry
 	    		count++;
 	    		
 	    		String name =zipItem.getName();
-
-
-			
-
-	    			//we need to buffer the byte reads because we don't know byte size
-					ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    				int rdlength;
-    				byte[] data = new byte[1024]; //size for the maximum bytes read at any time
-    				//check that the actual read bytes isn't empty and make sure UTF-8 is used.
-    				//while ((rdlength = zis.read(data,0,data.length)) != -1) {
-    				//rdlength = zis.read(data,0,data.length);
-    				//System.out.println(rdlength);
+    			//we need to buffer the byte reads because we don't know byte size
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+				int rdlength;
+				byte[] data = new byte[1024]; //size for the maximum bytes read at any time
+				//check that the actual read bytes isn't empty and make sure UTF-8 is used.
+				while ((rdlength = zis.read(data,0,data.length)) != -1) {
+						buffer.write(data,0, rdlength); //add our latest bytes to the buffer
+				}
+				buffer.flush(); //finish buffering
+				byte[] byteArray = buffer.toByteArray(); //convert buffer back to byte array of actual length
+				String mystring = new String(byteArray, StandardCharsets.UTF_8);
+				System.out.println(mystring);
+				//decode with utf8 if string files
+				if (name.indexOf("xml") != -1 || name.indexOf("rels") != -1) {
+    				System.out.println("This is a string not binary file: "+name);
     				
-    				while ((rdlength = zis.read(data,0,data.length)) != -1) {
-    						//message = new String(result, 0, resultLength, "UTF-8");
-    						buffer.write(data,0, rdlength); //add our latest bytes to the buffer
-    				}
-    				buffer.flush(); //finish buffering
-    				//byte[] tester = buffer.toByteArray();
-					byte[] byteArray = buffer.toByteArray(); //convert buffer back to byte array of actual length
-					String mystring = new String(byteArray, StandardCharsets.UTF_8);
-    				System.out.println(mystring);
-					//System.out.println(tester.toString());
-						//decode with utf8 if string files
-					if (name.indexOf("xml") != -1 || name.indexOf("rels") != -1) {
-        				System.out.println("This is a string not binary file: "+name);
-        				
-   					}
-   					//images etc
-   					if (name.indexOf("xml") == -1 && name.indexOf("rels") == -1) {
-        				System.out.println("This is a binary file: "+name);
-        				//System.exit(0);
-   					}
-   					//we have our new bytearray (for contents) rather than a file per se.
-   					//new ZipEntry for output
-   					ZipEntry zipOutItem = new ZipEntry(name);
-   					zipOutItem.setSize(byteArray.length); //set size
-    				out.putNextEntry(zipOutItem); //
-					out.write(byteArray);
-					//out.write(byteArray,0,byteArray.length); //now write out the contents of byte array
-    				out.closeEntry();  //optional if you use 'get next entry'
-    				zipItem = zis.getNextEntry();
-
-	    			
+					}
+					//images etc
+					if (name.indexOf("xml") == -1 && name.indexOf("rels") == -1) {
+    				System.out.println("This is a binary file: "+name);
+					}
+					ZipEntry zipOutItem = new ZipEntry(name);
+					zipOutItem.setSize(byteArray.length); //set size
+				out.putNextEntry(zipOutItem); //
+				out.write(byteArray);
+				out.closeEntry();  //optional if you use 'get next entry'
+				zipItem = zis.getNextEntry();
 	    }
-	    out.close(); //close the output stream and file.  zis?
+	    out.close(); //close the output stream and file.  
 	}
 	catch (FileNotFoundException fnf) {
 		System.out.println("FNF Exception");
