@@ -899,6 +899,8 @@ public void updateHTMLpreview(Book myBook){
 public String getHTMLfromContents(Book myBook) {
     String input = myBook.getMD();
     String label = myBook.getLabel();
+    String notes = myBook.getNotes();
+    String fontfamily = "Garamond"; //Arial
     String logString="";
     //take out any existing headers?
     //String replaceString = input.replaceAll("(<html[ =\\w\\\"]*>{1})|(<body[ =\\w\\\"]*>{1})|<html>|</html>|<body>|</body>|<head>|</head>",""); //regEx
@@ -950,7 +952,7 @@ public String getHTMLfromContents(Book myBook) {
     //embedded links will probably only open www addresses in the inbuilt JavaFX WebView.  You can open these from the Button in edit view.
     String urlpath=myBook.geturlpath();
      if (urlpath.length()>0) {
-         String urlprefix="<p><span style=\"font-family: Arial;\"><a href=\"";
+         String urlprefix="<p><span style=\"font-family: "+fontfamily+";\"><a href=\"";
          String urlsuffix="\">weblink</a></span></p>";
          String urlfile = urlprefix+urlpath+urlsuffix;
          logString=logString+urlfile;
@@ -964,7 +966,7 @@ public String getHTMLfromContents(Book myBook) {
         System.out.println(imageURI);
         //<img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
          String imgprefix="<p><img src=\"";
-         String imgsuffix="\" alt=\"user image\" width=\"600\"></p>";
+         String imgsuffix="\" alt=\"user image\" width=\"600\" title=\""+notes+"\"></p>";
 
          String imgfile = imgprefix+imageURI+imgsuffix;
          logString=logString+imgfile;
