@@ -135,6 +135,8 @@ public class Main extends Application {
     BookMetaStage bookshelfInspectorStage;  
     //File input/output
     File currentOpenFile;
+    //Word
+    HashMap wordStyles = new HashMap();
 
 
 //main launches from Application class
@@ -439,6 +441,8 @@ public void deleteSpriteGUI(Book myBook) {
         else {
             System.out.println("Stage_WS created.");
         }
+        //setWordStyles();
+        //testZip();
     }
 
     //BUTTON EVENT HANDLERS

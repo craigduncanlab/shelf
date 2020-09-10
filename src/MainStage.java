@@ -231,8 +231,8 @@ public void processMarkdown(File file) {
     String thefilename=file.getName();
     String last=thefilename.substring(thefilename.length() - 3);
     if (last.equals(".md")==true) {
-      TemplateUtil myUtil = new TemplateUtil();
-      String contents = myUtil.getFileText(file);
+      //TemplateUtil myUtil = new TemplateUtil();
+      String contents = getFileText(file);
       this.shelfFileName.setText(thefilename); //update name on shelf view
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
@@ -255,6 +255,37 @@ public void processMarkdown(File file) {
       System.out.println("Finished parse in 'open button' makeStage");
       //LoadSave.this.ListOfFiles();// print out current directory
     }
+}
+
+//Simple utility to return contents of file as String
+public String getFileText(File myFile) {
+  StringBuffer myText = new StringBuffer(); //mutable String
+  String endOfLine="\n";
+  try {
+    Scanner scanner1 = new Scanner(myFile);
+    if (scanner1==null) {
+      System.out.println("No text/html content");
+      return null;
+    }
+    int nl=0;
+    while (scanner1.hasNextLine()) {
+      nl++;
+      String thisRow=scanner1.nextLine();
+      System.out.println(thisRow);
+      myText.append(thisRow);
+      myText.append(endOfLine);
+    }
+    scanner1.close();
+  }
+  catch (Throwable t)
+  {
+    t.printStackTrace();
+    //System.exit(0);
+    return null;
+  }
+  //System.out.println(myText);
+  //System.exit(0);
+  return myText.toString();
 }
 
 public void processMarkdownAsRow(File file) {
@@ -375,21 +406,43 @@ public void saveAs() {
 //for direct save
 public void writeFileOut() {
     //using existing filename
+    ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
+    writeOutBooks(mySaveBooks);
+    writeOutWord(mySaveBooks);
+}
+
+public void writeOutWord(ArrayList<Book> mySaveBooks) {    //
     String filepath=this.getFilename();
     System.out.println("Saving: "+filepath);
-    ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
+    Parser myP = new Parser();
+    Iterator<Book> myIterator = mySaveBooks.iterator();
+    StringBuffer myWordOutput=new StringBuffer();
+         while (myIterator.hasNext()) {
+            Book myNode=myIterator.next();
+            //System.out.println(myNode.toString());
+            String myWordString=myP.getOOXMLfromContents(myNode); //this gets wordcodes every time
+            myWordOutput.append(myWordString);
+            myWordString="";
+             //option: prepare string here, then write once.
+        }
+        //System.exit(0);
+        basicWordWriter(myWordOutput.toString(),filepath);
+}
+
+public void writeOutBooks(ArrayList<Book> mySaveBooks) {    //
     Iterator<Book> myIterator = mySaveBooks.iterator();
     String myOutput="";
+    String filepath=this.getFilename();
+    System.out.println("Saving: "+filepath);
          while (myIterator.hasNext()) {
             Book myNode=myIterator.next();
             //System.out.println(myNode.toString());
             String myString=convertBookMetaToString(myNode);
             myOutput=myOutput+myString;
+            myString="";
              //option: prepare string here, then write once.
         }
         basicFileWriter(myOutput,filepath);
-        //System.out.println(myOutput);
-        //System.exit(0);
 }
 
 //sort books by shelf order
@@ -514,13 +567,13 @@ private void basicFileWriter(String logstring,String filename) {
     //String reportfile=this.templatefolder+filename+".md";
 
     try {
-    PrintStream console = System.out;
-    PrintStream outstream = new PrintStream(new FileOutputStream(filename,false)); //true = append.  This overwrites.
-    System.setOut(outstream);
-    //String logString = Integer.toString(myNode.getNodeRef())+"@@P"+myNode.getDocName()+"@@P"+myNode.getHeading()+"@@P"+myNode.getNotes()+"@@P"+myNode.getHTML()+"@@P@EOR";
-    System.out.print(logstring); //don't use println.  No CR needed.
-    outstream.close();
-    System.setOut(console);
+      PrintStream console = System.out;
+      PrintStream outstream = new PrintStream(new FileOutputStream(filename,false)); //true = append.  This overwrites.
+      System.setOut(outstream);
+      //String logString = Integer.toString(myNode.getNodeRef())+"@@P"+myNode.getDocName()+"@@P"+myNode.getHeading()+"@@P"+myNode.getNotes()+"@@P"+myNode.getHTML()+"@@P@EOR";
+      System.out.print(logstring); //don't use println.  No CR needed.
+      outstream.close();
+      System.setOut(console);
     }
         catch (Throwable t)
         {
@@ -528,6 +581,19 @@ private void basicFileWriter(String logstring,String filename) {
             return;
         }
 }  
+
+//inputs: name is the full path name
+private void basicWordWriter(String logstring,String name) {
+    //String reportfile=this.templatefolder+filename+".md";
+    String myRefFile="wordlib/StylesTemplate.docx";
+    String filename=name.substring(0,name.length()-3)+".docx"; //remove .md  
+    //we need to take logstring, insert it into document.xml and then zip it up with rest of docx
+    File sourceFile = new File("wordlib/LittleDoc.xml");
+    String docXML=getFileText(sourceFile); //alternatively, extract from StylesTemplate
+    String newDoc=docXML.replace("XXXXXX",logstring); //we now have a new document.xml
+    ZipUtil util = new ZipUtil();
+    util.readAndReplaceZip(myRefFile,newDoc,filename);
+} 
 
 //JAVAFX SCENE GRAPH GUI INFO (THIS IS NOT THE DATA NODE!)
 public void setSceneRoot(Node myNode) {
