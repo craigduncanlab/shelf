@@ -4,31 +4,6 @@ import java.io.*;  //Buffered Reader, File Reader, IOException, FileNoteFoundExc
 import java.util.*; //scanner, HashMap, ArrayList etc, Zip...
 import java.nio.charset.StandardCharsets; 
 
-/* python3 ref 
-
-def writeNewFileZip(nbpath,newname,docxml):
-
-    maindoc='word/document.xml'
-    excludednames = [maindoc] 
-    nbpackages=_getZipInfo(nbpath) 
-    unzipsrc=zipfile.ZipFile(nbpath,'r',zipfile.ZIP_DEFLATED)
-    with zipfile.ZipFile(newname, 'w',zipfile.ZIP_DEFLATED) as zipwrite:
-        
-        # --- WRITE ALL EXISTING NOTEBOOK CONTENTS EXCEPT document.xml
-        for item in nbpackages:
-            if item.filename not in excludednames:  # no duplication
-                print("saving notebook package:"+item.filename)
-                insertdata = unzipsrc.read(item.filename)
-                # check xml and rels strings are utf decoded/encoded
-                newdata=utftest(item.filename,insertdata)
-                zipwrite.writestr(item, newdata)  
-            else: 
-                print("notebook package not re-saved:"+item.filename)
-                zipwrite.writestr(item,docxml)       
-        zipwrite.close()
-
- */
-
 public class ZipUtil {
 
 public ZipUtil() {
@@ -58,18 +33,6 @@ public ArrayList<ZipEntry> readZip(String fileZip){
 	}
 	return myItemList;
 }
-
-/*
-public void openStyleTest(String filepath) {
-	System.out.println("OST");
-	File file = new File(filepath);
-	System.out.println(file.getName());
-	System.out.println(file.getPath());
-    String contents = getFileText(file);
-    String myFile="content/StylesTemplate.docx"; //TO DO:put in sother folder
-    readAndReplaceZip(myFile,contents);
-}
-*/
 
 //Simple utility to return contents of file as String
 public String getFileText(File myFile) {
@@ -273,101 +236,5 @@ public ArrayList<ZipEntry> readAndWriteZip(String fileZip){
 	return myItemList;
 }
 
-/*
-public class UnzipFile {
-    public static void main(String[] args) throws IOException {
-        String fileZip = "src/main/resources/unzipTest/compressed.zip";
-        File destDir = new File("src/main/resources/unzipTest");
-        byte[] buffer = new byte[1024];
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(fileZip));
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            File newFile = newFile(destDir, zipEntry);
-            FileOutputStream fos = new FileOutputStream(newFile);
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
-            }
-            fos.close();
-            zipEntry = zis.getNextEntry();
-        }
-        zis.closeEntry();
-        zis.close();
-    }
-    
-    public static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
-        File destFile = new File(destinationDir, zipEntry.getName());
-        
-        String destDirPath = destinationDir.getCanonicalPath();
-        String destFilePath = destFile.getCanonicalPath();
-        
-        if (!destFilePath.startsWith(destDirPath + File.separator)) {
-            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
-        }
-        
-        return destFile;
-    }
-}
-*/
-/*
-//zip multiple files
-public void ZipMultiple (ArrayList myInput) throws IOException {
-        List<String> srcFiles = myInput; //Arrays.asList("test1.txt", "test2.txt");
-        FileOutputStream fos = new FileOutputStream("multiCompressed.zip");
-        ZipOutputStream zipOut = new ZipOutputStream(fos);
-        for (String srcFile : srcFiles) {
-            File fileToZip = new File(srcFile);
-            FileInputStream fis = new FileInputStream(fileToZip);
-            ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
-            zipOut.putNextEntry(zipEntry);
- 
-            byte[] bytes = new byte[1024];
-            int length;
-            while((length = fis.read(bytes)) >= 0) {
-                zipOut.write(bytes, 0, length);
-            }
-            fis.close();
-        }
-        zipOut.close();
-        fos.close();
-    }
-
-//read
-
-//String fileZip = "src/main/resources/unzipTest/compressed.zip";
-//File destDir = new File("src/main/resources/unzipTest");
-public void writeZip(String fileZip,File destDir) {     
-        
-        byte[] buffer = new byte[1024];
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(fileZip));
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            File newFile = newFile(destDir, zipEntry);
-            FileOutputStream fos = new FileOutputStream(newFile);
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
-            }
-            fos.close();
-            zipEntry = zis.getNextEntry();
-        }
-        zis.closeEntry();
-        zis.close();
-    }
-
-//class to make a new File object
-    public static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
-        File destFile = new File(destinationDir, zipEntry.getName());
-        
-        String destDirPath = destinationDir.getCanonicalPath();
-        String destFilePath = destFile.getCanonicalPath();
-        
-        if (!destFilePath.startsWith(destDirPath + File.separator)) {
-            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName()); //prevent ZipSlip attacks with relative file paths
-        }
-        
-        return destFile;
-    }
-    */
 }
 
