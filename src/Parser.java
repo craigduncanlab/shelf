@@ -602,27 +602,15 @@ public String getOOXMLfromContents(Book myBook) {
  	System.exit(0);
  	*/
  	StringBuffer output = new StringBuffer();
- 	String h = h1_style.replace("XXX",label); //heading1
+ 	String fix_h=fixEscapeChars(label);
+ 	String h = h1_style.replace("XXX",fix_h); //heading1
  	output.append(h);
  	Boolean lasthead2=false; //track level 2 headings
 	while (scanner1.hasNextLine()) {
 		String wordline="";
 	 	//just make paragraphs for now
 	 	String thisLine=scanner1.nextLine();
-	 	//escape characters for the OOXML output
-	 	/*
-	 	' -> &apos;
-		" -> &quot;
-		> -> &gt;
-		< -> &lt;
-		& -> &amp;
-		*/
-	 	String rep1=thisLine.replace("&","&amp;");
-	 	String rep2=rep1.replace("<","&lt;");
-	 	String rep3=rep2.replace(">","&gt;");
-	 	String rep4=rep3.replace("\"","&quot;");
-	 	String rep5=rep4.replace("\'","&apos;");
-	 	thisLine=rep5;
+		thisLine=fixEscapeChars(thisLine);
 	 	if (thisLine.length()==0 && lasthead2==true) {
 	 		lasthead2=false;
 	 		//do nothing
@@ -654,6 +642,22 @@ public String getOOXMLfromContents(Book myBook) {
 	return stringOut;
 }
 
+//escape characters for the OOXML output
+	 	/*
+	 	' -> &apos;
+		" -> &quot;
+		> -> &gt;
+		< -> &lt;
+		& -> &amp;
+		*/
+public String fixEscapeChars(String thisLine){
+	String rep1=thisLine.replace("&","&amp;");
+ 	String rep2=rep1.replace("<","&lt;");
+ 	String rep3=rep2.replace(">","&gt;");
+ 	String rep4=rep3.replace("\"","&quot;");
+ 	String output=rep4.replace("\'","&apos;");
+ 	return output;
+}
 
 
 //Convert the MD section of current Book to some HTML and update the HTML parameter		
