@@ -403,12 +403,51 @@ public void saveAs() {
         }
     }
 
+//for save Row as
+public void saveRowAs(Integer row) {
+    Stage myStage = new Stage();
+    myStage.setTitle("Save As ...");
+    String myFilename=getShortFilename()+"_row"; //SaveAs will use current path so only name is needed.  Add suffix to avoid accidents.
+    this.currentFileChooser.setTitle("Save Row As File");
+    this.currentFileChooser.setInitialFileName(myFilename);  
+    this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
+    //System.exit(0);
+    File file = currentFileChooser.showSaveDialog(myStage);
+    if (file != null) {
+        setFilename(file.getPath());
+        setShortFilename(file.getName());
+        writeRowOut(row);
+        } 
+        else {
+            //DO SOMETHING
+        }
+    }
+
 //for direct save
 public void writeFileOut() {
     //using existing filename
     ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
     writeOutBooks(mySaveBooks);
     writeOutWord(mySaveBooks);
+}
+
+//for direct Row save
+//Currently retains the grid position of this row. i.e. doesn't write new entries back to row '0' but it could.
+public void writeRowOut(Integer row) {
+    //using existing filename
+    ArrayList<Book> myBookSet = listBooksShelfOrder();//getBooksOnShelf();
+    ArrayList<Book> myBookRow = new ArrayList<Book>(); 
+    //filter these to just one row
+    Iterator<Book> myIterator = myBookSet.iterator();
+    while (myIterator.hasNext()) {
+      Book thisBook = myIterator.next();
+      Integer checkRow = thisBook.getRow();
+      //integer comparison.
+      if (checkRow.intValue()==row.intValue()) {
+        myBookRow.add(thisBook);
+      }
+    }
+    writeOutBooks(myBookRow);
 }
 
 public void writeOutWord(ArrayList<Book> mySaveBooks) {    //

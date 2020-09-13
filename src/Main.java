@@ -208,6 +208,7 @@ private MenuBar makeMenuBar() {
         MenuItem OpenTempl = new MenuItem("Open (CMD-O)");
         MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
         MenuItem SaveAsMenuItem = new MenuItem("Save As (CMD-SHIFT-S)");
+        MenuItem saveRowAsMenuItem = new MenuItem("Save Row As");
         MenuItem ClearBookshelfMenuItem = new MenuItem("Close (CMD-W)");
         MenuItem importAsRowBelow = new MenuItem("Import as Row Below");
         MenuItem OutputWork = new MenuItem("Output as Text");
@@ -223,9 +224,10 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
+        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
         SaveShelf.setOnAction(SaveHandler);
         SaveAsMenuItem.setOnAction(SaveAsHandler); //docname
+        saveRowAsMenuItem.setOnAction(saveRowAsHandler);
         OpenTempl.setOnAction(openTemplate);
         ClearBookshelfMenuItem.setOnAction(clearBookShelf);
         importAsRowBelow.setOnAction(importAsRowHandler);
@@ -469,10 +471,18 @@ public void deleteSpriteGUI(Book myBook) {
         this.Stage_WS.writeFileOut();
     }
 
-     public void saveAsFileSaver() {
+    public void saveAsFileSaver() {
         this.Stage_WS.setFilename(this.currentOpenFile.getPath());
         this.Stage_WS.setShortFilename(this.currentOpenFile.getName());
         this.Stage_WS.saveAs();
+    }
+
+    public void saveRowAsFileSaver() {
+        this.Stage_WS.setFilename(this.currentOpenFile.getPath());
+        this.Stage_WS.setShortFilename(this.currentOpenFile.getName());
+        Book myBook = Main.this.getActiveBook();
+        Integer myRow = myBook.getRow();
+        this.Stage_WS.saveRowAs(myRow);
     }
 
     // --- EVENT HANDLERS
@@ -603,5 +613,14 @@ public void deleteSpriteGUI(Book myBook) {
             Main.this.saveAsFileSaver();
                 }
             }; 
+
+        //save Row As template
+        EventHandler<ActionEvent> saveRowAsHandler = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Main.this.saveRowAsFileSaver();
+                }
+            };
 
 }
