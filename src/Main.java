@@ -86,17 +86,10 @@ public class Main extends Application {
     //variables for mouse events TO DO : RENAME
     double orgSceneX, orgSceneY;
     double orgTranslateX, orgTranslateY;
-    //General managers
-    //SpriteManager myBookManager;
-    ControlsManager myControlsManager = new ControlsManager();
-    //
-    //BookMetaStage bookshelfInstance;//= new BookMetaStage();
     Stage ParentStage;
     //Main Stage (Workspace window) that owns all other Stages
     MainStage Stage_WS;
     //Text Output windows (no edits)
-    //BookMetaStage Stage_Output;
-    
     //Extracted Definitions window (text)
     Stage defsTextStage;
     ScrollPane defsTextStage_root;
@@ -112,8 +105,6 @@ public class Main extends Application {
     TextArea textEdit;
     TextArea categoryEdit;
     TextArea dateEdit;
-    Clause editClause;
-    Event editEvent;
     //Container editor
     TextArea docnameEdit;
     TextArea authorEdit;
@@ -129,8 +120,7 @@ public class Main extends Application {
     
     //Menus that need to be individually referenced/updated
     Menu theRecentMenu;
-    Recents theRecent;
-
+  
     //To hold Stage with open node that is current
     BookMetaStage bookshelfInspectorStage;  
     //File input/output
@@ -270,25 +260,6 @@ private MenuBar makeMenuBar() {
         });
 
         return menuBar;
-}
-
-private void refreshRecentMenu() {
-    if (this.Stage_WS==null) {
-        System.out.println("Stage WS is null refresh recent");
-        System.exit(0);
-    }
-    Recents myRec = new Recents(this.Stage_WS, new LoadSave(this.Stage_WS));  //create a new object with the loadsave functions with workspace.
-    ArrayList<String> latest = myRec.getList();
-    if (latest!=null) {
-        this.theRecentMenu.getItems().clear();
-    }
-    Iterator<String> myIterator = latest.iterator(); //alternatively use Java method to see if in Array?
-    while (myIterator.hasNext()) {
-        String filename = myIterator.next();
-        MenuItem myMI = myRec.makeMenuItem(filename);
-        System.out.println("menu item added:"+filename);
-        this.theRecentMenu.getItems().add(myMI);
-    }
 }
 
 //clearBooksFromShelf

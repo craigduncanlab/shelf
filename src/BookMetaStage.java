@@ -148,9 +148,6 @@ MenuBar localmenubar;
 CheckBox visibleCheck = new CheckBox("Visible");
 ArrayList<Object> BoxContentsArray = new ArrayList<Object>(); //generic store of contents of boxes
 
-
-//Track current stage that is open.  Class variables
-static StageManager currentFocus; 
 static Book currentTarget; 
 
 //constructor

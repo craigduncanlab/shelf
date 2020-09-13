@@ -293,8 +293,7 @@ public void processMarkdownAsRow(File file) {
     String thefilename=file.getName();
     String last=thefilename.substring(thefilename.length() - 3);
     if (last.equals(".md")==true) {
-      TemplateUtil myUtil = new TemplateUtil();
-      String contents = myUtil.getFileText(file);
+      String contents = getFileText(file);
       this.shelfFileName.setText(thefilename); //update name on shelf view
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());

@@ -80,7 +80,6 @@ Scene localScene;
 TextArea inputTextArea = new TextArea();
 //target Stage information
 MainStage targetSM = new MainStage();
-WhiteBoard defaultWhiteBoard = new WhiteBoard();
 //current dialogue
 Stage myStage;
 Book targetNode = new Book();
@@ -98,12 +97,6 @@ public LoadSave () {
 //constructor with Stage
 public LoadSave (MainStage myMS) {
   this.targetSM=myMS;
-  this.desktop = Desktop.getDesktop();
-}
-
-//constructor with WhiteBoard
-public LoadSave (WhiteBoard myWB) {
-  this.defaultWhiteBoard=myWB;
   this.desktop = Desktop.getDesktop();
 }
 
@@ -259,18 +252,6 @@ private Stage makeLoaderStage(Button openButton) {
         rootGroup.setPadding(new Insets(12, 12, 12, 12));
         this.myStage.setScene(new Scene(rootGroup));
         return this.myStage;
-    }
-
-//This opens a file, but it defaults to the local system application?
-private void openFile(File file) {
-        try {
-            desktop.open(file);
-        } catch (IOException ex) {
-            Logger.getLogger(
-                FileChooserSample.class.getName()).log(
-                    Level.SEVERE, null, ex
-                );
-        }
     }
 
 EventHandler<ActionEvent> clickOpen = 
