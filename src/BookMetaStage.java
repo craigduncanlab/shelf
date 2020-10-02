@@ -897,25 +897,36 @@ public String getHTMLfromContents(Book myBook) {
     String input = myBook.getMD();
     String label = myBook.getLabel();
     String notes = myBook.getNotes();
+    Boolean showNotes=false;
+    if (notes.length()>0) {
+        showNotes=true;
+    }
     String fontfamily = "Garamond"; //Arial
     String logString="";
     //take out any existing headers?
     //String replaceString = input.replaceAll("(<html[ =\\w\\\"]*>{1})|(<body[ =\\w\\\"]*>{1})|<html>|</html>|<body>|</body>|<head>|</head>",""); //regEx
     int index =0; //
+    String cssString="<style> .bordered { font-family: Arial; font-size: small; width: 900px; padding: 20px; background-color: #ddd; border: 1px dashed darkorange; border-radius: 8px; } .a {font-family: Arial;} </style>";
     //top row or heading
     if(index==0) {
-        logString = "<html><head><title>"+label+"</title></head>"+"<body>";// use the label for the html page (if needed)
+        logString = "<html><head>";
+        logString=logString+"<title>"+label+"</title>";
+        logString=logString+cssString; //css
+        logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
+        //logString=logString+"<p><b>"+label+"</b></p>";
+        //logString=logString+"<H1>"+label+"</H1>";
+        //logString = "<html><head><title>"+label+"</title></head>"+"<body>";// use the label for the html page (if needed)
         //logString=logString+"<p><b>"+label+"</b></p>";
         logString=logString+"<H1><span style=\"font-family: Arial;\">"+label+"<span style=\"font-family: Arial;\"></H1>";
      }
      //iterate and create rest of file
     Scanner scanner1 = new Scanner(input);
-    String prefix = "<p><span style=\"font-family: Arial;\">";
+    String prefix = "<p class=\"a\">";
     String suffix="</span></p>";
     // filter md content for h2 or p
     String h2code="## ";
     String h2prefix="<H2><span style=\"font-family: Arial;\">";
-    String h2suffix="<span style=\"font-family: Arial;\"></H2>";
+    String h2suffix="</H2>";
     int mdFormatCode=0;
     String balanceString="";
      while (scanner1.hasNextLine()) {
@@ -939,6 +950,21 @@ public String getHTMLfromContents(Book myBook) {
         }
        
      } //end while
+     //notes
+     if (showNotes==true) {
+         Scanner scanner2 = new Scanner(notes);
+         String prefixdiv="<div class=\"bordered\">";
+         String suffixdiv="</div>";
+         String prefix2="<p>";
+         logString=logString+prefixdiv;
+         while (scanner2.hasNextLine()) {
+            String notesLine=scanner2.nextLine();
+            logString=logString+prefix2+notesLine+suffix;
+            System.out.println(notesLine);
+         }
+         logString=logString+suffixdiv;
+     }
+     //
      String linkpath=myBook.getdocfilepath();
      if (linkpath.length()>0) {
          String linkprefix="<p><span style=\"font-family: Arial;\"><a href=\"";

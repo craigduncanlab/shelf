@@ -664,13 +664,17 @@ public String fixEscapeChars(String thisLine){
 public String getHTMLfromContents(Book myBook) {
 	String input = myBook.getMD();
 	String label = myBook.getLabel();
+	String notes = myBook.getNotes();
 	String logString="";
 	//take out any existing headers?
 	//String replaceString = input.replaceAll("(<html[ =\\w\\\"]*>{1})|(<body[ =\\w\\\"]*>{1})|<html>|</html>|<body>|</body>|<head>|</head>",""); //regEx
 	int index =0; //
 	//top row or heading
 	if(index==0) {
-	 	logString = "<html><head><title>"+label+"</title></head>"+"<body>";// use the label for the html page (if needed)
+	 	logString = "<html><head>";
+	 	logString=logString+"<title>"+label+"</title>";
+	 	logString=logString+"<script> border {border-style:dotted;}</script>"; //css
+	 	logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
 	 	//logString=logString+"<p><b>"+label+"</b></p>";
 	 	logString=logString+"<H1>"+label+"</H1>";
 	 }
@@ -684,8 +688,21 @@ public String getHTMLfromContents(Book myBook) {
 	 	String thisLine=scanner1.nextLine();
 	 	logString=logString+prefix+thisLine+suffix;
 	 }
+	 //
+	 Scanner scanner2 = new Scanner(notes);
+	 String prefixdiv="<div id=\"border\">";
+	 String suffixdiv="</div>";
+	 logString=logString+prefixdiv;
+	 while (scanner2.hasNextLine()) {
+	 	String notesLine=scanner2.nextLine();
+	 	logString=logString+prefix+notesLine+suffix;
+	 	System.out.println(notesLine);
+	 }
+	 logString=logString+suffixdiv;
+	 //
 	 logString=logString+"</body></html>";
 	 System.out.println(logString);
+	 //System.exit(0);
 	return logString;
 	}
 
