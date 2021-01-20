@@ -127,6 +127,8 @@ public class Main extends Application {
     File currentOpenFile;
     //Word
     HashMap wordStyles = new HashMap();
+    //Display
+    Integer displayMode=1;
 
 
 //main launches from Application class
@@ -222,6 +224,22 @@ private MenuBar makeMenuBar() {
         ClearBookshelfMenuItem.setOnAction(clearBookShelf);
         importAsRowBelow.setOnAction(importAsRowHandler);
 
+        //GENERAL LAYOUT/WRAP OPTIONS
+        Menu layoutMenu = new Menu("Layout");
+        MenuItem layoutWrap = new MenuItem("Wrap (10 boxes)");
+        layoutMenu.getItems().addAll(layoutWrap);
+        layoutWrap.setOnAction(performBoxWrap);
+
+        //DISPLAY OPTIONS
+        Menu displayMenu = new Menu("Display");
+        MenuItem displayTitles = new MenuItem("Titles");
+        MenuItem displayWithDate = new MenuItem("Titles With Date/Time");
+        MenuItem displayDateOnly = new MenuItem("Date/Time");
+        displayMenu.getItems().addAll(displayTitles,displayWithDate,displayDateOnly);
+        displayTitles.setOnAction(setDisplayTitles);
+        displayWithDate.setOnAction(setDisplayTitleWithDate);
+        displayDateOnly.setOnAction(setDisplayDateTime);
+
         //MENU GRID : BOX MOVEMENTS
         Menu menuGrid = new Menu("Move me!");
         MenuItem insertRowAfterItem = new MenuItem("Insert Row (After)");
@@ -247,7 +265,7 @@ private MenuBar makeMenuBar() {
         
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile, menuGrid, menuBooks);     
+        menuBar.getMenus().addAll(menuFile, layoutMenu,displayMenu,menuGrid, menuBooks);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
@@ -260,6 +278,28 @@ private MenuBar makeMenuBar() {
         });
 
         return menuBar;
+}
+
+//
+public void setDisplayModeTitles() {
+    if (this.displayMode!=1){
+        this.displayMode=1;
+        Stage_WS.setDisplayModeTitles(this.displayMode);
+    }
+}
+
+public void setDisplayModeTitleWithDate() {
+    if (this.displayMode!=2){
+        this.displayMode=2;
+        Stage_WS.setDisplayModeTitles(this.displayMode);
+    }
+}
+
+public void setDisplayModeDateTime() {
+    if (this.displayMode!=3){
+        this.displayMode=3;
+        Stage_WS.setDisplayModeTitles(this.displayMode);
+    }
 }
 
 //clearBooksFromShelf
@@ -397,15 +437,15 @@ public void deleteSpriteGUI(Book myBook) {
     public void start(Stage primaryStage) {
        
         /* This only affects the primary stage set by the application */
-        primaryStage.setTitle("Shelf App");
+        primaryStage.setTitle("Fact Processor");
         primaryStage.hide();
         
         ParentStage = new Stage();
-        ParentStage.setTitle("The Shelf App");
+        ParentStage.setTitle("Fact Processor");
         MenuBar myMenu = makeMenuBar();
        
         //The main Stage for Workspace.  
-        Stage_WS = new MainStage("Shelf App (c) Craig Duncan 2020", myMenu,Main.this);  //sets up GUI for view
+        Stage_WS = new MainStage("Fact Processor (c) Craig Duncan 2021", myMenu,Main.this);  //sets up GUI for view
         
         if (this.Stage_WS==null) {
             System.out.println("Stage_WS is null start application");
@@ -457,6 +497,42 @@ public void deleteSpriteGUI(Book myBook) {
     }
 
     // --- EVENT HANDLERS
+
+    //layout
+    EventHandler<ActionEvent> performBoxWrap = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            //Main.this.performBoxWrapFunction();
+            Stage_WS.wrapBoxes(); 
+            }
+        };
+
+    //display
+    EventHandler<ActionEvent> setDisplayTitles = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Main.this.setDisplayModeTitles();
+        }
+    };
+
+    EventHandler<ActionEvent> setDisplayTitleWithDate = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Main.this.setDisplayModeTitleWithDate();
+        }
+    };
+
+
+    EventHandler<ActionEvent> setDisplayDateTime = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Main.this.setDisplayModeDateTime();
+        }
+    };
 
     // new Book on stage
 

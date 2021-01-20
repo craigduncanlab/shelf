@@ -128,7 +128,11 @@ TextArea mdTextArea = new TextArea();
 TextArea bookLabelTextArea = new TextArea();
 TextArea codeNotesTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
+TextArea dateLabelTextArea = new TextArea();
+TextArea timeLabelTextArea = new TextArea();
 Integer textFocus=0;
+Text dateText;
+Text timeText;
 Text filepathText;
 Text imagepathText;
 Text bookLabelText;
@@ -163,6 +167,8 @@ public BookMetaStage(Stage parent, Book myBook, EventHandler PressBox, EventHand
     Stage currentStage = this.localStage; //created as an instance variable on this object creation.
     currentStage.initOwner(this.mainStage); //do this before Show.  This keeps this Stage on top of the parent.  use MODAL for further behaviour config
     //this.localStage.initOwner(parent);
+    //debugging
+    System.out.println("New Book...");
     //store event handlers as local instance variables
     setPressBox(PressBox);
     setDragBox(DragBox);
@@ -170,8 +176,11 @@ public BookMetaStage(Stage parent, Book myBook, EventHandler PressBox, EventHand
     setKeyPress(NodeKeyHandler); //this can be different for workspace
     //position
     //data: new 'parent' node based on category alone
+    System.out.println("Setting active book...");
     setActiveBook(myBook);
+    System.out.println("Updating book meta view...");
     updateCurrentBookMetaView(); //updates contents but doesn't show stage unless requested
+    System.out.println("About to show stage...");
     showStage(); //to do: put default view in constructor
 }
 
@@ -336,7 +345,13 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
             if (focusedTextArea==bookLabelTextArea) {
                 mdTextArea.requestFocus();
             }
-            else if (focusedTextArea==mdTextArea) {
+            else if (focusedTextArea==mdTextArea){
+                dateLabelTextArea.requestFocus();
+            }
+             else if (focusedTextArea==dateLabelTextArea){
+                timeLabelTextArea.requestFocus();
+            }
+            else if (focusedTextArea==timeLabelTextArea) {
                 filepathTextArea.requestFocus();
             }
             else if (focusedTextArea==filepathTextArea) {
@@ -598,20 +613,25 @@ public void setLocalImagepath (String imagepath){
 
 /* --- BASIC GUI SETUP FOR OPEN NODE VIEWERS --- */
 private void updateCurrentBookMetaView() {
+    System.out.println("Start making new scene");
     makeSceneForBookMetaView(); //sets up scene, not content
     //title bar
     refreshTitle();
     //provide information about path of current open node in tree
-    String pathText = "Filepath:"+getActiveBook().getdocfilepath();
+     System.out.println("Start updating editor info");
+     String pathText = "Filepath:"+getActiveBook().getdocfilepath();
     filepathText.setText(pathText);
     imagepathText.setText("Image path:");
     urlText.setText("URL path:");
+    dateText.setText("Date (DD/MM/YYYY)");
+    timeText.setText("Time (HH.MM am/pm");
     bookLabelText.setText("Book Label:");
     multiLineNotesText.setText("Multi-line notes:");
     visibleBlockText.setText("Visibility:");
     visibleCheck.setSelected(true);
     mdHeadingText.setText("Markdown:");
     //this captures from the in-memory not the GUI?
+    System.out.println("Finished updating editor info");
     restoreBookMeta();
 
     }
@@ -626,6 +646,8 @@ public void restoreBookMeta() {
         imagepathTextArea.setText(updateNode.getimagefilepath());
         urlTextArea.setText(updateNode.geturlpath());
         bookLabelTextArea.setText(updateNode.getLabel());
+        dateLabelTextArea.setText(updateNode.getdate());
+        timeLabelTextArea.setText(updateNode.gettime());
         mdTextArea.setText(updateNode.getMD()); //update the markdown text
         codeNotesTextArea.setText(updateNode.getNotes());
         visibleCheck.setSelected(updateNode.getVisible()); //check box
@@ -639,7 +661,7 @@ public void updateBookMeta() {
         Book thisBook=getActiveBook();
         System.out.println("This book box : "+thisBook.toString());
         //System.exit(0);
-        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(), bookLabelTextArea.getText(),mdTextArea.getText(),codeNotesTextArea.getText());
+        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(),bookLabelTextArea.getText(),dateLabelTextArea.getText(),timeLabelTextArea.getText(),mdTextArea.getText(),codeNotesTextArea.getText());
         thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
         updateHTMLpreview(thisBook); //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
@@ -758,6 +780,10 @@ private void makeSceneForBookMetaView() {
         String terminalStyle="-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #ffffff; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; ";
         bookLabelTextArea.setPrefRowCount(1);
         bookLabelTextArea.setStyle(terminalStyle);
+        dateLabelTextArea.setPrefRowCount(1);
+        dateLabelTextArea.setStyle(terminalStyle);
+        timeLabelTextArea.setPrefRowCount(1);
+        timeLabelTextArea.setStyle(terminalStyle);
         mdTextArea.setPrefRowCount(20); //for markdown.  Add to boxPane
         mdTextArea.setWrapText(true);
         mdTextArea.setStyle(terminalStyle);
@@ -788,6 +814,8 @@ private void makeSceneForBookMetaView() {
         filepathText = new Text();
         imagepathText = new Text();
         bookLabelText = new Text();
+        dateText = new Text();
+        timeText = new Text();
         multiLineNotesText = new Text();
         visibleBlockText = new Text();
         mdHeadingText = new Text();
@@ -810,6 +838,7 @@ private void makeSceneForBookMetaView() {
         HBox imagepathBox = new HBox(0,imagepathTextArea,btnBrowseImagepath);
         HBox urlpathBox = new HBox(0,urlTextArea,btnOpenURL);
         HBox widebox = new HBox(0,htmlEditor); //default - can change as below
+        HBox datetimeBox = new HBox(0,dateText,dateLabelTextArea,timeText,timeLabelTextArea);
         BorderPane borderPane = new BorderPane();
         //handle null case
         if (getActiveBook().getUserView()==null) {
@@ -818,7 +847,7 @@ private void makeSceneForBookMetaView() {
         }
         //compare states and update view
         if (getActiveBook().getUserView().equals("metaedit")) {
-            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,datetimeBox,mdHeadingText,mdTextArea,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             vertFrame.setPrefSize(winWidth,winHeight);
             setTitle(getTitleText(" - Meta Edit View"));
             widebox = new HBox(0,vertFrame);
@@ -826,7 +855,7 @@ private void makeSceneForBookMetaView() {
             scenewidth=winWidth;
         }
         else if (getActiveBook().getUserView().equals("metaedithtml")) {
-            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,mdHeadingText,mdTextArea,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,datetimeBox,mdHeadingText,mdTextArea,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
             //htmlEditor.setPrefSize(winWidth,winHeight);  //use BorderPanes for better resizing.
             vertFrame.setPrefSize(winWidth,winHeight);//both, with equal width to HTML
@@ -892,7 +921,8 @@ public void updateHTMLpreview(Book myBook){
     htmlEditor.setHtmlText(newHTML);
 }
 
-//Convert the MD section of current Book to some HTML and update the HTML parameter     
+//Convert the MD section of current Book to some HTML and update the HTML parameter  
+//TO DO: Can this function be enclosed in a Book object?   
 public String getHTMLfromContents(Book myBook) {
     String input = myBook.getMD();
     String label = myBook.getLabel();
@@ -919,6 +949,26 @@ public String getHTMLfromContents(Book myBook) {
         //logString=logString+"<p><b>"+label+"</b></p>";
         logString=logString+"<H1><span style=\"font-family: Arial;\">"+label+"<span style=\"font-family: Arial;\"></H1>";
      }
+
+    //date and time
+    String dtstring=myBook.getdate();
+    String timestring=myBook.gettime();
+    if(timestring.length()>0 && dtstring.length()>0) {
+        dtstring=dtstring+","+timestring;
+    }
+    else if (timestring.length()>0 && dtstring.length()==0) {
+        dtstring=timestring;
+    }
+     if (dtstring.length()>1) {
+         /*String dtprefix="<p><span style=\"font-family: "+fontfamily+";\">";
+         String dtsuffix="</span></p>";
+         String dtfile = dtprefix+dtstring+dtsuffix;
+         */
+         String h2prefix="<H2><span style=\"font-family: Arial;\">";
+         String h2suffix="</H2>";
+         String dtfile=h2prefix+dtstring+h2suffix;
+         logString=logString+dtfile;
+    }
      //iterate and create rest of file
     Scanner scanner1 = new Scanner(input);
     String prefix = "<p class=\"a\">";

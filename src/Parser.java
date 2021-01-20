@@ -223,6 +223,8 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		ArrayList<Integer> fileindex = new ArrayList<Integer>();
 		
 		Boolean visibility=true; //TO DO: fix visibility state after index prepared?
+		Boolean dateLine=false;
+		Boolean timeLine=false;
 		Boolean codeLine=false;
 		Boolean urlLine=false;
 		Boolean filepathLine=false;
@@ -243,6 +245,8 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 			while (scanner1.hasNextLine()) {
 				codeLine=false;
 				singlecodeline = false;
+				dateLine=false;
+				timeLine=false;
 				imagepathLine=false;
 				filepathLine=false;
 				urlLine=false;
@@ -303,6 +307,15 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		            		System.out.println(prefix);
 		            		
 		            	}
+		            }
+		            if (thisRow.length()>6) {
+		            	String prefix=thisRow.substring(0,7);
+		            	if (prefix.equals("[date](")){
+		            		dateLine=true;
+		            	} 
+		            	if (prefix.equals("[time](")){
+		            		timeLine=true;
+		            	} 
 		            }
 		            if (thisRow.length()>11) {
 		            	String prefix=thisRow.substring(0,11);
@@ -384,6 +397,12 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 	                    	else if(grid==true){
 	                    		fileindex.add(9);//9=grid coord
 	                    	}
+	                    	else if(dateLine==true) {
+	                    		fileindex.add(11); //11=date
+	                    	}
+	                    	else if(timeLine==true) {
+	                    		fileindex.add(12); //12=time
+	                    	}
 	                    	else {
 	                    		if (thisRow.length()>0) {
 	                    			fileindex.add(1); //md
@@ -431,6 +450,8 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		String urlString="";
 		String filepathString="";
 		String imagepathString="";
+		String dateString="";
+		String timeString="";
 		double x=0.0;
 		double y=0.0;
 		Integer row=0;
@@ -541,6 +562,19 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				  	col=0;
 				  }
 				}
+				//date line
+				if (fileindex.get(nl)==11) {
+				  String suffix=thisLine.substring(7,thisLine.length()); //8 = length [date]( + 1
+		          dateString=suffix.replace(")","");
+		          System.out.println(dateString);
+				}
+				//time line
+				if (fileindex.get(nl)==12) {
+				  String suffix=thisLine.substring(7,thisLine.length()); //8 = length [date]( + 1
+		          timeString=suffix.replace(")","");
+		          System.out.println(timeString);
+				}
+
 				nl++;
 				//advance if ok
 				/*
@@ -573,6 +607,8 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		newNode.seturlpath(urlString);
 		newNode.setdocfilepath(filepathString);//filepath,urlpath,
 		newNode.setimagefilepath(imagepathString);
+		newNode.setdate(dateString);
+		newNode.settime(timeString);
 		newNode.setXY(x,y); //x,y  must be doubles		
 		this.mainstage.snapYtoShelf(newNode,y); //check y and set shelf number
 		//At present visibility reflects the last markdown # code detected in file.
@@ -587,6 +623,21 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 public String getOOXMLfromContents(Book myBook) {
 	String input = myBook.getMD();
 	String label = myBook.getLabel();
+	String dtstring=myBook.getdate();
+	String tmstring=myBook.gettime();
+	String headingstring = "";
+	if (dtstring.length()>0 && tmstring.length()>0) {
+		headingstring=dtstring+","+tmstring+" : "+label;
+	}
+	else if (dtstring.length()>0 && tmstring.length()==0) {
+		headingstring=dtstring+" : "+label;
+	}
+	else if (dtstring.length()==0 && tmstring.length()>0) {
+		headingstring=tmstring+" : "+label;
+	}
+	else if (dtstring.length()==0 && tmstring.length()==0) {
+		headingstring=label;
+	}
 	if (this.myHM==null) {
 		this.myHM = readWordStyles();
 	}
@@ -602,7 +653,7 @@ public String getOOXMLfromContents(Book myBook) {
  	System.exit(0);
  	*/
  	StringBuffer output = new StringBuffer();
- 	String fix_h=fixEscapeChars(label);
+ 	String fix_h=fixEscapeChars(headingstring);
  	String h = h1_style.replace("XXX",fix_h); //heading1
  	output.append(h);
  	Boolean lasthead2=false; //track level 2 headings

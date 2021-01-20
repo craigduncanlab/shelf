@@ -36,9 +36,11 @@ String docname=""; //to hold the container name or filename
 String docauthor=""; //to hold author name
 String docnotes=""; //to hold Document notes
 String shortname="";
-String booklabel="";
+String booklabel=""; //the title (heading 1) for this entry
+String displaylabel="";  //this may be booklabel by default, but can add other details like date etc
 String heading="";
 String date="";
+String time="";
 String output="";
 String htmlString="";
 String mdString="";
@@ -57,6 +59,7 @@ Integer columnNumber=0;
 Integer stdWidth=80; //same as BookIcon width.
 EventHandler myPressBox;
 EventHandler myDragBox;
+Integer displayMode=1;
 //empty constructor no arguments
 public Book() {
 
@@ -70,6 +73,7 @@ public Book(EventHandler PressBox, EventHandler DragBox, String label, String te
 	setNotes(note);
 	setDocName(label); //to be phased out.  It's just a MD section.
     setLabel(label);
+    updateDisplay();
     setOutputText("");
     setPressBox(PressBox); //local
     setDragBox(DragBox);
@@ -89,12 +93,21 @@ public void updateMDText(String label, String text, String note) {
 }
 
 //general update text function
-public void updateEditedText(String filepath,String urlpath, String imagepath, String label, String mdtext, String note) {
+public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String datetext,String timetext,String mdtext, String note) {
 	//setDocName(name);
 	setdocfilepath(filepath);
 	setimagefilepath(imagepath);
 	seturlpath(urlpath);
+	setdate(datetext);
+	settime(timetext);
+	System.out.println("Checks on updated edits:");
+	System.out.println("date input:"+datetext);
+	System.out.println("time input:"+timetext);
+	System.out.println("stored date:"+this.getdate());
+	System.out.println("stored time:"+this.gettime());
+	//System.exit(0);
 	setLabel(label);
+	updateDisplay();
 	setMD(mdtext);
     setNotes(note);
 }
@@ -153,6 +166,40 @@ public void setX(double x) {
 public void setY(double y) {
 	this.myYpos=y;
 	updatePosition(); //update actual position in scene
+}
+
+public void setDisplayMode(Integer mode) {
+	if (mode>0) {
+		this.displayMode=mode;
+	}
+	updateDisplay();
+}
+
+public void updateDisplay(){
+	if (this.displayMode==2) {
+		String update = getdate()+" "+gettime()+" "+getLabel();
+        setDisplayText(update);
+	}
+	else if (this.displayMode==3) {
+		String update = getdate()+" "+gettime();
+        setDisplayText(update);
+	}
+	else if (this.displayMode==1) {
+		String update = getLabel();
+        setDisplayText(update);
+	}
+}
+
+//filter the display text for display and update the node data (visible book spine)
+//use this only as private function
+private void setDisplayText(String input){
+	this.displaylabel=input;
+	/*
+	if (this.displaylabel.length()>50){
+		this.setDisplayText(this.displaylabel.substring(0,50));
+	}
+	*/
+	setVisibleNodeText(this.displaylabel); 
 }
 
 public double getX() {
@@ -290,6 +337,14 @@ public String getdate () {
 	return this.date;
 }
 
+public void settime (String myString) {
+	this.time = myString;
+}
+
+public String gettime () {
+	return this.time;
+}
+
 public void setdocauthor (String myString) {
 	this.docauthor = myString;
 }
@@ -346,9 +401,9 @@ public Book cloneBook() {
 	clone.setdocauthor(this.docauthor);
 	clone.setDocName(this.docname); //to hold the container name or filename
 	clone.setShortname(this.shortname);
-	clone.setLabel(this.booklabel);
 	clone.setHeading(this.heading);
 	clone.setdate(this.date);
+	clone.settime(this.time);
 	clone.setOutputText(this.output);
 	clone.setHTML(this.htmlString);
 	clone.setVisible(this.visible);
@@ -403,7 +458,8 @@ public String getLabel() {
     //this.bookspinetext.getText();
 }
 
-private void setVisibleBookSpine(String myLabel) {
+
+private void setVisibleNodeText(String myLabel) {
 	if (myLabel.length()>50) {
 		myLabel=myLabel.substring(0,50); //limit book label to first "# " + 10 characters
 		}
@@ -414,7 +470,7 @@ private void setVisibleBookSpine(String myLabel) {
 public void setLabel(String myString) {
     if (!myString.equals("")) {
     	this.booklabel=myString;
-        setVisibleBookSpine(booklabel); //crop label but store booklabel
+    	updateDisplay();
     }
 }
 

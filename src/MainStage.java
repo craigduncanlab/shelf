@@ -483,6 +483,52 @@ public void writeOutBooks(ArrayList<Book> mySaveBooks) {    //
         basicFileWriter(myOutput,filepath);
 }
 
+//function to change way box labels are displayed
+public void setDisplayModeTitles(Integer input){
+  if (input>0 && input<4) {
+    ArrayList<Book> myBooksonShelves = listBooksShelfOrder(); 
+    Integer booknum=myBooksonShelves.size();
+    for (int x=0;x<booknum;x++) {
+          Book item = myBooksonShelves.get(x);
+          item.setDisplayMode(input);
+    }
+      //'booksOnShelf' is the global arraylist holding books
+      booksOnShelf=myBooksonShelves; //change the pointer
+    }
+    System.out.println("Display Mode set: "+input);
+}
+
+
+//wrap layout of books to 10 books wide (default)
+//This sets both row,col and X,Y.  TO DO:  set only Row, Col attributes in main API and let layout manager position cell.
+public void wrapBoxes() {
+//until reloaded the item order in memory isn't same as GUI
+//ArrayList<Book> myBooksonShelves = getBooksOnShelf(); 
+ArrayList<Book> myBooksonShelves = listBooksShelfOrder(); 
+Integer booknum=myBooksonShelves.size();
+Integer xcount=0;
+Integer ycount=0;
+    for (int x=0;x<booknum;x++) {
+        Book item = myBooksonShelves.get(x);
+        item.setRow(ycount);
+        item.setCol(xcount);
+        double newX=convertColtoX(xcount);
+        item.setX(newX);
+        double newY=convertRowtoY(ycount);
+        item.setY(newY);
+        //index 9 is the 10th column
+        if (xcount<9) {
+          xcount=xcount+1;
+        }
+        else {
+          xcount=0;
+          ycount=ycount+1;
+        }
+    }
+    //'booksOnShelf' is the global arraylist holding books
+    booksOnShelf=myBooksonShelves; //change the pointer
+}
+
 //sort books by shelf order
 public ArrayList<Book> listBooksShelfOrder() {
     ArrayList<Book> myBooksonShelves = getBooksOnShelf();
@@ -539,6 +585,12 @@ public String convertBookMetaToString(Book myBook) {
              myOutput=myOutput+"\n";
         }; 
         */
+    }
+    if (myBook.getdate().length()>6) {
+        myOutput=myOutput+"[date]("+myBook.getdate()+")"+System.getProperty("line.separator");
+    }
+    if (myBook.gettime().length()>4) {
+        myOutput=myOutput+"[time]("+myBook.gettime()+")"+System.getProperty("line.separator");
     }
     if (myBook.getRow()>=0 && myBook.getCol()>=0) {
         myOutput=myOutput+"[r,c]("+myBook.getRow()+","+myBook.getCol()+")"+System.getProperty("line.separator");
@@ -1128,8 +1180,9 @@ private void OpenRedBookNow(Book currentBook) {
      //bookMetaInspectorStage.closeThisStage(); //close open stage.  No save checks? //TO DO: close all child stages
      Stage parent = this.localStage; // the Stage associated with this object, not the MainStage object itself.
      bookMetaInspectorStage = new BookMetaStage(parent, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
+     System.out.println("set BookMetaStage...");
      setMetaStageParams(bookMetaInspectorStage);
-
+     System.out.println("new Stage Parameters Set ...");
 }
 /*switch(clickcount) {
     //single click
@@ -1802,7 +1855,7 @@ public void moveActiveDown(Book myBook) {
    }
 }
 
-
+//this acts as a layout API - converts raw row, col to pixel coords
 public double convertRowtoY(Integer myRow){
      double newY=(myRow*this.cellgap_y)+this.cellrowoffset_y+this.boxtopmargin;
      return newY;
