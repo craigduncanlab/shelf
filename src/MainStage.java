@@ -1176,8 +1176,8 @@ EventHandler<MouseEvent> DragBox =
             final EventType TYPE = t.getEventType(); //
             System.out.println("Event");
             System.out.println(TYPE.toString());
-              
-            if (currentBook!=null && MainStage.this.metaMode==false && MainStage.this.shiftMode==false) {
+            // && MainStage.this.metaMode==false && MainStage.this.shiftMode==false
+            if (currentBook!=null && selectedBooks.size()==1) {
                 MainStage.this.setActiveBook(currentBook); //clicked sprite
                 double offsetX = t.getSceneX() - orgSceneX;
                 double offsetY = t.getSceneY() - orgSceneY;
