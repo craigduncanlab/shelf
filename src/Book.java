@@ -99,7 +99,7 @@ public void updateEditedText(String filepath,String urlpath, String imagepath, S
 	setimagefilepath(imagepath);
 	seturlpath(urlpath);
 	setdate(datetext);
-	settime(timetext);
+	settime(timetext); //check for trailing
 	System.out.println("Checks on updated edits:");
 	System.out.println("date input:"+datetext);
 	System.out.println("time input:"+timetext);

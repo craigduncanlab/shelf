@@ -570,7 +570,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				}
 				//time line
 				if (fileindex.get(nl)==12) {
-				  String suffix=thisLine.substring(7,thisLine.length()); //8 = length [date]( + 1
+				  String suffix=thisLine.substring(7,thisLine.length()); 
 		          timeString=suffix.replace(")","");
 		          System.out.println(timeString);
 				}

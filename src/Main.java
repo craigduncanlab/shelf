@@ -121,8 +121,9 @@ public class Main extends Application {
     //Menus that need to be individually referenced/updated
     Menu theRecentMenu;
   
-    //To hold Stage with open node that is current
+    //To hold another Stage with open node that is current
     BookMetaStage bookshelfInspectorStage;  
+    BookMetaStage bulkFillStage;  
     //File input/output
     File currentOpenFile;
     //Word

@@ -173,6 +173,7 @@ Some kind of content manager for each stage?
 Consider if subclasses of BookMetaStage could deal with flavours of BookMetaStage (e.g. position?
 */
 ArrayList<Book> booksOnShelf = new ArrayList<Book>(); //generic store of contents of boxes
+ArrayList<Book> selectedBooks = new ArrayList<Book>(); //for GUI selections
 double orgSceneX;
 double orgSceneY;
 
@@ -187,10 +188,15 @@ FileChooser.ExtensionFilter myExtFilter = new FileChooser.ExtensionFilter("Shelf
 static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
 //static Book currentTarget; //any Box(no?) or BookMetaStage can set this to its display node
 
+Boolean metaMode;
+Boolean shiftMode;
+
 //constructor
 public MainStage() {
     this.outputTextArea.setWrapText(true);
     this.inputTextArea.setWrapText(true);  //default
+    this.metaMode=false;
+    this.shiftMode=false;
 }
 
 //workspace constructor.  Filename details will be inherited from loaded node.
@@ -201,6 +207,8 @@ public MainStage(String title, MenuBar myMenu, Main parent) {
     //category
     //NodeCategory NC_WS = new NodeCategory ("workspace",99,"white");
     //view
+    this.metaMode=false;
+    this.shiftMode=false;
     this.parentClass=parent;
     //this.parentStage=parent.getStage();
     setMenuBar(myMenu);
@@ -529,6 +537,101 @@ Integer ycount=0;
     booksOnShelf=myBooksonShelves; //change the pointer
 }
 
+public void singleSelection(Book thisBook){
+  int numsel=selectedBooks.size();
+  if (numsel!=0) {
+    for (int x=0;x<numsel;x++){
+      selectedBooks.get(x).endAlert(); //option: remove objects from old array
+    }
+  }
+  ArrayList<Book> newSelection= new ArrayList<Book>();
+  newSelection.add(thisBook);
+  this.focusBook=thisBook;
+  thisBook.doAlert(); //change this so there is a general 'undo alert'
+  selectedBooks=newSelection;
+  int nums=selectedBooks.size();
+  //refresh selected books
+  refreshSelectedBooksColour();
+}
+
+public void refreshSelectedBooksColour() {
+  ArrayList<Book> sorted= listBooksShelfOrder(); //can this be stored, only updated when needed?
+  Iterator <Book> myIterator = sorted.iterator();
+  while(myIterator.hasNext()){
+    Book item = myIterator.next();
+    if (selectedBooks.contains(item)) {
+      item.doAlert();
+    }
+    else {
+      item.endAlert();
+    }
+  }
+}
+
+public void toggleExtraSelection(Book thisBook){
+    //ArrayList<Book> myBooksonShelves = getBooksOnShelf();
+
+    if (selectedBooks.contains(thisBook)) {
+        int num = selectedBooks.size();
+        System.out.println("selectedBooks items:"+num);
+        for (int x =0;x<num;x++){
+          System.out.println(selectedBooks.get(x).getLabel());
+        }
+        selectedBooks.remove(thisBook);
+        thisBook.endAlert();
+        System.out.println("Toggle, but found book");
+    }
+    else if (!selectedBooks.contains(thisBook)) {
+        selectedBooks.add(thisBook);
+        thisBook.doAlert();
+        this.focusBook=thisBook;
+        System.out.println("Toggle, but did not find book");
+    }
+}
+
+public void shiftedSelection(Book thisBook) {
+      Book firstBook = selectedBooks.get(0);
+      ArrayList<Book> newList = new ArrayList<Book>();
+      //newList.add(firstBook); //start selection again with only origin book
+      selectedBooks = newList;
+      ArrayList<Book> sorted= listBooksShelfOrder(); //can this be stored, only updated when needed?
+      Iterator <Book> myIterator = sorted.iterator();
+      Boolean selection=false;
+      Boolean stop=false;
+      while(myIterator.hasNext()) {
+      Book item = myIterator.next();
+      item.endAlert(); //reset
+
+
+      
+      //find start of selection
+      if (item==firstBook && !selectedBooks.contains(thisBook)){
+            selection=true;
+      }
+      if (item==thisBook && !selectedBooks.contains(firstBook)){
+            selection=true;
+      }
+      //find end of selection
+      if (item==firstBook && selectedBooks.contains(thisBook)){
+            stop=true;
+            selection=false;
+            selectedBooks.add(item);
+            item.doAlert();
+      }
+      if (item==thisBook && selectedBooks.contains(firstBook)){
+            stop=true;
+            selection=false;
+            selectedBooks.add(item);
+            item.doAlert();
+      }
+      //if still in mid range selection
+      if (selection==true && !selectedBooks.contains(item)) {
+            selectedBooks.add(item); 
+            item.doAlert();     
+      }
+    } //end while
+   }
+
 //sort books by shelf order
 public ArrayList<Book> listBooksShelfOrder() {
     ArrayList<Book> myBooksonShelves = getBooksOnShelf();
@@ -548,12 +651,12 @@ public ArrayList<Book> listBooksShelfOrder() {
     //System.out.println("Book score printout:\n");
          while (myIterator.hasNext()) {
             Integer targetscore = myIterator.next();
-            System.out.println("target:"+targetscore);
+            //System.out.println("target:"+targetscore);
             Iterator<Book> bookIterator = myBooksonShelves.iterator();
             while (bookIterator.hasNext()) {
                 Book item = bookIterator.next();
                 Integer test = item.getRowScore();
-                System.out.println("test score:"+test);
+                //System.out.println("test score:"+test);
                 if (test.equals(targetscore)) {
                     System.out.println("matched");
                     sortedBooks.add(item);
@@ -1059,7 +1162,7 @@ public double snapXtoShelf(Book myBook, double newTranslateX){
                  MainStage.this.writeFileOut();
                  //currentBook.cycleBookColour();
             }
-                    }
+      }
     };
 
 //This event handler is sent to the Sprites, but it can access variables from this object
@@ -1074,7 +1177,7 @@ EventHandler<MouseEvent> DragBox =
             System.out.println("Event");
             System.out.println(TYPE.toString());
               
-            if (currentBook!=null) {
+            if (currentBook!=null && MainStage.this.metaMode==false && MainStage.this.shiftMode==false) {
                 MainStage.this.setActiveBook(currentBook); //clicked sprite
                 double offsetX = t.getSceneX() - orgSceneX;
                 double offsetY = t.getSceneY() - orgSceneY;
@@ -1128,7 +1231,7 @@ EventHandler<MouseEvent> processLocalBoxClick =
         Book currentBook = (Book)t.getSource();  //selects a class for click source
         if (currentBook!=null) {
             System.out.println("Found click on sprite");
-            MainStage.this.setActiveBook(currentBook);
+            //MainStage.this.setActiveBook(currentBook);
             //moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
             int clickcount = t.getClickCount();
 
@@ -1138,12 +1241,57 @@ EventHandler<MouseEvent> processLocalBoxClick =
             orgTranslateX = currentBook.getTranslateX();
             orgTranslateY = currentBook.getTranslateY();
             System.out.println("getx: "+ orgSceneX+ " gety: "+orgSceneY);
+            
+            Integer firstRow=hadFocus.getRow();
+            Integer firstCol=hadFocus.getCol();
+            System.out.println("FROM row: "+ firstRow+ " col: "+firstCol);
 
             switch(clickcount) {
             //single click
             case 1:
                 //moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
                 System.out.println("One click");
+                System.out.println("Meta mode:"+MainStage.this.metaMode);
+                System.out.println("Shiftmode:"+MainStage.this.shiftMode);
+
+                //test for multiple selection
+                if (t.isMetaDown()) {
+                  System.out.println("One click with Meta");
+                  Integer latestRow=currentBook.getRow();
+                  Integer latestCol=currentBook.getCol();
+                  System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
+                  MainStage.this.toggleExtraSelection(currentBook);
+                }
+                if (t.isShiftDown()) {
+                  Integer latestRow=currentBook.getRow();
+                  Integer latestCol=currentBook.getCol();
+                  System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
+                  MainStage.this.shiftedSelection(currentBook);
+                }
+
+                else if (!t.isShiftDown() && !t.isControlDown() && !t.isMetaDown()) {
+                  MainStage.this.singleSelection(currentBook);
+                }
+                /*if (MainStage.this.metaMode) {
+                  System.out.println("One click with Meta");
+                  Integer latestRow=currentBook.getRow();
+                  Integer latestCol=currentBook.getCol();
+                  System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
+                  MainStage.this.metaMode=false;
+                  MainStage.this.toggleExtraSelection(currentBook);
+                }
+                else if (MainStage.this.shiftMode) {
+                  System.out.println("One click with SHIFT");
+                  Integer latestRow=currentBook.getRow();
+                  Integer latestCol=currentBook.getCol();
+                  System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
+                }
+
+                else if (MainStage.this.shiftMode==false && MainStage.this.metaMode==false) {
+                  MainStage.this.singleSelection(currentBook);
+                }
+                */
+                
                 //change stage focus with just one click on Book (but node still closed)
                 //bookMetaInspectorStage=currentBook.getStageLocation();
                 //refreshNodeViewScene();
@@ -1180,8 +1328,10 @@ private void OpenRedBookNow(Book currentBook) {
      //bookMetaInspectorStage.closeThisStage(); //close open stage.  No save checks? //TO DO: close all child stages
      Stage parent = this.localStage; // the Stage associated with this object, not the MainStage object itself.
      bookMetaInspectorStage = new BookMetaStage(parent, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
+     
      System.out.println("set BookMetaStage...");
      setMetaStageParams(bookMetaInspectorStage);
+     bookMetaInspectorStage.storeSelectedBooks(this.selectedBooks); //pass selection to editor
      System.out.println("new Stage Parameters Set ...");
 }
 /*switch(clickcount) {
@@ -1460,6 +1610,21 @@ private Scene makeWorkspaceScene(Group myGroup) {
                  System.out.println("Key pressed on workspace stage " + ke.getSource());
                  System.out.println("KeyCode: "+ke.getCode());
                  //open book if CMD-O
+                 //shortcuts for selections
+                  if (ke.isMetaDown()) {
+                     MainStage.this.metaMode=true;
+                     //System.out.println("Pressed CMD");
+                  }
+                  else {
+                     MainStage.this.metaMode=false;
+                  }
+                  if (ke.isShiftDown()){
+                     MainStage.this.shiftMode=true;
+                     //System.out.println("Pressed Shift");
+                  }
+                  else {
+                    MainStage.this.shiftMode=false;
+                  }
                  if (ke.isMetaDown() && ke.getCode().getName().equals("I") || ke.getCode()==KeyCode.ENTER) {
                     System.out.println("CMD-I or ENTER pressed (will open metadata inspector stage)");
                     try {
@@ -1604,6 +1769,8 @@ private Scene makeWorkspaceScene(Group myGroup) {
 
 //set active sprite.  if problem with tracker, ignore.
 public void setActiveBook(Book b) {
+   singleSelection(b);
+  /*
     try {
         if (this.focusBook!=null) {
             Book hadFocus = this.focusBook;
@@ -1617,6 +1784,7 @@ public void setActiveBook(Book b) {
     }
     this.focusBook=b;
     this.focusBook.doAlert();
+    */
 }
 
 //set active sprite.  if problem with tracker, ignore.
@@ -1926,4 +2094,23 @@ public double getBigY() {
     return this.myBigY;
 }
 
+//EVENT HANDLERS FOR THE MAIN GRID WITH CELLS
+//Will these be additional to the main stage?
+EventHandler<KeyEvent> NodeKeyHandler2 = new EventHandler<KeyEvent>() {
+ @Override
+ public void handle(KeyEvent ke) {
+    System.out.println("Key Event on current Stage:"+MainStage.this.toString());
+    System.out.println("Key Press (keycode):"+ke.getCode());
+    //System.out.println("Key Press (keycode textual):"+ke.getCode().getKeyCode());
+    System.out.println("Key Press (keycode name):"+ke.getCode().getName());
+    System.out.println("Key Press (as string):"+ke.getCode().toString());
+    System.out.println("KeyPress (as source): " + ke.getSource());
+    System.out.println("KeyPress (as higher-level event type): " + ke.getEventType());
+    System.out.println("KeyPress (unicode): " + ke.getCharacter());
+    System.out.println("is Shift Down: " + ke.isShiftDown());
+    System.out.println("is Control Down: " + ke.isControlDown());
+    System.out.println("is Meta(Command) Down: " + ke.isMetaDown());
+    //'live' conversion of typing into HTML (not as efficient but typists don't notice)
+    }
+  };
 }

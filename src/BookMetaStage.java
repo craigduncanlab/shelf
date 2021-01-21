@@ -107,7 +107,7 @@ String stageName = "";
 String stageTitle = "";
 
 
-Stage localStage = new Stage();
+Stage localStage = new Stage();  //on creation of an object, creates a new Stage object
 Node rootNode; //Use Javafx object type
 Group spriteGroup;
 ScrollPane spriteScrollPane;
@@ -151,6 +151,8 @@ MenuBar localmenubar;
 //visibility checkbox
 CheckBox visibleCheck = new CheckBox("Visible");
 ArrayList<Object> BoxContentsArray = new ArrayList<Object>(); //generic store of contents of boxes
+//for now, the dialogue button can update all selected, but should be from main stage
+ArrayList<Book> booksSelected = new ArrayList<Book>(); 
 
 static Book currentTarget; 
 
@@ -341,17 +343,16 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
         ke.consume(); //so the TAB doesn't actually 'land' as a keystroke in the TextArea
         if (BookMetaStage.this.localScene.focusOwnerProperty().get() instanceof TextArea) {
                 TextArea focusedTextArea = (TextArea)BookMetaStage.this.localScene.focusOwnerProperty().get();
-              
-            if (focusedTextArea==bookLabelTextArea) {
-                mdTextArea.requestFocus();
-            }
-            else if (focusedTextArea==mdTextArea){
+            if (focusedTextArea==bookLabelTextArea){
                 dateLabelTextArea.requestFocus();
             }
              else if (focusedTextArea==dateLabelTextArea){
                 timeLabelTextArea.requestFocus();
             }
-            else if (focusedTextArea==timeLabelTextArea) {
+             else if (focusedTextArea==timeLabelTextArea) {
+                mdTextArea.requestFocus();
+            }
+            else if (focusedTextArea==mdTextArea) {
                 filepathTextArea.requestFocus();
             }
             else if (focusedTextArea==filepathTextArea) {
@@ -668,6 +669,44 @@ public void updateBookMeta() {
         //System.exit(0);
     }
 
+public void storeSelectedBooks(ArrayList<Book> input){
+        this.booksSelected = input;
+}
+
+//fillSelectionBookMeta()
+public void fillSelectionDate() {
+    //check there is books Selected?
+    Iterator<Book> myIterator=this.booksSelected.iterator();
+    while(myIterator.hasNext()) {
+        Book item = myIterator.next();
+
+        //just do date and time for now
+        String dt = dateLabelTextArea.getText();
+        String tl=timeLabelTextArea.getText();
+
+        if (dt.length()>0) {
+            item.setdate(dt);
+        }
+        item.updateDisplay();
+        /* just do dates
+        if(tl.length()>0){
+            item.settime(tl);
+        }
+        */
+    } //end while
+        /*
+        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(),bookLabelTextArea.getText(),dateLabelTextArea.getText(),timeLabelTextArea.getText(),mdTextArea.getText(),codeNotesTextArea.getText());
+        thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
+        updateHTMLpreview(thisBook); //some kind of refresh needed?
+        System.out.println(thisBook.getLabel());
+        //System.exit(0);
+        String fp = filepathTextArea.getText();
+        if (fp.length()>0) {
+            item.setLocalFilepath
+        }
+        */
+    }
+
 
 private void setActiveBook(Book myBook) {
     this.activeBook = myBook;
@@ -796,6 +835,11 @@ private void makeSceneForBookMetaView() {
         btnUpdate.setText("Update");
         btnUpdate.setTooltip(new Tooltip ("Confirm edits"));
         btnUpdate.setOnAction(UpdateBookMetaText);
+        //
+        Button btnSelectionUpdate = new Button();
+        btnSelectionUpdate.setText("Fill Date (Selected)");
+        btnSelectionUpdate.setTooltip(new Tooltip ("Update dates in selected cells"));
+        btnSelectionUpdate.setOnAction(fillBooksDate);
         //Button for cancel
         Button btnEditCancel = new Button();
         btnEditCancel.setText("Close");
@@ -805,7 +849,7 @@ private void makeSceneForBookMetaView() {
         btnOpenDoc.setText("Open");
         btnOpenDoc.setTooltip(new Tooltip ("Opens in Default Application"));
         btnOpenDoc.setOnAction(OpenWordAction);
-        HBox hboxButtons = new HBox(0,btnUpdate,btnEditCancel);
+        HBox hboxButtons = new HBox(0,btnUpdate,btnEditCancel,btnSelectionUpdate);
         Button btnOpenURL = new Button();
         btnOpenURL.setText("Open");
         btnOpenURL.setTooltip(new Tooltip ("Opens in Default Application"));
@@ -1116,6 +1160,16 @@ EventHandler<ActionEvent> UpdateBookMetaText =
         @Override 
         public void handle(ActionEvent event) {
             BookMetaStage.this.updateBookMeta();
+            }
+        };
+
+//fillBookMetaText
+
+EventHandler<ActionEvent> fillBooksDate = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            BookMetaStage.this.fillSelectionDate();
             }
         };
 
