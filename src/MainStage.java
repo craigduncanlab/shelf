@@ -172,6 +172,7 @@ BookMetaStage should store GUI objects in one way, data in another?  separation 
 Some kind of content manager for each stage?
 Consider if subclasses of BookMetaStage could deal with flavours of BookMetaStage (e.g. position?
 */
+ArrayList<Layer>layersCollection = new ArrayList<Layer>();
 ArrayList<Book> booksOnShelf = new ArrayList<Book>(); //generic store of contents of boxes
 ArrayList<Book> selectedBooks = new ArrayList<Book>(); //for GUI selections
 double orgSceneX;
@@ -697,8 +698,13 @@ public String convertBookMetaToString(Book myBook) {
     if (myBook.gettime().length()>4) {
         myOutput=myOutput+"[time]("+myBook.gettime()+")"+System.getProperty("line.separator");
     }
+    /*
     if (myBook.getRow()>=0 && myBook.getCol()>=0) {
         myOutput=myOutput+"[r,c]("+myBook.getRow()+","+myBook.getCol()+")"+System.getProperty("line.separator");
+    }
+    */
+    if (myBook.getRow()>=0 && myBook.getCol()>=0) {
+        myOutput=myOutput+"[r,c,l]("+myBook.getRow()+","+myBook.getCol()+","+myBook.getLayer()+")"+System.getProperty("line.separator");
     }
     if (myBook.getimagefilepath().length()>6) {
         myOutput=myOutput+"[img]("+myBook.getimagefilepath()+")"+System.getProperty("line.separator");
@@ -706,8 +712,13 @@ public String convertBookMetaToString(Book myBook) {
      if (myBook.geturlpath().length()>6) {
         myOutput=myOutput+"[url]("+myBook.geturlpath()+")"+System.getProperty("line.separator");
     }
+    /*
     if (myBook.getX()>0 || myBook.getY()>0) {
         myOutput=myOutput+"[x,y]("+myBook.getX()+","+myBook.getY()+")"+System.getProperty("line.separator");
+    }
+    */
+    if (myBook.getX()>0 || myBook.getY()>0) {
+        myOutput=myOutput+"[x,y,z]("+myBook.getX()+","+myBook.getY()+","+myBook.getZ()+")"+System.getProperty("line.separator");
     }
     if (myBook.getthisNotes().length()>0) {
         String notes = myBook.getthisNotes();
@@ -1815,6 +1826,7 @@ public void AddNewBookFromParser(Book newBook) throws NullPointerException {
 }
 
 //method to put new book on stage.  cf if you have an existing Book object. addBookToStage
+//This should also (in due course) take layer into account? i.e. Book's layer and Z properties.
 
 public void addNewBookToView () {
     //Book b = makeBoxWithNode(myNode); //relies on Main, event handlers x
@@ -1848,6 +1860,7 @@ public void addNewBookToView () {
 Internal method to add sprite to the Group/Pane of this Node Viewer 
 This is to add an existing GUI 'box/node' to the Child Node section of this Viewer.
 i.e. this adds a specific object, rather than updating the view from whole underlying data set.
+TO DO: consider if the 'layer' matters, in terms of positioning this book relative to others.
 */
 
 private void addBookToStage(Book myBook) {
@@ -1859,6 +1872,7 @@ private void addBookToStage(Book myBook) {
     Book newBook = myBook;
 
     //if trying to paste into scene twice...FX error  OK but need to deal with it.
+    //use intermediate array 'booksOnShelf' to reason about books as a whole.
     if (this.booksOnShelf.contains(myBook)) {
       newBook = myBook.cloneBook(); //make a new object to add to avoid object duplication.
     } 

@@ -48,6 +48,7 @@ Boolean visible = true;
 Text bookspinetext = new Text ("new book");//Default label text for every Book
 double myXpos = 100; //default for shelves. not needed?
 double myYpos = 50;
+double myZpos=1; //layers
 Boolean isAlert=false;
 Color defaultColour=Color.WHITE;
 Color userColour=Color.LIGHTBLUE;
@@ -56,11 +57,11 @@ BookIcon myBookIcon;
 String userMetaView; //how to display metadata
 Integer rowNumber=0;
 Integer columnNumber=0;
+Integer layerNumber=1;
 Integer stdWidth=80; //same as BookIcon width.
 EventHandler myPressBox;
 EventHandler myDragBox;
 Integer displayMode=1;
-Integer layerID=1;
 //empty constructor no arguments
 public Book() {
 
@@ -159,6 +160,13 @@ public void setXY(double cnx, double cny) {
 	updatePosition(); //update actual position in scene
 }
 
+public void setXYZ(double cnx, double cny, double cnz) {
+	this.myXpos=cnx;
+	this.myYpos=cny;
+	this.myZpos=cnz;
+	updatePosition(); //update actual position in scene
+}
+
 public void setX(double x) {
 	this.myXpos=x;
 	updatePosition(); //update actual position in scene
@@ -166,6 +174,12 @@ public void setX(double x) {
 
 public void setY(double y) {
 	this.myYpos=y;
+	updatePosition(); //update actual position in scene
+}
+
+//not needed for rendering?
+public void setZ(double z) {
+	this.myZpos=z;
 	updatePosition(); //update actual position in scene
 }
 
@@ -212,6 +226,11 @@ public double getY() {
 
 }
 
+public double getZ() {
+	return this.myZpos;
+
+}
+
 public void setRow(Integer myShelf) {
 	this.rowNumber=myShelf;
 }
@@ -228,8 +247,17 @@ public Integer getCol() {
 	return this.columnNumber;
 }
 
+public void setLayer(Integer myLayer) {
+	this.layerNumber=myLayer;
+}
+
+public Integer getLayer() {
+	return this.layerNumber;
+}
+
 //create a Score that will rank all Books by Shelf position lowest (top left) to highest (bottom right)
 //The multiplier needs to be high enough that all rows are unique?
+//TO DO: introduce 3D parameters?  Or not needed?
 public Integer getRowScore(){
 	Integer myScore=0;
 	try {
@@ -250,6 +278,11 @@ public double[] getXY() {
     return new double[]{this.myXpos,this.myYpos};
 }
 
+//get all 3D parameters.  Not needed yet.
+public double[] getXYZ() {
+    return new double[]{this.myXpos,this.myYpos,this.myZpos};
+}
+
 
 // Visibility
 
@@ -261,17 +294,6 @@ public Boolean getVisible() {
 	return this.visible;
 }
 
-
-//GUI Layer on which this object is located
-public void setLayer(Integer mylayer){
-	this.layerID = myLayer;
-	//check valid layer against maxLayers
-}
-
-public Integer getLayer(){
-	return this.layerID;
-	//check valid layer against maxLayers
-}
 
 /*  Data methods
 
@@ -421,10 +443,12 @@ public Book cloneBook() {
 	clone.setVisible(this.visible);
 	clone.setX(this.myXpos); //small offset
 	clone.setY(this.myYpos);
+	clone.setZ(this.myZpos);
 	clone.setAlert(this.isAlert);
 	clone.setUserView(this.userMetaView);
 	clone.setRow(this.rowNumber);
 	clone.setCol(this.columnNumber);
+	clone.setLayer(this.layerNumber);
 	clone.setPressBox(this.myPressBox);
 	clone.setDragBox(this.myDragBox);
 	clone.FXsetup();
@@ -451,6 +475,7 @@ public void FXsetup() {
  /* JAVAFX GUI NODES, OBJECTS AND ENVIRONMENT */
 
 //indirectly update the JavaFX variable based on this object's mirror variables
+//TO DO: use myZpos to control the visibility/layering of different layers
 private void updatePosition() {
 	//check range
 	if (this.myXpos<0) {

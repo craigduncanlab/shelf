@@ -82,6 +82,7 @@ public Book parseMDfileAsRow(MainStage myStage, EventHandler pb,EventHandler db,
     newBook.setXY(0,0);
     newBook.setRow(0);
     newBook.setCol(0);
+    newBook.setLayer(1);//needed?  or take in required layer as input to function?
     //System.out.println("Finished parsing MD file as Row");
     return newBook;
 }
@@ -232,7 +233,9 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		Boolean imagepathLine=false; 
 		Boolean singlecodeline=false;
 		Boolean coord=false;
+		Boolean coord3D=false;
 		Boolean grid=false;
+		Boolean grid3D=false;
 		String label = "";
 		int nl=0;
 		try {
@@ -254,6 +257,8 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 				urlLine=false;
 				coord=false;
 				grid=false;
+				grid3D=false;
+				coord3D=false;
 				//Array currentNotes[] = new Array(2);
 				String thisRow=scanner1.nextLine();
 				//Scanner scanner2= new Scanner(thisRow).useDelimiter("#");
@@ -309,6 +314,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		            		System.out.println(prefix);
 		            		
 		            	}
+		            	
 		            }
 		            if (thisRow.length()>6) {
 		            	String prefix=thisRow.substring(0,7);
@@ -319,11 +325,23 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		            		timeLine=true;
 		            	} 
 		            }
+
 		            if (thisRow.length()>7) {
 		            	String prefix=thisRow.substring(0,8);
 		            	if (prefix.equals("[layer](")){
 		            		layerLine=true;
 		            	} 
+		            	//[r,c,l]
+		            	else if (prefix.equals("[r,c,l](")) {
+		            		grid3D=true;
+		            		System.out.println(prefix);
+		            		
+		            	}
+		            	else if (prefix.equals("[x,y,z](")) {
+		            		coord3D=true;
+		            		System.out.println(prefix);
+		            		
+		            	}
 		            }
 		            if (thisRow.length()>11) {
 		            	String prefix=thisRow.substring(0,11);
@@ -414,6 +432,12 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 	                    	else if(layerLine==true) {
 	                    		fileindex.add(13); //13=layer
 	                    	}
+	                    	else if(grid3D==true) {
+	                    		fileindex.add(14); //14=row,col,layer coords
+	                    	}
+	                    	else if(coord3D==true) {
+	                    		fileindex.add(15); ///15=[x,y,z] coords
+	                    	}
 	                    	else {
 	                    		if (thisRow.length()>0) {
 	                    			fileindex.add(1); //md
@@ -465,6 +489,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		String timeString="";
 		double x=0.0;
 		double y=0.0;
+		double z=0.0;
 		Integer row=0;
 		Integer col=0;
 		Integer layer=1;
@@ -530,7 +555,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		            urlString=suffix.replace(")","");
 		            System.out.println(urlString);
 				}
-				//coordinates line
+				//coordinates line (old)
 				if(fileindex.get(nl)==8) {
 				  String restart=thisLine.replace("[x,y](","");
 				  String restart2=restart.replace(")","");
@@ -549,6 +574,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				  	y=0;
 				  }
 				}
+				
 				//img line
 				if(fileindex.get(nl)==10) {
 				  String suffix=thisLine.substring(6,thisLine.length());
@@ -574,6 +600,54 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				  	col=0;
 				  }
 				}
+				//grid3D refs
+				if(fileindex.get(nl)==14) {
+				  String restart=thisLine.replace("[r,c,l](","");
+				  String restart2=restart.replace(")","");
+				  String restart3=restart2.replace("]",",");
+				  Scanner scanner3= new Scanner(restart3).useDelimiter(",");
+				  String rc=scanner3.next();
+				  String cc=scanner3.next();
+				  String lc=scanner3.next();
+				  System.out.println(rc+","+cc+","+lc);
+				  row = (int)Double.parseDouble(rc);
+				  col = (int)Double.parseDouble(cc);
+				  layer=(int)Double.parseDouble(lc);
+				  System.out.println(row+","+col+","+layer);
+				  if (row<0) {
+				  	row=0;
+				  }
+				  if(col<0) {
+				  	col=0;
+				  }
+				  if(layer<0) {
+				  	layer=0;
+				  }
+				}
+				//coordinates line (3D)
+				if(fileindex.get(nl)==15) {
+				  String restart=thisLine.replace("[x,y,z](","");
+				  String restart2=restart.replace(")","");
+				  String restart3=restart2.replace("]",",");
+				  Scanner scanner3= new Scanner(restart3).useDelimiter(",");
+				  String xcoord=scanner3.next();
+				  String ycoord=scanner3.next();
+				  String zcoord=scanner3.next();
+				  System.out.println(xcoord+","+ycoord);
+				  x = Double.parseDouble(xcoord);
+				  y = Double.parseDouble(ycoord);
+				  z = Double.parseDouble(zcoord);
+				  System.out.println(x+","+y+","+z);
+				  if (x<0) {
+				  	x=0.0;
+				  }
+				  if(y<0) {
+				  	y=0;
+				  }
+				  if(z<0) {
+				  	z=0;
+				  }
+				}
 				//date line
 				if (fileindex.get(nl)==11) {
 				  String suffix=thisLine.substring(7,thisLine.length()); //8 = length [date]( + 1
@@ -586,18 +660,15 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		          timeString=suffix.replace(")","");
 		          System.out.println(timeString);
 				}
-				//layer line
+				//layer line {REDUNDANT NOW THERE IS R,C,L coordinates}
 				if (fileindex.get(nl)==13) {
 				  String suffix=thisLine.substring(8,thisLine.length()); 
 		          suffix=suffix.replace(")","");
 		          //System.out.println(timeString);
 		          layer = (int)Double.parseDouble(suffix);
 				  System.out.println(row+","+col);
-				  if (layer<1) {
-				  	layer=1;
-				  }
-				  if (layer>5) {
-				  	layer=5;
+				  if (layer<0) {
+				  	layer=0;
 				  }
 				}
 
@@ -635,8 +706,11 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		newNode.setimagefilepath(imagepathString);
 		newNode.setdate(dateString);
 		newNode.settime(timeString);
+		newNode.setRow(row);
+		newNode.setCol(col);
+		newNode.setLayer(layer);
 		newNode.setXY(x,y); //x,y  must be doubles	
-		newNode.setLayer(layer);	
+		newNode.setXYZ(x,y,z);//x,y,z must be doubles
 		this.mainstage.snapYtoShelf(newNode,y); //check y and set shelf number
 		//At present visibility reflects the last markdown # code detected in file.
 		newNode.setVisible(true);
