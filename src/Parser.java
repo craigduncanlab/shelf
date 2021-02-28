@@ -224,6 +224,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		
 		Boolean visibility=true; //TO DO: fix visibility state after index prepared?
 		Boolean dateLine=false;
+		Boolean layerLine=false;
 		Boolean timeLine=false;
 		Boolean codeLine=false;
 		Boolean urlLine=false;
@@ -246,6 +247,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 				codeLine=false;
 				singlecodeline = false;
 				dateLine=false;
+				layerLine=false;
 				timeLine=false;
 				imagepathLine=false;
 				filepathLine=false;
@@ -315,6 +317,12 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		            	} 
 		            	if (prefix.equals("[time](")){
 		            		timeLine=true;
+		            	} 
+		            }
+		            if (thisRow.length()>7) {
+		            	String prefix=thisRow.substring(0,8);
+		            	if (prefix.equals("[layer](")){
+		            		layerLine=true;
 		            	} 
 		            }
 		            if (thisRow.length()>11) {
@@ -403,6 +411,9 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 	                    	else if(timeLine==true) {
 	                    		fileindex.add(12); //12=time
 	                    	}
+	                    	else if(layerLine==true) {
+	                    		fileindex.add(13); //13=layer
+	                    	}
 	                    	else {
 	                    		if (thisRow.length()>0) {
 	                    			fileindex.add(1); //md
@@ -456,6 +467,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		double y=0.0;
 		Integer row=0;
 		Integer col=0;
+		Integer layer=1;
 		try {
 				Scanner scanner2 = new Scanner(input); //default delimiter is EOL?
 				if (scanner2==null) {
@@ -574,6 +586,20 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		          timeString=suffix.replace(")","");
 		          System.out.println(timeString);
 				}
+				//layer line
+				if (fileindex.get(nl)==13) {
+				  String suffix=thisLine.substring(8,thisLine.length()); 
+		          suffix=suffix.replace(")","");
+		          //System.out.println(timeString);
+		          layer = (int)Double.parseDouble(suffix);
+				  System.out.println(row+","+col);
+				  if (layer<1) {
+				  	layer=1;
+				  }
+				  if (layer>5) {
+				  	layer=5;
+				  }
+				}
 
 				nl++;
 				//advance if ok
@@ -609,7 +635,8 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		newNode.setimagefilepath(imagepathString);
 		newNode.setdate(dateString);
 		newNode.settime(timeString);
-		newNode.setXY(x,y); //x,y  must be doubles		
+		newNode.setXY(x,y); //x,y  must be doubles	
+		newNode.setLayer(layer);	
 		this.mainstage.snapYtoShelf(newNode,y); //check y and set shelf number
 		//At present visibility reflects the last markdown # code detected in file.
 		newNode.setVisible(true);

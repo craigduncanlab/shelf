@@ -60,6 +60,7 @@ Integer stdWidth=80; //same as BookIcon width.
 EventHandler myPressBox;
 EventHandler myDragBox;
 Integer displayMode=1;
+Integer layerID=1;
 //empty constructor no arguments
 public Book() {
 
@@ -260,6 +261,17 @@ public Boolean getVisible() {
 	return this.visible;
 }
 
+
+//GUI Layer on which this object is located
+public void setLayer(Integer mylayer){
+	this.layerID = myLayer;
+	//check valid layer against maxLayers
+}
+
+public Integer getLayer(){
+	return this.layerID;
+	//check valid layer against maxLayers
+}
 
 /*  Data methods
 

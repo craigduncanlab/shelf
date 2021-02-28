@@ -190,6 +190,8 @@ static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
 
 Boolean metaMode;
 Boolean shiftMode;
+Integer currentLayer;
+Integer maxLayer;
 
 //constructor
 public MainStage() {
