@@ -31,6 +31,14 @@ public void removeBookFromLayer(Book myBook){
 	this.booksInLayer.remove(myBook); //add to array list
 }
 
+public void setLayerNumber(Integer ln){
+	this.layerNumber=ln;
+}
+
+public Integer getLayerNumber(){
+	return this.layerNumber;
+}
+
 
 }
 

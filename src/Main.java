@@ -86,7 +86,6 @@ public class Main extends Application {
     //variables for mouse events TO DO : RENAME
     double orgSceneX, orgSceneY;
     double orgTranslateX, orgTranslateY;
-    Stage ParentStage;
     //Main Stage (Workspace window) that owns all other Stages
     MainStage Stage_WS;
     //Text Output windows (no edits)
@@ -196,7 +195,7 @@ private MenuBar makeMenuBar() {
         //MENUBAR SETUP
         MenuBar menuBar = new MenuBar();
         // --- FILE MENU ---
-        Menu menuFile = new Menu("File Stuff");
+        Menu menuFile = new Menu("File");
         //setFileMenu(menuFile);
         MenuItem OpenTempl = new MenuItem("Open (CMD-O)");
         MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
@@ -228,8 +227,20 @@ private MenuBar makeMenuBar() {
         //GENERAL LAYOUT/WRAP OPTIONS
         Menu layoutMenu = new Menu("Layout");
         MenuItem layoutWrap = new MenuItem("Wrap (10 boxes)");
-        layoutMenu.getItems().addAll(layoutWrap);
+        //layoutMenu.getItems().addAll(layoutWrap);
+        //MENU GRID : BOX MOVEMENTS
+        //Menu menuGrid = new Menu("Move me!");
+        MenuItem insertRowAfterItem = new MenuItem("Insert Row (After)");
+        MenuItem insertRowBeforeItem = new MenuItem("Insert Row (Before)");
+        MenuItem insertCellShiftRightItem = new MenuItem("Nudge (Shift Right)");
+        MenuItem nudgeCellShiftLeftItem = new MenuItem("Nudge (Shift Left)");
         layoutWrap.setOnAction(performBoxWrap);
+        insertRowBeforeItem.setOnAction(insertRowBeforeHandler);
+        insertRowAfterItem.setOnAction(insertRowAfterHandler);
+        insertCellShiftRightItem.setOnAction(insertCellShiftRightHandler);
+        nudgeCellShiftLeftItem.setOnAction(nudgeCellShiftLeftHandler);
+        layoutMenu.getItems().addAll(layoutWrap,insertRowBeforeItem,insertRowAfterItem,nudgeCellShiftLeftItem,insertCellShiftRightItem);
+        
 
         //DISPLAY OPTIONS
         Menu displayMenu = new Menu("Display");
@@ -241,32 +252,20 @@ private MenuBar makeMenuBar() {
         displayWithDate.setOnAction(setDisplayTitleWithDate);
         displayDateOnly.setOnAction(setDisplayDateTime);
 
-        //MENU GRID : BOX MOVEMENTS
-        Menu menuGrid = new Menu("Move me!");
-        MenuItem insertRowAfterItem = new MenuItem("Insert Row (After)");
-        MenuItem insertRowBeforeItem = new MenuItem("Insert Row (Before)");
-        MenuItem insertCellShiftRightItem = new MenuItem("Nudge (Shift Right)");
-        MenuItem nudgeCellShiftLeftItem = new MenuItem("Nudge (Shift Left)");
-        menuGrid.getItems().addAll(insertRowBeforeItem,insertRowAfterItem,nudgeCellShiftLeftItem,insertCellShiftRightItem);
-        insertRowBeforeItem.setOnAction(insertRowBeforeHandler);
-        insertRowAfterItem.setOnAction(insertRowAfterHandler);
-        insertCellShiftRightItem.setOnAction(insertCellShiftRightHandler);
-        nudgeCellShiftLeftItem.setOnAction(nudgeCellShiftLeftHandler);
-
         //--- MENU CONCEPTS
-        Menu menuBooks = new Menu("Add or Substract");
+        Menu menuEdit = new Menu("Edit");
         MenuItem addNewBook = new MenuItem("New Book");
         addNewBook.setOnAction(addNewBookMaker);
         MenuItem bookDeleteMenuItem = new MenuItem("Delete Selected");
         bookDeleteMenuItem.setOnAction(deleteSelectedBook);
-        menuBooks.getItems().addAll(addNewBook,bookDeleteMenuItem);
+        menuEdit.getItems().addAll(addNewBook,bookDeleteMenuItem);
         
          // --- TEXT MENU ---
         //MenuItem FileOpen = new MenuItem("FileOpen");
         
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile, layoutMenu,displayMenu,menuGrid, menuBooks);     
+        menuBar.getMenus().addAll(menuFile,menuEdit,layoutMenu,displayMenu);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
@@ -383,9 +382,10 @@ public void nudgeCellShiftLeftMethod(Integer firstrow, Integer firstcol) {
     //update appearance?
 }
 
-public void resetFileNames() {
-    this.currentOpenFile = new File ("untitled.md");
-    Stage_WS.setFilename(this.currentOpenFile.getPath());
+public void resetFileNames(String title) {
+    this.currentOpenFile=new File (title);
+    //this.currentOpenFile = new File ("untitled.md");
+    //Stage_WS.setFilename(this.currentOpenFile.getPath());
 }
 
 /*
@@ -437,23 +437,21 @@ public void deleteSpriteGUI(Book myBook) {
     @Override
     public void start(Stage primaryStage) {
        
-        /* This only affects the primary stage set by the application */
-        primaryStage.setTitle("Fact Processor");
-        primaryStage.hide();
+        /* This only affects the primary stage set by the application (os level) */
+        //primaryStage.setTitle("Fact Processor");
+        //primaryStage.hide();
         
-        ParentStage = new Stage();
-        ParentStage.setTitle("Fact Processor");
         MenuBar myMenu = makeMenuBar();
        
         //The main Stage for Workspace.  
-        Stage_WS = new MainStage("Fact Processor (c) Craig Duncan 2021", myMenu,Main.this);  //sets up GUI for view
+        Stage_WS = new MainStage("LayerText Editor (c) Craig Duncan 2021", myMenu,Main.this,primaryStage);  //sets up GUI for view
         
         if (this.Stage_WS==null) {
             System.out.println("Stage_WS is null start application");
             System.exit(0);
         }
         else {
-            System.out.println("Stage_WS created.");
+            System.out.println("Stage_WS object created.");
         }
         //setWordStyles();
         //testZip();

@@ -59,6 +59,63 @@ and this to run:
 runprog
 ```
 
+# Running from archive
+
+An archive has byte-code compiled class files in it, ready to run as an executable on a java machine.
+
+Create a manifest file (editor.mf) with the name of the Main-Class in it.
+
+"Main-Class:classname that defines the class with the public static void main(String[] args) method that serves as your application's starting point."
+
+Issues: a JavaFX application may not have a main method, because it could be :
+
+@override
+public void start(Stage primaryStage) 
+
+or it could be:
+
+public class Main extends Application
+
+The archive has a manifest file that will contain, at least, the first (main) class file to execute from the java archive (.jar) file.  However the advantage of a manifest file is that you can include your 'jar' options in it, so that you don't have to type them on the command line.  Instead, you include the link to the manifest file.
+
+If the application contains references to existing jar files (modules), as mine does (swing,control, web), then how to you incorporate these?  'controls' is the largest at 2.5MB.
+
+The archive was created from source using this jar command (with options cfmp i.e. create, file, manifest, then path for class files, path for existing .jar modules:
+
+(before you run this you compile in the normal way to create your class files - the .java files are not needed for the archige)
+
+jar options include:
+
+-c is create
+-C is change directory and include files following (i.e. the .class)
+
+You can do this on command line, and include A.class B.class explicitly, or use the -C command to include a directory containing the files
+
+jar --create --file 2Deditor.jar --manifest editor.mf -C class/
+
+Does it help to put relevant .jar files in that directory too?
+e.g. javafx.swing.jar
+
+What if your execute command is more complicated?  Can you include in your archive file?
+You can include @file after jar command and put your jar options in a text file.
+e.g.
+jar --create --file my.jar @classes.list
+
+
+runprog='java --module-path $PATH_TO_FX --add-modules javafx.controls,javafx.swing,javafx.web -cp classes Main'
+
+The above 'run' uses the javafx modules that are already compiled and sitting in the PATH_TO_FX, which in my case is 'fxlib'.
+
+The jar command will accept -p or '--module-path' so that's okay.
+In this case, 
+
+What about 'add modules'?
+
+if you specify the file with the name 'module-info.class' in both the jar file creation line and then include descriptions of the modules you need in that file.
+
+http://tutorials.jenkov.com/java/modules.html#modules-contain-one-or-more-java-packages
+
+
 # Start
 
 To begin, press CMD-N for new box/book and then do File-->Save As (CMD-SHIFT-S).

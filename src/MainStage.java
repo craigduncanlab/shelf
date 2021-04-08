@@ -3,6 +3,7 @@
 
 //import utilities needed for Arrays lists etc
 import java.util.*; //collections too
+
 //JavaFX
 import javafx.stage.Stage;
 import javafx.stage.Screen;
@@ -34,6 +35,9 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.cell.ChoiceBoxListCell;
 
 //Scene - general appearance & layout of Background Fills, Stages, nodes
 import javafx.scene.layout.Region;
@@ -75,6 +79,12 @@ import java.io.*;
 import java.io.File;
 //Desktop etc and file chooser
 import java.awt.Desktop;
+//collections for listview
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.ListChangeListener; //for obs list
+//adding listview
+import javafx.util.Callback; //for listview cells
 
 /* Stages will always be on top of the parent window.  This is important for layout
 Make sure the smaller windows are owned by the larger window that is always visible
@@ -159,11 +169,12 @@ Integer firstcell_y=0;
 Integer gridwidth=1000;
 Integer gridlineheight=1;
 Integer filenameoffset_y=20;
-Integer filenameoffset_x=350;
+Integer filenameoffset_x=400; //how far across the filename appears
 Integer cellrowoffset_y=30;
 Integer boxtopmargin=10;
 Color shelfborder=Color.BLACK;
-Color shelffill=Color.DARKSLATEGREY;
+//Color shelffill=Color.WHITE; //background to 'grid' cf. DARKSLATEGREY
+
 
 /*
 Data collection will parallel GUI display of boxes. Provided stage manager can be serialised?
@@ -175,6 +186,10 @@ Consider if subclasses of BookMetaStage could deal with flavours of BookMetaStag
 ArrayList<Layer>layersCollection = new ArrayList<Layer>();
 ArrayList<Book> booksOnShelf = new ArrayList<Book>(); //generic store of contents of boxes
 ArrayList<Book> selectedBooks = new ArrayList<Book>(); //for GUI selections
+//
+ArrayList myFileList = new ArrayList(); 
+ObservableList<String> myObList;
+//
 double orgSceneX;
 double orgSceneY;
 
@@ -191,8 +206,10 @@ static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
 
 Boolean metaMode;
 Boolean shiftMode;
-Integer currentLayer;
 Integer maxLayer;
+Layer firstLayer= new Layer();
+Layer currentLayer = firstLayer;
+Stage primaryStage;
 
 //constructor
 public MainStage() {
@@ -205,7 +222,7 @@ public MainStage() {
 //workspace constructor.  Filename details will be inherited from loaded node.
 //Passes MenuBar from main application for now
 //Passes general eventhandlers from Main (at present, also uses these for the boxes)
-public MainStage(String title, MenuBar myMenu, Main parent) {
+public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage) {
     //Book baseNode, 
     //category
     //NodeCategory NC_WS = new NodeCategory ("workspace",99,"white");
@@ -213,8 +230,16 @@ public MainStage(String title, MenuBar myMenu, Main parent) {
     this.metaMode=false;
     this.shiftMode=false;
     this.parentClass=parent;
+    this.primaryStage=myprimarystage;
     //this.parentStage=parent.getStage();
-    setMenuBar(myMenu);
+    //<---Use a system menu for mac ? Problematic with the focus --->
+    /*
+        final String os = System.getProperty("os.name");
+        if (os != null && os.startsWith("Mac")) {
+          myMenu.useSystemMenuBarProperty().set(true);
+        }
+    */
+    setMenuBar(myMenu); //storesmenubar object for later
     //TO DO: setLocalSpriteSelect(processLocalBoxClick);
     //set event handlers as local instance variables.  These are used at time of Book creation
     //They are set here so that the Bookes can access BookMetaStage level data
@@ -227,6 +252,7 @@ public MainStage(String title, MenuBar myMenu, Main parent) {
     //we need to set sprite group etc
 
     newWorkstageFromGroup(title);
+    currentLayer.setLayerNumber(1);
     System.out.println ("The initial bookgroupNode...");
     System.out.println (this.bookgroupNode);
     System.out.println("Reference of this stage object MainStage");
@@ -245,6 +271,7 @@ public void processMarkdown(File file) {
       //TemplateUtil myUtil = new TemplateUtil();
       String contents = getFileText(file);
       this.shelfFileName.setText(thefilename); //update name on shelf view
+      setTitle(thefilename); //update title on this window
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
@@ -306,6 +333,7 @@ public void processMarkdownAsRow(File file) {
     if (last.equals(".md")==true) {
       String contents = getFileText(file);
       this.shelfFileName.setText(thefilename); //update name on shelf view
+      setTitle(thefilename); //update title on window too
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
@@ -355,6 +383,9 @@ public File openMarkdown() {
         if (tryfile != null) {
           file = tryfile;
           processMarkdown(file);
+          myFileList.add(file.getName()); //add string reference
+          myObList.setAll(myFileList); //does a clear and refresh?
+          System.out.println(myFileList.size()+","+file.getName());
           setFilename(file.getPath());
           setShortFilename(file.getName());
         } 
@@ -816,9 +847,12 @@ public String getFilename() {
     return this.filename;
 }
 
+//set filename to currently open file.
+//add filename to current list view (TO DO: remove once closed)
 public void setFilename(String myFile) {
     this.filename = myFile;
     this.shelfFileName.setText(this.filename);
+    this.setTitle(this.filename); //update title on window
 }
 
 public void setShortFilename(String myFile) {
@@ -928,16 +962,17 @@ private Scene getSceneGUI () {
 }
 
 private void updateScene (Scene myScene) {
-     getStage().setScene(myScene); //JavaFX in the GUI
      this.localScene = myScene; //local copy/reference
 }
 
 //SIMPLE STAGE GETTERS AND SETTERS FOR CUSTOM GUI.  WRAPPER FOR JAVAFX SETTERS
 
+/*
 public void setStageName(String myName) {
     this.stageName = myName;
     this.localStage.setTitle(myName);
 }
+*/
 
 public String getStageName() {
     return this.stageName;
@@ -946,16 +981,20 @@ public String getStageName() {
 //probably redundant - keep name or title
 public void setTitle(String myTitle) {
     this.stageTitle = myTitle;
-    this.localStage.setTitle(myTitle); //update on screen
+    System.out.println("Title set to:"+myTitle);
+    //this.localStage.setTitle(myTitle); //update on screen
+    this.primaryStage.setTitle(myTitle);
 }
 
 public String getTitle() {
     return this.stageTitle;
 }
 
+/*
 private void refreshTitle() {
     this.localStage.setTitle(getTitle());
 }
+*/
 
 public void setCategory(String myCat) {
     this.category=myCat;
@@ -1025,7 +1064,9 @@ public void clearAllBooks() {
     this.bookgroupNode.getChildren().clear();
     this.booksOnShelf.clear(); 
     this.resetBookOrigin();
-    this.parentClass.resetFileNames(); //to update general file name etc
+    String title = "default.md";
+    setFilename(title);
+    this.parentClass.resetFileNames(title); //to update general file name etc
 }
 
 /*
@@ -1418,15 +1459,19 @@ private void closeThisStage() {
 
 //MainStage setup function
 private void newWorkstageFromGroup(String title) {
-    Group myGroup = makeWorkspaceTree(); //myGroup_root
-    Scene myScene = makeWorkspaceScene(myGroup); //new scene with myGroup_root = this.localscene
-    Stage myStage = new Stage();
-    setStage(myStage);
+    
+    Group myGroup = makeWorkspaceTree(); //myGroup_root.  
+    Scene myScene = makeWorkspaceScene(myGroup); //new scene with myGroup_root; eventHandlers added
+    //Stage myStage = new Stage();
+    setStage(this.primaryStage);
     setTitle(title);
     updateScene(myScene);
-    setStagePosition(0,0);
-    stageBack();
-    showStage();
+    this.primaryStage.setScene(myScene); //JavaFX in the GUI
+    this.primaryStage.show();
+    //setStagePosition(0,0);
+    //stageBack();
+
+    //showStage();
 }
 
 /* 
@@ -1436,6 +1481,7 @@ Create root node and branches that is ready for placing in a Scene.
 
 Sets up workspace stage with 2 subgroups for vertical separation:
 (a) menu bar
+(aa) layers listview
 (b) sprite display area, which is inside a border pane and group for layout reasons.
 
 This method does not update content of the Sprite-display GUI node.
@@ -1443,14 +1489,123 @@ This method does not update content of the Sprite-display GUI node.
 */
 //myGroup_root--->
 //myBP(top)-->menuBarGroup-->myMenu
-//myBP(center)-->workspacePane-->displayAreaGroup (for BookIcons etc to be added)
+//myBP(center)-->myScrollPane-->filename+workspacePane-->displayAreaGroup (for BookIcons etc to be added)
 private Group makeWorkspaceTree() {
 
         Group myGroup_root = new Group(); //for root node of Scene
-        BorderPane myBP = new BorderPane(); //holds the menubar at top, workspace in center of BorderPane
+        //myBP(top)-->menuBarGroup-->myMenu
+        //holds the menubar at top, workspace in center of BorderPane
+        
+       //<--- ** LEFT region of the BorderPane ** --->
+
+        Group layerGroup = new Group();
+
+        //an array list for list view
+        
+        
+        //create observable list backed by an array list
+        //takes 'List' as an argument.  Obs List = Changes update automatically in view.
+        //ArrayList myFileList = new ArrayList(); //can't be 'List'
+        //myFileList is an ArrayList
+        //ObservableList<String> myItems = FXCollections.observableArrayList(myFileList);
+       // myObList = FXCollections.observableArrayList(myFileList);
+        //need listener to do something when list changes.  Refresh?
+
+        //for list of open files
+        //myFileList.add("Tester");
+        //ObservableList<String> 
+        myObList = FXCollections.observableArrayList(myFileList);
+        ListView<String> layerListView = new ListView<String>(myObList); 
+        BorderPane myBP = new BorderPane(); 
+        
+        //listen for changes to list; not clicks
+        myObList.addListener(new ListChangeListener() { 
+          @Override
+            public void onChanged(ListChangeListener.Change change) {
+                change.next(); //required
+                if (change.wasAdded()) {
+                   System.out.println("Detected addition to list");
+                 }
+                //MainStage.this.refresh();
+              }
+        });
+        
+        //ListView<String> layerListView = new ListView<String>(myObList); 
+        //layerListView.setItems(myItems);
+        layerListView.setPrefWidth(200);
+        layerListView.setPrefHeight(300);
+
+        //<----Customised cells section ---->
+        
+        //cells only need definition when structure being customised
+        //basic approach is to set the column, then the cells
+        //ayerListView.setCellFactory(p -> new DraggableCell<>());
+        /*
+        layerListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
+        //above line also creates the new ListCell as second item
+        //override the call function which ListView 'calls' to obtain cells
+          @Override
+          public ListCell<String> call(ListView<String> param) {
+            //The new cell is a cell with an override on update 
+            //each 'item' here is an object that will be provided by the listview
+            //the method called here must be available on the objects in the ListView
+            //Cell may be represented by text or Checkbox...
+              ListCell<String> myCell = new ListCell<String>();
+              if (param.equals("")) {
+                myCell.setText("Hello this was empty"); //for buttons need node, label
+                return myCell;
+              }
+              else {
+                myCell.setText(param.getItems().getText()); //use the listview param passed to this function
+                return myCell;
+              }
+              };
+            }); //end definition of callback
+            /*ListCell<String> cell = new ListCell<String>(){
+            @Override
+                  protected void updateItem(String item) {
+                  super.updateItem(item);
+                  if (item != null) {
+                    setText(item.getPlate());
+                  }
+                else {
+                  setText(""); //clear for blank entries on re-use.
+                }
+              }
+             
+            }; //end of cell call function override
+          return cell;  //the cell is the value returned from 'call'
+          }
+           */ //end of the override
+        
+        //<---end customised cells section ---> 
+        //choiceboxlistcell
+        ScrollPane myLayerScroller = new ScrollPane(layerListView);
+
+        //<--- ** TOP region of the BorderPane ** --->
+
         Group menubarGroup = new Group(); //subgroup
-        MenuBar myMenu = getMenuBar();
+        
+        MenuBar myMenu = getMenuBar(); //retrieve stored menu bar object
+
+        //Set title of this stage to the file name
+        /*
+        String myupdate=this.shelfFileName.getText();
+        setTitle(myupdate);
+        */
+        /*
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(menuBar);
+        
+        primaryStage.setScene(new Scene(borderPane));
+        */
         menubarGroup.getChildren().addAll(myMenu);
+        
+        //<--- ** centre region of the BorderPane ** --->
+        /*
+        this.shelfFileName.setY(this.filenameoffset_y);
+        this.shelfFileName.setX(this.filenameoffset_x); 
+        */
         Pane workspacePane = new Pane(); 
         //workspacePane.setPrefWidth(this.wsPaneWidth);
         //workspacePane.setPrefHeight(this.wsPaneHeight);
@@ -1462,6 +1617,7 @@ private Group makeWorkspaceTree() {
         */
         Group displayAreaGroup = new Group(); //subgroup of Pane; where Squares/Boxes located
         //myScrollPane.getChildren().addAll(displayAreaGroup);
+        //VBox centrelayout = new VBox(this.shelfFileName,workspacePane);
 
        // --- IF USING A SCROLLPANE HERE, ADD THAT TO THE BP
         ScrollPane myScrollPane = new ScrollPane(workspacePane); //content is the workspacePane
@@ -1470,19 +1626,21 @@ private Group makeWorkspaceTree() {
         myScrollPane.pannableProperty().set(false);  //to prevent panning by mouse
         myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS")); //AS_NEEDED or ALWAYS
         myScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
-        //myScrollPane.setStyle(scrollpaneStyle);
-        myBP.setMargin(myScrollPane, new Insets(0,0,0,0));
-        myBP.setCenter(myScrollPane);
+       
+        
 
         //--- IF USING A PANE
 
         //myScrollPane.setVmax(500);
         workspacePane.getChildren().addAll(displayAreaGroup);
+        String wpaneStyle="-fx-background-color:white; ";
+        workspacePane.setStyle(wpaneStyle);
          //make it big enough for number of rows/cols
         //ScrollPane myScrollPane= new ScrollPane();
-        String scrollpaneStyle="-fx-background-color:transparent; ";
+        String scrollpaneStyle="-fx-background-color:blue; ";
+        myScrollPane.setStyle(scrollpaneStyle);
         
-        setGridGroup(displayAreaGroup); //store as instance variable for referencing elsewhere
+        setGridGroup(displayAreaGroup); //store dAG in bookgroupNode variable as global variable
         //myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
        // myScrollPane.setVmax(500);
         //Pane workspacePane = new Pane(); //to hold a group, holding a bookgroupNode
@@ -1490,7 +1648,12 @@ private Group makeWorkspaceTree() {
 
         //setSpritePane(workspacePane); //store for later use
         
-        myBP.setTop(menubarGroup);
+
+        
+        //<--- ** ADD CONTENTS TO BORDERPANE REGIONS ** --->
+        myBP.setLeft(myLayerScroller);
+        myBP.setMargin(myLayerScroller, new Insets(0,10,0,0));
+        myBP.setTop(menubarGroup); //this includes the top menu.  Do not set anywhere else
         //myBP.setMargin(workspacePane, new Insets(50,50,50,50)); //i.e. Y=-50='translateX=0'
         myBP.setMargin(myScrollPane, new Insets(0,0,0,0));
         myBP.setCenter(myScrollPane);
@@ -1498,9 +1661,13 @@ private Group makeWorkspaceTree() {
         //workspacePane.setPadding(new Insets(150,150,150,150));
         //
         //Make horizontal lines for grid, and add to FX root node for this Stage
+        /*
         this.shelfFileName.setY(this.filenameoffset_y);
         this.shelfFileName.setX(this.filenameoffset_x); 
         myGroup_root.getChildren().add(this.shelfFileName);
+        */
+
+        //Make horizontal lines for grid, and add to FX root node for this Stage
        
         ArrayList<Line> myRowLines=new ArrayList<Line>();
         double startX=0.0; //+cellrowoffset_y;
@@ -1524,8 +1691,8 @@ private Group makeWorkspaceTree() {
         }
               
         //make up a pane to display filename of bookshelf (not used)
-        Pane shelfFilePane = new Pane();
-        shelfFilePane.getChildren().add(this.shelfFileTextArea);
+        //Pane shelfFilePane = new Pane();
+        //shelfFilePane.getChildren().add(this.shelfFileTextArea);
                 
         //add the Border Pane and branches to root Group 
         myGroup_root.getChildren().addAll(myBP);
@@ -1832,6 +1999,7 @@ public void addNewBookToView () {
     //Book b = makeBoxWithNode(myNode); //relies on Main, event handlers x
     
     Book b = new Book(PressBox,DragBox,"untitled","","");
+    b.setLayer(this.currentLayer.getLayerNumber()); //give book a layer reference
     //
     Book lastBook=getActiveBook();
     if (lastBook!=null) {
@@ -1878,7 +2046,9 @@ private void addBookToStage(Book myBook) {
     } 
     
     this.bookgroupNode.getChildren().add(newBook);
+    //add to the collection of books in app (to DO: layer specific)
     this.booksOnShelf.add(newBook);  //add to metadata collection TO DO: cater for deletions.
+
     try { 
         setActiveBook(newBook); 
         }
