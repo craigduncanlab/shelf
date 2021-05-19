@@ -24,6 +24,20 @@ import javafx.scene.Cursor;
 import java.io.Serializable;
 //For storing current Stage location
 import javafx.stage.Stage;
+//File input output for HTML exports
+//file i/o
+import java.io.*;
+import java.io.File;
+import java.io.IOException;
+//net function for browser links
+import java.net.URI;
+import java.net.URISyntaxException;
+// for image file copying
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
 
 
 public class Book extends StackPane {
@@ -62,6 +76,7 @@ Integer stdWidth=80; //same as BookIcon width.
 EventHandler myPressBox;
 EventHandler myDragBox;
 Integer displayMode=1;
+
 //empty constructor no arguments
 public Book() {
 
@@ -421,8 +436,8 @@ public void setDragBox(EventHandler myDB) {
     Book.this.setOnMouseReleased(this.myDragBox); 
 }
 
-public String getHTMLlink(String navlink) {
-	String logString=updateBodyHTML(navlink);
+public String getHTMLlink(String navlink, String newdir) {
+	String logString=updateBodyHTML(navlink,newdir);
 	//logString=logString+navlink;
 	String output=addHTMLEndTags(logString);
 	return output;
@@ -430,7 +445,8 @@ public String getHTMLlink(String navlink) {
 
 public void updateHTML() {
 	String nav="";
-	String logString=updateBodyHTML(nav);
+	String newdir="";
+	String logString=updateBodyHTML(nav,newdir);
 	String newpage=addHTMLEndTags(logString);
 	this.setHTML(newpage); 
 	}
@@ -448,7 +464,7 @@ public String addHTMLEndTags(String logString){
 <head>
 <meta charset="utf-8"/>
 */
-public String updateBodyHTML(String nav) {
+public String updateBodyHTML(String nav, String newdir) {
 	String input = getMD();
 	String label = getLabel();
 	String notes = getNotes();
@@ -500,6 +516,13 @@ public String updateBodyHTML(String nav) {
 	 if (linkout.length()>0){
 	 	logString=logString+linkout;
 	 }
+	 //include image (local)
+	 //String imlink=includeImage();
+	 String imlink=includeImageRel(newdir);
+	 System.out.println("link for image:"+imlink);
+	 if (imlink.length()>0){
+	 	logString=logString+imlink;
+	 }
 
 	 return logString;
 }
@@ -512,6 +535,88 @@ public String includeLink(){
          String linksuffix="\">Web link</a></p>";
          String linkfile = linkprefix+linkpath+linksuffix;
          output=output+linkfile;
+    }
+    return output;
+}
+
+
+//This uses local file system link to image.  
+//TO DO: copy to /images/ folder inside this HTML export folder
+public String includeImageRel(String newdir){
+	String notes = getNotes(); //not sure why we need this for title
+	//link.  Can we show the image?
+	String output="";
+    String imagepath=getimagefilepath();
+    //the image path must be converted to URI or URL so webView can read it (local files only)
+    //From Java 8 use Files and Paths
+     if (imagepath.length()>0) {
+			File myFile = new File (imagepath);
+			URI imageURI = myFile.toURI(); //this is an absolute local link.  Change to relative.
+			System.out.println(imageURI);
+			//DO A STD COPY
+			int count=1;
+			
+			//<img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
+			String linkfile = "image"+count+"."+imagepath.substring(imagepath.length()-3,imagepath.length());
+			standardCopy(count,imagepath,newdir,linkfile); //TO DO: get image filenames or use sequence
+			String linkpath="images/"+linkfile;
+			String imgprefix="<p class=\"a\"><img src=\"";
+			String imgsuffix="\" alt=\"user image\" width=\"600\" title=\""+notes+"\"></p>";
+			//use linkfile not image URI for HTML folders
+			String imgfile = imgprefix+linkpath+imgsuffix;
+			output=output+imgfile;
+    }
+    return output;
+}
+
+public void standardCopy(int count,String imagepath, String newdir, String filename){
+		
+		String fullpath=newdir+"/images/"+filename;
+		// Path of file where data is to copied
+        Path pathIn = (Path)Paths.get(imagepath);
+        // Path of file whose data is to be copied. To do: pass name or file ext in?
+        Path pathOut = (Path)Paths.get(newdir,"images",filename);// or just String
+  
+        System.out.println("Path of target file: "
+                           + pathOut.toString());
+  
+        System.out.println("Path of source file: "
+                           + pathIn.toString());
+  
+        // Try block to check for exceptions
+        try {
+  			Files.copy(pathIn, pathOut,StandardCopyOption.REPLACE_EXISTING);
+            // Printing number of bytes copied
+            //System.out.println("Number of bytes copied: "+bts);
+        }
+  
+        // Catch block to handle the exceptions
+        catch (IOException e) {
+  
+            // Print the line number where exception occured
+            e.printStackTrace();
+        }
+    }
+
+//This uses local file system link to image.  
+//TO DO: copy to /images/ folder inside this HTML export folder
+public String includeImage(){
+	String notes = getNotes(); //not sure why we need this for title
+	//link.  Can we show the image?
+	String output="";
+    String imagepath=getimagefilepath();
+    //the image path must be converted to URI or URL so webView can read it (local files only)
+    //From Java 8 use Files and Paths
+     if (imagepath.length()>0) {
+			File myFile = new File (imagepath);
+			URI imageURI = myFile.toURI(); //this is an absolute local link.  Change to relative.
+			System.out.println(imageURI);
+			//<img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
+			String imgprefix="<p class=\"a\"><img src=\"";
+			String imgsuffix="\" alt=\"user image\" width=\"600\" title=\""+notes+"\"></p>";
+
+			String imgfile = imgprefix+imageURI+imgsuffix;
+			output=output+imgfile;
     }
     return output;
 }

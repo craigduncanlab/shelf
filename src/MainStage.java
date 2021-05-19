@@ -564,24 +564,9 @@ public void writeOutHTML(ArrayList<Book> inputObject) {
   System.out.println("The filelink:"+filenamelink);
   System.out.println("The filename no ext:"+name);
   System.out.println("Main title:"+maintitle);
-
-  // Create directory to hold individual HTML pages
-  String newdir="/"+fileNoExt; //Works to create dir on local file system.  
-  System.out.println("New dir name/path:"+newdir);
-  try {
-
-    Path dpath = Paths.get(newdir);
-
-    //java.nio.file.Files;
-    Files.createDirectories(dpath);
-
-    System.out.println("Directory is created!");
-
-  } catch (IOException e) {
-
-    System.err.println("Failed to create directory!" + e.getMessage());
-
-  }
+  String newdir="/"+fileNoExt;
+  createNewHTMLDir(fileNoExt); //for html and images
+  
   //
   int pagemax=bookList.size();
   String navlink="";
@@ -630,7 +615,8 @@ public void writeOutHTML(ArrayList<Book> inputObject) {
         String notes = item.getNotes();
         //String bookpage = item.getHTML();
         //Get new HTML pages, each with nav links, save into new directory
-        String bookpage = item.getHTMLlink(navlink);
+        String bookpage = item.getHTMLlink(navlink,newdir);
+        
         String linkpath=newdir+"/"+linkname;
         basicFileWriter(bookpage,linkpath);
         //Advance page counter
@@ -640,6 +626,30 @@ public void writeOutHTML(ArrayList<Book> inputObject) {
     basicFileWriter(logString,htmlfilename);
     System.out.println("Write out HTML completed");
     writeOutCSS(parent);
+}
+
+//create new HTML directories in local file system, where source .md file is found
+public void createNewHTMLDir(String fileNoExt) {
+  // Create directory to hold individual HTML pages
+  String newdir="/"+fileNoExt; //Works to create dir on local file system.  
+  String newimagedir=newdir+"/images";
+  System.out.println("New dir name/path:"+newdir);
+  try {
+
+    Path dpath = Paths.get(newdir);
+    Path ipath = Paths.get(newimagedir);
+
+    //java.nio.file.Files;
+    Files.createDirectories(dpath);
+    Files.createDirectories(ipath);
+
+    System.out.println("Directory(s) is created!");
+
+  } catch (IOException e) {
+
+    System.err.println("Failed to create directory!" + e.getMessage());
+
+  }
 }
 
 public void writeOutCSS(String parent) {
