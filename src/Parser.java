@@ -811,7 +811,6 @@ public String fixEscapeChars(String thisLine){
  	return output;
 }
 
-
 //Convert the MD section of current Book to some HTML and update the HTML parameter		
 public String getHTMLfromContents(Book myBook) {
 	String input = myBook.getMD();

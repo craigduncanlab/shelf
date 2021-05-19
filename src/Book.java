@@ -421,6 +421,157 @@ public void setDragBox(EventHandler myDB) {
     Book.this.setOnMouseReleased(this.myDragBox); 
 }
 
+public String getHTMLlink(String navlink) {
+	String logString=updateBodyHTML(navlink);
+	//logString=logString+navlink;
+	String output=addHTMLEndTags(logString);
+	return output;
+}
+
+public void updateHTML() {
+	String nav="";
+	String logString=updateBodyHTML(nav);
+	String newpage=addHTMLEndTags(logString);
+	this.setHTML(newpage); 
+	}
+
+public String addHTMLEndTags(String logString){
+	String output=logString+"</body></html>";
+	return output;	
+	
+}
+
+
+/*
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+<meta charset="utf-8"/>
+*/
+public String updateBodyHTML(String nav) {
+	String input = getMD();
+	String label = getLabel();
+	String notes = getNotes();
+	String logString="";
+	//take out any existing headers?
+	//String replaceString = input.replaceAll("(<html[ =\\w\\\"]*>{1})|(<body[ =\\w\\\"]*>{1})|<html>|</html>|<body>|</body>|<head>|</head>",""); //regEx
+	int index =0; //
+	//top row or heading
+	if(index==0) {
+	 	logString = "<!DOCTYPE html><html lang=\"en\"><head>";
+	 	logString=logString+"<meta charset=\"utf-8\"/>";
+	 	logString=logString+"<title>"+label+"</title>";
+	 	//logString=logString+"<script> border {border-style:dotted;}</script>"; //css
+	 	//inherits main page style sheet?
+	 	logString=logString+"<link rel=\"stylesheet\" href=\"../shelf.css\">";
+	 	logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
+	 	//logString=logString+"<p><b>"+label+"</b></p>";
+	 	logString=logString+"<H1 class=\"a\">"+label+"</H1>"; //class a is arial
+	 	logString=logString+nav; //navigation line (if any)
+	 }
+	 //iterate and create rest of file
+	Scanner scanner1 = new Scanner(input);
+ 	String prefix = "<p>";
+ 	String suffix="</p>";
+
+	 while (scanner1.hasNextLine()) {
+	 	//just make paragraphs for now
+	 	String thisLine=scanner1.nextLine();
+	 	logString=logString+checkMD2(thisLine);
+	 }
+
+	 //include notes
+	 if (notes.length()>0) {
+		 Scanner scanner2 = new Scanner(notes);
+		 //use class in .css external sheets where you have a .period in front of it
+		 String prefixdiv="<div class=\"border\" id=\"border\">";
+		 String suffixdiv="</div>";
+		 logString=logString+prefixdiv;
+		 while (scanner2.hasNextLine()) {
+		 	String notesLine=scanner2.nextLine();
+		 	logString=logString+p_Default(notesLine); //always default
+		 	//System.out.println(notesLine);
+		 }
+		 logString=logString+suffixdiv;
+	}
+	//includes link
+	 String linkout=includeLink();
+	 System.out.println("link for html:"+linkout);
+	 if (linkout.length()>0){
+	 	logString=logString+linkout;
+	 }
+
+	 return logString;
+}
+
+public String includeLink(){
+	String output="";
+	String linkpath=geturlpath();
+     if (linkpath.length()>0) {
+         String linkprefix="<p class=\"a\"><a href=\"";
+         String linksuffix="\">Web link</a></p>";
+         String linkfile = linkprefix+linkpath+linksuffix;
+         output=output+linkfile;
+    }
+    return output;
+}
+
+public String p_Default(String thisLine){
+	String prefix = "<p class=\"a\">"; 
+	//String prefix = "<p>";
+ 	String suffix="</p>";
+ 	String output=prefix+thisLine+suffix;
+	return output;
+}
+
+public String checkMD2(String thisLine){
+	String h2code="## ";
+	String h3code="### ";
+    String h2prefix="<H2 class=\"a\">"; //<span style=\"font-family: Arial;\">
+    String h2suffix="</H2>";
+    String h3prefix="<H3 class=\"a\">"; //<span style=\"font-family: Arial;\">
+    String h3suffix="</H3>";
+    int mdFormatCode=0;
+    String balanceString="";
+    String output="";
+    //fix escape characters
+    thisLine=fixASCII(thisLine);
+    //
+    int testlength=thisLine.length();
+        if (testlength>3) {
+            String testString=thisLine.substring(0,3);
+            if (testString.equals(h2code)) {
+                mdFormatCode=2;
+                balanceString=thisLine.substring(3,testlength);
+            }
+        }  //end length if
+        if (testlength>4) {
+            String testString=thisLine.substring(0,4);
+            if (testString.equals(h3code)) {
+                mdFormatCode=3;
+                balanceString=thisLine.substring(4,testlength);
+            }
+        }  //end length if
+
+        switch (mdFormatCode) {
+			case(2) : 	output=output+h2prefix+balanceString+h2suffix;
+	            		break;
+			case(3) : 	output=output+h3prefix+balanceString+h3suffix;
+						break;
+			default :	output=output+p_Default(thisLine);
+        }
+        return output;
+}
+
+//TO DO: replace characters out of range e.g. ä or specify foreign character set for HTML?
+public String fixASCII(String thisLine) {
+	String rep1=thisLine.replace("“","\"");
+ 	String rep2=rep1.replace("”","\"");
+ 	String rep3=rep2.replace("–","-");
+ 	String output=rep3.replace("ä","a");
+ 	return output;
+}
+
 //clone - uses simple constructor so must duplicate constructor functions
 public Book cloneBook() {
 	Book clone = new Book();

@@ -85,6 +85,10 @@ import javafx.collections.ObservableList;
 import javafx.collections.ListChangeListener; //for obs list
 //adding listview
 import javafx.util.Callback; //for listview cells
+//for file handling
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 /* Stages will always be on top of the parent window.  This is important for layout
 Make sure the smaller windows are owned by the larger window that is always visible
@@ -470,6 +474,7 @@ public void writeFileOut() {
     ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
     writeOutBooks(mySaveBooks);
     writeOutWord(mySaveBooks);
+    writeOutHTML(mySaveBooks);
 }
 
 //for direct Row save
@@ -524,6 +529,132 @@ public void writeOutBooks(ArrayList<Book> mySaveBooks) {    //
         }
         basicFileWriter(myOutput,filepath);
 }
+
+//input: the shelf books/objects
+//output: an html page in similar layout to the grid items in the editor
+/*
+public void setBooksOnShelf(ArrayList<Book> inputObject) {
+    this.booksOnShelf = inputObject;
+}
+*/
+public void writeOutHTML(ArrayList<Book> inputObject) {
+  //header section
+  String label=getShortFilename();
+  String maintitle=label.substring(0,label.length()-3);
+  String logString = "<html><head>"; //use StringBuffer?
+  logString=logString+"<title>"+maintitle+"</title>";
+  //logString=logString+"<script> border {border-style:dotted;}</script>"; //css - put in shared css file?
+  logString=logString+"<link rel=\"stylesheet\" href=\"shelf.css\">";
+  logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
+  //logString=logString+"<p><b>"+label+"</b></p>";
+  logString=logString+"<H1>"+maintitle+"</H1>";
+  logString=logString+"<div class=\"grid\">";
+  //
+  ArrayList<Book> bookList =inputObject;
+  int pagecount=1;
+  //path to main .md file
+  String name=this.getFilename(); //this is full path
+  Path path = Paths.get(name);
+  String parent=path.getParent().toString();
+  String fileNoExt=name.substring(0,name.length()-3); //still has a full filepath?
+  String filenamelink="../"+maintitle+".html"; //try to do do relative links here?
+  String htmlfilename=fileNoExt+".html"; //local file sysetm
+  System.out.println("The parent:"+parent);
+  System.out.println("The filename:"+filename);
+  System.out.println("The filelink:"+filenamelink);
+  System.out.println("The filename no ext:"+name);
+  System.out.println("Main title:"+maintitle);
+
+  // Create directory to hold individual HTML pages
+  String newdir="/"+fileNoExt; //Works to create dir on local file system.  
+  System.out.println("New dir name/path:"+newdir);
+  try {
+
+    Path dpath = Paths.get(newdir);
+
+    //java.nio.file.Files;
+    Files.createDirectories(dpath);
+
+    System.out.println("Directory is created!");
+
+  } catch (IOException e) {
+
+    System.err.println("Failed to create directory!" + e.getMessage());
+
+  }
+  //
+  int pagemax=bookList.size();
+  String navlink="";
+  String mainlink="<a href=\""+filenamelink+"\">index</a>";
+  Iterator<Book> myIterator=bookList.iterator();
+  while(myIterator.hasNext()) {
+        Book item = myIterator.next();
+        Integer checkRow=item.getRow();
+        Integer checkCol=item.getCol();
+        String label2 = item.getLabel();
+        String pagename=pagecount+"_"+label2;
+        //+maintitle in link?
+        String linkname=pagecount+".html";
+        //page links
+        if (pagecount==1 && pagemax==1){
+           navlink="";
+        }
+        if (pagecount==1 && pagemax>1){
+          String nextlinkname=pagecount+1+".html";
+          String nextlink="<a href=\""+nextlinkname+"\">"+"next:"+(pagecount+1)+"</a>";
+          navlink=mainlink+" | "+nextlink+" > ";
+        }
+        if (pagecount>1 && pagemax>pagecount){
+          String prevlinkname=pagecount-1+".html";
+          String nextlinkname=pagecount+1+".html";
+          //absolute links - redundant
+          //String prevlink="<a href=\""+fileNoExt+"/"+prevlinkname+"\">"+"prev:"+(pagecount-1)+"</a>";
+          //String nextlink="<a href=\""+fileNoExt+"/"+nextlinkname+"\">"+"next:"+(pagecount+1)+"</a>";
+          //relative links
+          String prevlink="<a href=\""+prevlinkname+"\">"+"prev:"+(pagecount-1)+"</a>";
+          String nextlink="<a href=\""+nextlinkname+"\">"+"next:"+(pagecount+1)+"</a>";
+          navlink="< "+prevlink+" | "+mainlink+" | "+nextlink+" >";
+        }
+        if (pagecount>1 && pagemax==pagecount){
+          String prevlinkname=pagecount-1+".html";
+          String prevlink="<a href=\""+prevlinkname+"\">"+"prev:"+(pagecount-1)+"</a>";
+          navlink=prevlink+" | "+mainlink;
+        }
+        //absolute Links in the main grid contents page
+        //String link="<a href=\""+fileNoExt+"/"+linkname+"\">"+pagename+"</a>";
+        //relative links
+        String sublink=maintitle+"/"+pagecount+".html"; //relative link
+        String link="<a href=\""+sublink+"\">"+pagename+"</a>";
+        logString=logString+"<div class=\"cell\">"+link+"</div>";
+        //
+        String notes = item.getNotes();
+        //String bookpage = item.getHTML();
+        //Get new HTML pages, each with nav links, save into new directory
+        String bookpage = item.getHTMLlink(navlink);
+        String linkpath=newdir+"/"+linkname;
+        basicFileWriter(bookpage,linkpath);
+        //Advance page counter
+        pagecount++;
+    }
+    logString=logString+"</div></body></html";
+    basicFileWriter(logString,htmlfilename);
+    System.out.println("Write out HTML completed");
+    writeOutCSS(parent);
+}
+
+public void writeOutCSS(String parent) {
+    String mycss=".grid { display: grid; grid-template-columns: auto auto;} \ndiv.cell {background: LightBlue; border: 1px solid Blue;  padding: 10px;}";
+    //\ndiv.border {border-style:dotted;}
+    //Query if width should be here?  width: 900px; 
+    String borders="\n.border { font-family: Arial; font-size: small; padding: 20px; background-color: #ddd; border: 1px dashed darkorange; border-radius: 8px; }";
+    String arial="\n.a {font-family: Arial;}";
+    mycss=mycss+borders+arial;
+    String cssname=parent+"/shelf.css";
+    System.out.println(cssname);
+    basicFileWriter(mycss,cssname);
+    System.out.println("Write out CSS completed");
+}
+
 
 //function to change way box labels are displayed
 public void setDisplayModeTitles(Integer input){
@@ -800,6 +931,7 @@ private String trim(String input){
     return output;
 }
 
+//will save this file (assumes it is text, html etc)
 private void basicFileWriter(String logstring,String filename) {
     //String reportfile=this.templatefolder+filename+".md";
 
@@ -1376,6 +1508,9 @@ EventHandler<MouseEvent> processLocalBoxClick =
 };
 
 
+/* This function passes current book, selection information and event handlers to a new Java Object (BookMetaStage).
+The JavaObject (BookMetaStage) creates a custom JavaFX.stage object that functions as a book data editor.
+The editor stage opened will be able to edit the contents of the currently selected Book (cell). */
 //TO DO: check Book isn't the basis for inspector stage before opening new stage.
 private void OpenRedBookNow(Book currentBook) {
      //Book currentBook= getActiveBook(); //currentBook.getBoxNode();
@@ -1384,8 +1519,8 @@ private void OpenRedBookNow(Book currentBook) {
      bookMetaInspectorStage = new BookMetaStage(parent, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
      
      System.out.println("set BookMetaStage...");
-     setMetaStageParams(bookMetaInspectorStage);
-     bookMetaInspectorStage.storeSelectedBooks(this.selectedBooks); //pass selection to editor
+     setMetaStageParams(bookMetaInspectorStage);  //stores the UI 'stage' as the local stage.  That's all.
+     bookMetaInspectorStage.storeSelectedBooks(this.selectedBooks); //pass any selection to the editor to use (for fills etc)
      System.out.println("new Stage Parameters Set ...");
 }
 /*switch(clickcount) {
