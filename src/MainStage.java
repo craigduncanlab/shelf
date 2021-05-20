@@ -474,7 +474,9 @@ public void writeFileOut() {
     ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
     writeOutBooks(mySaveBooks);
     writeOutWord(mySaveBooks);
-    writeOutHTML(mySaveBooks);
+    String author="Craig Duncan";
+    String year="2021";
+    writeOutHTML(mySaveBooks,author,year);
 }
 
 //for direct Row save
@@ -537,17 +539,19 @@ public void setBooksOnShelf(ArrayList<Book> inputObject) {
     this.booksOnShelf = inputObject;
 }
 */
-public void writeOutHTML(ArrayList<Book> inputObject) {
+public void writeOutHTML(ArrayList<Book> inputObject, String author, String year) {
   //header section
+  String byline="(c)"+year+" "+author;
   String label=getShortFilename();
   String maintitle=label.substring(0,label.length()-3);
   String logString = "<html><head>"; //use StringBuffer?
-  logString=logString+"<title>"+maintitle+"</title>";
+  logString=logString+"<title>"+maintitle+" "+byline+"</title>";
   //logString=logString+"<script> border {border-style:dotted;}</script>"; //css - put in shared css file?
   logString=logString+"<link rel=\"stylesheet\" href=\"shelf.css\">";
   logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
   //logString=logString+"<p><b>"+label+"</b></p>";
   logString=logString+"<H1>"+maintitle+"</H1>";
+  logString=logString+"<p class=\"feature\">"+byline+"</p>";
   logString=logString+"<div class=\"grid\">";
   //
   ArrayList<Book> bookList =inputObject;
@@ -582,7 +586,7 @@ public void writeOutHTML(ArrayList<Book> inputObject) {
         String linkname=pagecount+".html";
         //page links
         if (pagecount==1 && pagemax==1){
-           navlink="";
+           navlink=mainlink;
         }
         if (pagecount==1 && pagemax>1){
           String nextlinkname=pagecount+1+".html";
@@ -656,9 +660,12 @@ public void writeOutCSS(String parent) {
     String mycss=".grid { display: grid; grid-template-columns: auto auto;} \ndiv.cell {background: LightBlue; border: 1px solid Blue;  padding: 10px;}";
     //\ndiv.border {border-style:dotted;}
     //Query if width should be here?  width: 900px; 
+    String h1="h1 {text-align:center;}";
+    String f1="\n.feature {display: block; margin-left: auto; margin-right: auto; width: 50%};";
+    String body="\nbody { background-color:#00A8C5; font-family:Lucida,Helvetica,sans-serif; font-weight:500; text-decoration: none;  position: relative;  width: 100%; margin-left: 0px;}";
     String borders="\n.border { font-family: Arial; font-size: small; padding: 20px; background-color: #ddd; border: 1px dashed darkorange; border-radius: 8px; }";
     String arial="\n.a {font-family: Arial;}";
-    mycss=mycss+borders+arial;
+    mycss=mycss+h1+body+f1+borders+arial;
     String cssname=parent+"/shelf.css";
     System.out.println(cssname);
     basicFileWriter(mycss,cssname);

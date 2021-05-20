@@ -561,7 +561,7 @@ public String includeImageRel(String newdir){
 			standardCopy(count,imagepath,newdir,linkfile); //TO DO: get image filenames or use sequence
 			String linkpath="images/"+linkfile;
 			String imgprefix="<p class=\"a\"><img src=\"";
-			String imgsuffix="\" alt=\"user image\" width=\"600\" title=\""+notes+"\"></p>";
+			String imgsuffix="\" alt=\"user image\" width=\"600\" class=\"feature\" title=\""+notes+"\"></p>";
 			//use linkfile not image URI for HTML folders
 			String imgfile = imgprefix+linkpath+imgsuffix;
 			output=output+imgfile;
