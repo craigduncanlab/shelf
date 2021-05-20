@@ -48,7 +48,12 @@ String urlpath = "";
 String imagepath="";
 String docname=""; //to hold the container name or filename
 String docauthor=""; //to hold author name
-String docnotes=""; //to hold Document notes
+String docnotes=""; //to hold Document notes per markdown ``` as usual
+String code="";// to hold code (subset of notes in the markdown; stored separately here)
+String lang="";// to hold human lang translation (subset of notes in the markdown).  Lang markdown.
+String law="";// Future use: to hold legal text - subset of notes in markdown; jurisdiction element too?
+String codelang=""; //future use: to store the type of markdown e.g. R markdown {R}
+String humanlang="";//future use: to store the type of lang;
 String shortname="";
 String booklabel=""; //the title (heading 1) for this entry
 String displaylabel="";  //this may be booklabel by default, but can add other details like date etc
@@ -127,6 +132,7 @@ public void updateEditedText(String filepath,String urlpath, String imagepath, S
 	updateDisplay();
 	setMD(mdtext);
     setNotes(note);
+    setCode(code);
 }
 
 //return the meta info regarding filepath
@@ -333,6 +339,11 @@ public String getNotes () {
 	return this.docnotes;
 }
 
+public String getCode () {
+	//return publicText(getdataDisplayNode().getthisNotes());
+	return this.code;
+}
+
 //default HTML
 private String defaultHTML() {
 	//return "<html dir="ltr"><head></head><body contenteditable="true"></body></html>"
@@ -342,6 +353,11 @@ private String defaultHTML() {
 //set the text that will be the main descriptive or clause text in this node
 public void setNotes (String myString) {
 	this.docnotes = myString;
+}
+
+//set the text that will be the main descriptive or clause text in this node
+public void setCode (String myString) {
+	this.code = myString;
 }
 
 public void setHTML (String myString) {
@@ -684,6 +700,7 @@ public Book cloneBook() {
 	clone.setLabel(this.booklabel);
 	clone.setMD(this.mdString);
 	clone.setNotes(this.docnotes);
+	clone.setCode(this.code);
 	clone.setdocfilepath(this.docxfilepath);
 	clone.seturlpath(this.urlpath);
 	clone.setimagefilepath(this.imagepath);

@@ -715,8 +715,8 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		//At present visibility reflects the last markdown # code detected in file.
 		newNode.setVisible(true);
 		//convert contents to html for initial 'preview'
-		String myHTML=getHTMLfromContents(newNode);
-		newNode.setHTML(myHTML); //could do this in method that receives below but do it here for now
+		newNode.updateHTML();
+		//could do this in method that receives below but do it here for now
 		return newNode;
 		} //end method
 
@@ -811,7 +811,8 @@ public String fixEscapeChars(String thisLine){
  	return output;
 }
 
-//Convert the MD section of current Book to some HTML and update the HTML parameter		
+//Convert the MD section of current Book to some HTML and update the HTML parameter	
+/*	
 public String getHTMLfromContents(Book myBook) {
 	String input = myBook.getMD();
 	String label = myBook.getLabel();
@@ -856,5 +857,6 @@ public String getHTMLfromContents(Book myBook) {
 	 //System.exit(0);
 	return logString;
 	}
+	*/
 
 } //end class

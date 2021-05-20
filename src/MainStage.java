@@ -95,6 +95,20 @@ Make sure the smaller windows are owned by the larger window that is always visi
 The owner must be initialized before the stage is made visible.
 */
 
+/* TO DO:
+Separate JavaFX stage logic/objects from the underlying data.
+Underlying Data should be stored in a "Project" instance and retrieved here or modified as necessary
+At present, this class is an intwined controller/viewer so think about better separation of concerns.
+Also, remove data file input/output to Project instance too.
+*/
+
+/*
+Data collection will parallel GUI display of boxes. Provided stage manager can be serialised?
+Can GUI info be transient or should it be serialised?
+Should 'selection' state be stored only on controller, or stored with data in Project object?
+Design issue: (i.e serialise this with data, put in separate file?  Store-in memory separately?)
+*/
+
 public class MainStage {
 
 //hold default Stage variables. TO DO: position relative to screen and then increment.
@@ -126,9 +140,10 @@ Book clipboardBook; //for cut,copy and paste
 //To hold Stage with open node that is current
 BookMetaStage bookMetaInspectorStage; 
 
+/*
 String filename = "";
 String shortfilename=""; //current filename for saving this stage's contents
-
+*/
 String category="";
 //Displayed Book (i.e. Node).  Will be updated through GUI.
 //Book displayNode = new Book();
@@ -180,15 +195,13 @@ Color shelfborder=Color.BLACK;
 //Color shelffill=Color.WHITE; //background to 'grid' cf. DARKSLATEGREY
 
 
-/*
-Data collection will parallel GUI display of boxes. Provided stage manager can be serialised?
-Can GUI info be transient or should it be serialised?
-BookMetaStage should store GUI objects in one way, data in another?  separation of concerns
-Some kind of content manager for each stage?
-Consider if subclasses of BookMetaStage could deal with flavours of BookMetaStage (e.g. position?
-*/
 ArrayList<Layer>layersCollection = new ArrayList<Layer>();
-ArrayList<Book> booksOnShelf = new ArrayList<Book>(); //generic store of contents of boxes
+
+//To store collection of "Books" with main content data.  Also stores X,Y in each book for now.
+Project myProject = new Project();
+//ArrayList<Book> booksOnShelf = new ArrayList<Book>(); //generic store of contents of boxes
+
+//Currently, 'selected' is kind of GUI property, reflected in individual Book property as well.
 ArrayList<Book> selectedBooks = new ArrayList<Book>(); //for GUI selections
 //
 ArrayList myFileList = new ArrayList(); 
@@ -202,7 +215,7 @@ double orgTranslateY;
 Main parentClass;
 //Stage parentStage;
 FileChooser currentFileChooser = new FileChooser();
-FileChooser.ExtensionFilter myExtFilter = new FileChooser.ExtensionFilter("Shelf markdown","*.md");
+FileChooser.ExtensionFilter myExtFilter; 
 
 //Track current stage that is open.  Class variables
 static BookMetaStage currentFocus; //any BookMetaStage can set this to itself
@@ -224,6 +237,7 @@ public MainStage() {
 }
 
 //workspace constructor.  Filename details will be inherited from loaded node.
+
 //Passes MenuBar from main application for now
 //Passes general eventhandlers from Main (at present, also uses these for the boxes)
 public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage) {
@@ -235,6 +249,7 @@ public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage
     this.shiftMode=false;
     this.parentClass=parent;
     this.primaryStage=myprimarystage;
+    setExtensions();
     //this.parentStage=parent.getStage();
     //<---Use a system menu for mac ? Problematic with the focus --->
     /*
@@ -266,16 +281,36 @@ public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage
     this.currentFileChooser.getExtensionFilters().add(myExtFilter);
 }
 
+public void setExtensions(){
+  String string1="*.md";
+  String string2="*.rmd";
+  ArrayList<String> myextlist = new ArrayList<String>();
+  myextlist.add(string1);
+  myextlist.add(string2);
+  myExtFilter = new FileChooser.ExtensionFilter("Shelf markdown",myextlist);
+}
+
+public checkExtensions(String thefilename){
+    String ext1=thefilename.substring(thefilename.length() - 3);
+    String ext2=thefilename.substring(thefilename.length() - 4);
+    //for now have 1 parser for these two file types
+     if (ext1.equals(".md")==true || ext2.equals(".rmd")==true || ext2.equals(".Rmd")==true) {
+      return true;
+    }
+    else {
+      return false;
+    }
+}
 
 public void processMarkdown(File file) {
   //String filename=System.out.print(file.toString()); // this is full path
     String thefilename=file.getName();
-    String last=thefilename.substring(thefilename.length() - 3);
-    if (last.equals(".md")==true) {
+    Boolean isOK = checkExtensions(thefilename);
+    if (isOK==true) {
       //TemplateUtil myUtil = new TemplateUtil();
       String contents = getFileText(file);
-      this.shelfFileName.setText(thefilename); //update name on shelf view
-      setTitle(thefilename); //update title on this window
+      setFilename(thefilename); //both window and in data file
+      
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
@@ -291,9 +326,14 @@ public void processMarkdown(File file) {
                 System.out.println("Starting iteration of block lines in MD");
                 AddNewBookFromParser(newBook);
               }
+              else {
+                System.out.println("Nothing returned from parser");
+              }
          } //end while
       } //end if
-      
+      else {
+        System.out.println("No blocks returned from file split");
+      }
       System.out.println("Finished parse in 'open button' makeStage");
       //LoadSave.this.ListOfFiles();// print out current directory
     }
@@ -333,11 +373,11 @@ public String getFileText(File myFile) {
 public void processMarkdownAsRow(File file) {
   //String filename=System.out.print(file.toString()); // this is full path
     String thefilename=file.getName();
-    String last=thefilename.substring(thefilename.length() - 3);
-    if (last.equals(".md")==true) {
+    Boolean isOK = checkExtensions(thefilename);
+    if (isOK==true) {
       String contents = getFileText(file);
-      this.shelfFileName.setText(thefilename); //update name on shelf view
-      setTitle(thefilename); //update title on window too
+      setFilename(thefilename); //update title on window / workspace too
+
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
@@ -432,7 +472,7 @@ public File openMarkdownAsRow(Integer row) {
 public void saveAs() {
     Stage myStage = new Stage();
     myStage.setTitle("Save As ...");
-    String myFilename=getShortFilename(); //SaveAs will use current path so only name is needed
+    String myFilename= getShortFilename(); //SaveAs will use current path so only name is needed
     this.currentFileChooser.setTitle("Save Shelf File As");
     this.currentFileChooser.setInitialFileName(myFilename);  
     this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
@@ -471,7 +511,7 @@ public void saveRowAs(Integer row) {
 //for direct save
 public void writeFileOut() {
     //using existing filename
-    ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
+    ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();//getBooksOnShelf();
     writeOutBooks(mySaveBooks);
     writeOutWord(mySaveBooks);
     String author="Craig Duncan";
@@ -481,9 +521,10 @@ public void writeFileOut() {
 
 //for direct Row save
 //Currently retains the grid position of this row. i.e. doesn't write new entries back to row '0' but it could.
+//To do: move to Project instance
 public void writeRowOut(Integer row) {
     //using existing filename
-    ArrayList<Book> myBookSet = listBooksShelfOrder();//getBooksOnShelf();
+    ArrayList<Book> myBookSet = myProject.listBooksShelfOrder();//getBooksOnShelf();
     ArrayList<Book> myBookRow = new ArrayList<Book>(); 
     //filter these to just one row
     Iterator<Book> myIterator = myBookSet.iterator();
@@ -676,7 +717,7 @@ public void writeOutCSS(String parent) {
 //function to change way box labels are displayed
 public void setDisplayModeTitles(Integer input){
   if (input>0 && input<4) {
-    ArrayList<Book> myBooksonShelves = listBooksShelfOrder(); 
+    ArrayList<Book> myBooksonShelves = myProject.listBooksShelfOrder(); 
     Integer booknum=myBooksonShelves.size();
     for (int x=0;x<booknum;x++) {
           Book item = myBooksonShelves.get(x);
@@ -694,7 +735,7 @@ public void setDisplayModeTitles(Integer input){
 public void wrapBoxes() {
 //until reloaded the item order in memory isn't same as GUI
 //ArrayList<Book> myBooksonShelves = getBooksOnShelf(); 
-ArrayList<Book> myBooksonShelves = listBooksShelfOrder(); 
+ArrayList<Book> myBooksonShelves = myProject.listBooksShelfOrder(); 
 Integer booknum=myBooksonShelves.size();
 Integer xcount=0;
 Integer ycount=0;
@@ -716,7 +757,7 @@ Integer ycount=0;
         }
     }
     //'booksOnShelf' is the global arraylist holding books
-    booksOnShelf=myBooksonShelves; //change the pointer
+    myProject.setBooksOnshelf(myBooksonShelves); //change the pointer (if needed?)
 }
 
 public void singleSelection(Book thisBook){
@@ -737,7 +778,7 @@ public void singleSelection(Book thisBook){
 }
 
 public void refreshSelectedBooksColour() {
-  ArrayList<Book> sorted= listBooksShelfOrder(); //can this be stored, only updated when needed?
+  ArrayList<Book> sorted= myProject.listBooksShelfOrder(); //can this be stored, only updated when needed?
   Iterator <Book> myIterator = sorted.iterator();
   while(myIterator.hasNext()){
     Book item = myIterator.next();
@@ -776,7 +817,7 @@ public void shiftedSelection(Book thisBook) {
       ArrayList<Book> newList = new ArrayList<Book>();
       //newList.add(firstBook); //start selection again with only origin book
       selectedBooks = newList;
-      ArrayList<Book> sorted= listBooksShelfOrder(); //can this be stored, only updated when needed?
+      ArrayList<Book> sorted= myProject.listBooksShelfOrder(); //can this be stored, only updated when needed?
       Iterator <Book> myIterator = sorted.iterator();
       Boolean selection=false;
       Boolean stop=false;
@@ -814,6 +855,7 @@ public void shiftedSelection(Book thisBook) {
     } //end while
    }
 
+/*
 //sort books by shelf order
 public ArrayList<Book> listBooksShelfOrder() {
     ArrayList<Book> myBooksonShelves = getBooksOnShelf();
@@ -845,7 +887,13 @@ public ArrayList<Book> listBooksShelfOrder() {
                 }
             }
         }
-        /*Iterator<Book> bookIterator=sortedBooks.iterator();
+       
+        return sortedBooks;
+}
+*/
+
+//This was above 'return sortedBooks'
+ /*Iterator<Book> bookIterator=sortedBooks.iterator();
         while (bookIterator.hasNext()) {
             Book item = bookIterator.next();
             String label = item.getLabel();
@@ -853,8 +901,6 @@ public ArrayList<Book> listBooksShelfOrder() {
         }
         System.exit(0);
         */
-        return sortedBooks;
-}
 
 //Convert this book meta into a String of markdown.  Only write links if data is there.
 public String convertBookMetaToString(Book myBook) {
@@ -999,18 +1045,20 @@ public String getFilename() {
 //set filename to currently open file.
 //add filename to current list view (TO DO: remove once closed)
 public void setFilename(String myFile) {
-    this.filename = myFile;
+    myProject.setFilename(myFile);
     this.shelfFileName.setText(this.filename);
     this.setTitle(this.filename); //update title on window
 }
 
 public void setShortFilename(String myFile) {
-    this.shortfilename = myFile;
+    //this.shortfilename = myFile;
+    myProject.setShortFilename(myFile);
     //this.shelfFileName.setText(this.filename);
 }
 
 public String getShortFilename() {
-    return this.shortfilename;
+  return myProject.getShortFilename();
+    //return this.shortfilename;
 }
 
 public int getDocCount() {
@@ -1211,7 +1259,7 @@ public ScrollPane getSpriteScrollPane() {
 
 public void clearAllBooks() {
     this.bookgroupNode.getChildren().clear();
-    this.booksOnShelf.clear(); 
+    myProject.clearAllBooks(); 
     this.resetBookOrigin();
     String title = "default.md";
     setFilename(title);
@@ -2130,6 +2178,7 @@ public Book getActiveBook() {
 
 
 //Called by LoadSave and iterates through the nodes in the parsed MD file.
+//Is this deprecated?
 public void AddNewBookFromParser(Book newBook) throws NullPointerException {
     System.out.println("bookgroupNode in AddNewBookFromParser");
     System.out.println(this.bookgroupNode);
@@ -2185,22 +2234,11 @@ TO DO: consider if the 'layer' matters, in terms of positioning this book relati
 
 private void addBookToStage(Book myBook) {
 
-    if (myBook==null) {
-        System.out.println("addBookToStage.  No Book to add");
-        System.exit(0);
-    }
-    Book newBook = myBook;
+    //update Data Model
+    Book newBook=myProject.addBookToStage(newBook);
 
-    //if trying to paste into scene twice...FX error  OK but need to deal with it.
-    //use intermediate array 'booksOnShelf' to reason about books as a whole.
-    if (this.booksOnShelf.contains(myBook)) {
-      newBook = myBook.cloneBook(); //make a new object to add to avoid object duplication.
-    } 
-    
     this.bookgroupNode.getChildren().add(newBook);
-    //add to the collection of books in app (to DO: layer specific)
-    this.booksOnShelf.add(newBook);  //add to metadata collection TO DO: cater for deletions.
-
+    
     try { 
         setActiveBook(newBook); 
         }
@@ -2215,18 +2253,17 @@ private void addBookToStage(Book myBook) {
 public void removeBookFromStage(Book thisBook) {
     //TO DO: remove Node (data) ? is it cleaned up by GUI object removal?
     this.bookgroupNode.getChildren().remove(thisBook); //view/GUI
-    this.booksOnShelf.remove(thisBook);
-    //to do: remove Book from ArrayList too.
+    myProject.removeBook(thisBook);
     getStage().show(); //refresh GUI
     
 }
 
 public void setBooksOnShelf(ArrayList<Book> inputObject) {
-    this.booksOnShelf = inputObject;
+    myProject.setBooksOnShelf(inputObject);
 }
 
 public void insertRow(Integer firstrow){
-    ArrayList<Book> bookList =getBooksOnShelf();
+    ArrayList<Book> bookList = myProject.getBooksOnShelf();
     Iterator<Book> myIterator=bookList.iterator();
     while(myIterator.hasNext()) {
         Book item = myIterator.next();
@@ -2243,7 +2280,7 @@ public void insertRow(Integer firstrow){
 
 //nudge cell right
 public void nudgeCellRightInRow(Integer firstrow, Integer firstcol){
-    ArrayList<Book> bookList =getBooksOnShelf();
+    ArrayList<Book> bookList = myProject.getBooksOnShelf();
     Iterator<Book> myIterator=bookList.iterator();
     while(myIterator.hasNext()) {
         Book item = myIterator.next();
@@ -2264,7 +2301,7 @@ public void nudgeCellRightInRow(Integer firstrow, Integer firstcol){
 //nudgeCellLeftInRow
 
 public void nudgeCellLeftInRow(Integer firstrow, Integer firstcol){
-    ArrayList<Book> bookList =getBooksOnShelf();
+    ArrayList<Book> bookList = myProject.getBooksOnShelf();
     Iterator<Book> myIterator=bookList.iterator();
     while(myIterator.hasNext()) {
         Book item = myIterator.next();
@@ -2288,7 +2325,7 @@ public void moveActiveRight(Book myBook) {
     Integer row=myBook.getRow();
     Integer col=myBook.getCol();
     Boolean moved = false;
-    ArrayList<Book> sorted= listBooksShelfOrder();
+    ArrayList<Book> sorted= myProject.listBooksShelfOrder();
     Iterator <Book> myIterator = sorted.iterator();
     while(myIterator.hasNext()) {
       Book item = myIterator.next();
@@ -2308,7 +2345,7 @@ public void moveActiveLeft(Book myBook) {
     Integer row=myBook.getRow();
     Integer col=myBook.getCol();
     Boolean moved = false;
-    ArrayList<Book> sorted= listBooksShelfOrder();
+    ArrayList<Book> sorted= myProject.listBooksShelfOrder();
     Integer mySize=sorted.size();
     ListIterator <Book> myIterator = sorted.listIterator(mySize); //must pass argument at time of creation to set at right end
     Boolean start=false;
@@ -2329,7 +2366,7 @@ public void moveActiveUp(Book myBook) {
     Integer row=myBook.getRow();
     Integer col=myBook.getCol();
     Boolean moved = false;
-    ArrayList<Book> sorted= listBooksShelfOrder();
+    ArrayList<Book> sorted= myProject.listBooksShelfOrder();
     Integer mySize=sorted.size();
     ListIterator <Book> myIterator = sorted.listIterator(mySize); //must pass argument at time of creation to set at right end
     Boolean start=false;
@@ -2348,7 +2385,7 @@ public void moveActiveDown(Book myBook) {
     Integer row=myBook.getRow();
     Integer col=myBook.getCol();
     Boolean moved = false;
-    ArrayList<Book> sorted= listBooksShelfOrder();
+    ArrayList<Book> sorted= myProject.listBooksShelfOrder();
     Integer mySize=sorted.size();
     Iterator <Book> myIterator = sorted.iterator(); //must pass argument at time of creation to set at right end
     Boolean start=false;
@@ -2372,9 +2409,11 @@ public double convertColtoX(Integer myCol) {
     return newX;
 }
 
+/*
 public ArrayList<Book> getBooksOnShelf() {
     return this.booksOnShelf;
 }
+*/
 
 public void positionBookOnStage(Book myBook) {
         
