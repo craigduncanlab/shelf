@@ -470,26 +470,25 @@ public void deleteSpriteGUI(Book myBook) {
         };
 
     //FILE LOADERS AND SAVERS
+    //This is called from the GUI and Event Handler (OpenTempl on Main menu).
     public void mainFileLoader() {
         this.currentOpenFile=Main.this.Stage_WS.openMarkdown();
     }
 
-    //if we have a list of the Book objects inside the Bookes, and they have the relevant metadata (including x,y),
+    //if we have a list of the Book objects inside the Books, and they have the relevant metadata (including x,y),
     //Then we do not need to actually query the Book class - we can just save as per clause container
     public void mainFileSaver() {
-        this.Stage_WS.setFilename(this.currentOpenFile.getPath());
+        this.Stage_WS.setFile(this.currentOpenFile);
         this.Stage_WS.writeFileOut();
     }
 
     public void saveAsFileSaver() {
-        this.Stage_WS.setFilename(this.currentOpenFile.getPath());
-        this.Stage_WS.setShortFilename(this.currentOpenFile.getName());
+        this.Stage_WS.setFile(this.currentOpenFile);
         this.Stage_WS.saveAs();
     }
 
     public void saveRowAsFileSaver() {
-        this.Stage_WS.setFilename(this.currentOpenFile.getPath());
-        this.Stage_WS.setShortFilename(this.currentOpenFile.getName());
+        this.Stage_WS.setFile(this.currentOpenFile);
         Book myBook = Main.this.getActiveBook();
         Integer myRow = myBook.getRow();
         this.Stage_WS.saveRowAs(myRow);

@@ -15,10 +15,16 @@ EventHandler PressBox;
 EventHandler DragBox;
 MainStage mainstage;
 HashMap<String,String> myHM;
+Project projectCopy;
 
 //default constructor
 public Parser(){
+	this.projectCopy=new Project();
+}
 
+//constructor with myProject object passed in
+public Parser(Project inputProject){
+	this.projectCopy=inputProject;
 }
 
 //parse the Word styles markdown file (key line starts with #, then the paragraph)
@@ -55,8 +61,19 @@ public HashMap<String,String> readWordStyles() {
 }
 
 
-//read in an .md file and then process it
-//This could return an Array of Books, not one.
+/*
+Context: Called externally by MainStage class instances.
+
+Input:
+The block of input text is always a split part of .md or .rmd file with no more than one hash (#) section 
+(which should also be in first line)
+
+Output: 
+could return an Array of Books, not one.
+A new Book object is used for data model and GUI.
+
+TO DO: separate all GUI event handles from this (it is data only)
+*/
 
 public Book parseMDfile(MainStage myStage, EventHandler pb,EventHandler db,String contents) {
 	this.PressBox=pb;
@@ -70,8 +87,22 @@ public Book parseMDfile(MainStage myStage, EventHandler pb,EventHandler db,Strin
     return newBook;
 }
 
+/*
+Context: Called externally by MainStage class instances.
+
+Input:
+The block of input text is always a split part of .md or .rmd file with no more than one hash (#) section 
+(which should also be in first line)
+
+Output: 
+could return an Array of Books, not one.
+A new Book object is used for data model and GUI.
+
+TO DO: avoid duplication with the other code related to data model; separate out the GUI differences
+*/
+
 public Book parseMDfileAsRow(MainStage myStage, EventHandler pb,EventHandler db,String contents) {
-	this.PressBox=pb;
+	this.PressBox=pb; //are these global eventhandlers needed here anymore?
 	this.DragBox=db;
 	this.mainstage=myStage;
     //System.out.println("Begin parsing MD file");
@@ -100,126 +131,216 @@ Parsing algo:
 */
 
 //called externally to split up an MD file into separate blocks
+//blocks were originally just an array of Strings split on # 
 
 public ArrayList<String> splitMDfile(String input) {
-	ArrayList<Integer> fileindex = new ArrayList<Integer>();
-	StringBuffer currentblock = new StringBuffer();
+	ArrayList<String>myLines = getFileLines(input);
+	ArrayList<Integer> fileindex = codeMDLines(myLines);
+	ArrayList<String> newblocks = packageBlocksFromLines (myLines, fileindex);
+	return newblocks;
+}
+
+public ArrayList<String> splitRMDfile(String input) {
+	ArrayList<String>myLines = getFileLines(input);
+	ArrayList<Integer> fileindex = codeRMDLines(myLines);
+	ArrayList<String> newblocks = packageBlocksFromLines (myLines, fileindex);
+	return newblocks;
+}
+
+public ArrayList<String> getFileLines(String input){
 	ArrayList<String>myLines = new ArrayList<String>();
-	ArrayList<String>newBlocks = new ArrayList<String>();
-	int filecount=0;
-	int nl=0;
-		try {
-			Scanner scanner1 = new Scanner(input); //default delimiter is EOL?
+	Scanner scanner1 = new Scanner(input); //default delimiter is EOL?
+	try {
+			
 			if (scanner1==null) {
 				System.out.println("No MD block content");
 				return null;
 			}
-			
-			int brackets=0;
-			while (scanner1.hasNextLine()) {
+
+	while (scanner1.hasNextLine()) {
 				//Array currentNotes[] = new Array(2);
 				String thisRow=scanner1.nextLine();
 				myLines.add(thisRow);
-				//Scanner scanner2= new Scanner(thisRow).useDelimiter("#");
-				
-				//This is a short row
-				System.out.println(nl+") "+thisRow);
-				if (thisRow.length()<3) {
-					fileindex.add(1);
-				}
-				else {
-					String firstpart = thisRow.substring(0,2);
-					String visFlag = thisRow.substring(0,3);
-					System.out.println(nl+") "+firstpart);
-					switch (firstpart) {
-	            		case "# ":  
-		            		fileindex.add(0);
-		                	break;
-	                    default:  
-	                    	fileindex.add(1);
-	                    	break;
-	                } //end switch
-				} //end else 
-				
-				int max = fileindex.size();
-				if (nl>max) {
-					System.out.println("nl: "+nl+" max: "+max);
-					System.exit(0);
-				}
-				nl++;
-			} //end while
-			scanner1.close();			
-			} //end try
-			catch (Throwable t)
+		} 
+	}//end try
+	catch (Throwable t)
 			{
 				t.printStackTrace();
 				//System.exit(0);
 				return null;
 			}
-			System.out.println(fileindex.toString());
-			int max = fileindex.size();
-			if (max!=nl) {
-				System.out.println("Max : "+max+" nl: "+nl);
-			}
-
-			try {
-				Scanner scanner2 = new Scanner(input); //default delimiter is EOL?
-				if (scanner2==null) {
-					System.out.println("No MD block content");
-					return null;
-				}
-			// at this point we have fileindex array with '0's for # lines and '1's for other lines.
-			int cb=0;
-			int cl=0;
-			while (scanner2.hasNextLine()) {
-				String thisLine=scanner2.nextLine();
-				//if this row is a heading
-				System.out.println(cl+") ["+fileindex.get(cl)+"] "+thisLine);
-				if (fileindex.get(cl)==0) { //if we encounter start of next block
-					if(cl>cb) {
-						//currentblock.append("\n"); //EOL
-						String thisBlock=currentblock.toString();
-						newBlocks.add(thisBlock); //add the current block to newBlocks array
-						currentblock.delete(0,currentblock.length()); //delete current block
-						//currentblock.append("\n"); 
-						cb=cl;
-					}
-
-				}
-				cl++;
-				if (thisLine.length()>=0) { //first line of new block at start of file
-					currentblock.append(thisLine);
-					currentblock.append(System.getProperty("line.separator"));
-					//currentblock.append("\n"); //EOL needed;
-				}
-			}   //end while
-			//add last block or we drop 1 each time
-			String thisBlock=currentblock.toString();
-			newBlocks.add(thisBlock); //add the current block to newBlocks array
-			currentblock.delete(0,currentblock.length()); //delete current block
-			//currentblock.append("\n"); 
-		
-			scanner2.close();
-			} //end try
-			catch (Throwable t)
-			{
-				t.printStackTrace();
-				//System.exit(0);
-				return null;
-			}
-			System.out.println(newBlocks);
-			//System.exit(0);
-			return newBlocks;
+			scanner1.close();
+	return myLines;	
 }
 
-//called externally to work on contents of an individual Markdown block
+public ArrayList<Integer> codeMDLines(ArrayList<String>myLines) {
+	ArrayList<Integer> fileindex = new ArrayList<Integer>();
+	
+	for (String thisRow : myLines) {
+		fileindex.add(setMDLineCode(thisRow));
+	} 
+	return fileindex;
+}
+
+public ArrayList<Integer> codeRMDLines(ArrayList<String> myLines) {
+	ArrayList<Integer> fileindex = new ArrayList<Integer>();
+	int header = 0;
+	String linePrefix="";
+	for (String thisRow : myLines) {
+		int blocktype=setMDLineCode(thisRow); //inherit MD
+		//iterative processing of header code, state
+		if (thisRow.length()>=3) {
+			linePrefix = thisRow.substring(0,3);
+		} 
+		else {linePrefix=thisRow;}
+		header = getRMDHeaderCode(linePrefix,header); 
+        switch (header) {
+        	case 0:
+        		break;
+        	case 1:
+        		blocktype=3;
+        		break;
+        	case 3:
+        		blocktype=3;
+        		break;
+        	case 4:
+        		blocktype=4;
+        		break;
+        	default:
+        		//no change
+        		break;
+        }  
+		fileindex.add(blocktype);   
+	}
+	return fileindex;
+}
+
+//Stream processor: iteratively processes current line plus 'state' of headercode
+ public int getRMDHeaderCode(String visFlag, int hc) {
+        //for R markdown, we check any time we find dashes, but only deal with first line
+        int out=hc;
+        switch (visFlag) {
+        	case "---":		if (hc==0) {
+        						out=1;}		
+			        		if (hc==4) { //end of header
+			    				out=3;
+							}
+			        		break;
+        	default:
+					//if still in header section but not yet '---'
+        	 		if (hc==1) {
+        	 			out=4;
+        	 		}
+        	 		//outside header, after having parsed it.
+        	 		if (hc==3) {
+        	 			out=0; //back to default.  no change to blockcodes from MD
+        	 		}
+        			break;
+            } 
+
+    return out;
+}
+
+
+//set a linecode for this line based on a few prefix characters
+//line code distinguishes between division in stream (#) or RMD headers
+
+public int setMDLineCode(String thisRow) {
+		int blocktype=1; //default, even if row length small
+		String firstpart="";
+		//if row is long enough to check for hash prefix
+		if (thisRow.length()>=2) {
+			if (thisRow.substring(0,2).equals("# ")) {
+				return 0;
+			}
+		}
+     return blocktype;
+ }
+
+/* 
+Function: creation of new array of block strings as # portions of original .md or .rmd files
+TO DO:
+This is not using the benefit of the prior scanning i.e. fileindex codes by line and array entries
+In the 'myLines' array we have fileindex array with '0's for # lines and '1's for other lines.
+Also '3' for start of R markdown header and '4' for end of R markdown header
+We could further code the stream (new index, or with further coding)
+One or more passes to code sections with consecutive index codes that then become 'sub-blocks'
+i.e. improve passing on of information to parseMDblock();
+*/ 
+
+public ArrayList<String> packageBlocksFromLines(ArrayList<String> myLines, ArrayList<Integer> fileindex) {
+	ArrayList<String>newBlocks = new ArrayList<String>();
+	StringBuffer currentblock = new StringBuffer();
+	
+	String headertext="";
+	int cl=0;
+	for (String thisLine: myLines) {
+		int linecode=fileindex.get(cl);
+		//if this row is a heading
+		//System.out.println(cl+") ["+fileindex.get(cl)+"] "+thisLine);
+
+		//SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
+		if (linecode==0) { //if we encounter start of next block (#)
+			//first line
+				if (currentblock.length()>0) {
+					newBlocks.add(currentblock.toString()); //add the current block to newBlocks array
+					currentblock.delete(0,currentblock.length()); //delete current string buffer contents
+				}
+				currentblock.append(thisLine); // in any case start a new block, or start first
+				currentblock.append(System.getProperty("line.separator"));
+		}
+		//for linecode = 0 or 1, add and ignore anything else
+		if (linecode<=1) { 
+				currentblock.append(thisLine);
+				currentblock.append(System.getProperty("line.separator"));//EOL
+		}
+		//do not store header for .rmd in blocks, but capture for later
+		if (linecode==4) { //for rmd at present
+			headertext=headertext+thisLine+System.getProperty("line.separator"); 
+    	}
+		cl++; //increase line count for index	
+	}   //end loop
+
+	//add last block or we drop 1 each time
+	if (currentblock.length()>0) {
+		newBlocks.add(currentblock.toString()); //add the current block to newBlocks array
+		currentblock.delete(0,currentblock.length()); //delete current string buffer contents
+	}
+
+	if (headertext.length()>0) {
+		projectCopy.setHeader(headertext); //store for later;
+	}
+	
+	return newBlocks;
+}
+
+/* 
+Called by parseMDfile() to prepare new index, line by line, 
+Input : Takes an unprocessed String as input (one that has been constructed from those arrays).
+The string has already been 'split' from a .md file into sections.
+Output: creates a new 'Book' object (the one used for GUI etc) with internal structure from index.
+
+TO DO:
+This is currently inefficient because the splitting before input created its own index and arrays.
+Past processing is not retained.  As a computing machine, energy is wasted.  *Software as energy paths*
+*/
+
 public Book parseMDblock(String input) {
 	ArrayList<Integer> fileindex = makeMDfileindex(input);
 	Book newNode = MDfileFilter(fileindex,input);
 	return newNode;
 }
 
+//SECOND STAGE PARSING (OF EACH BLOCK)
+//TO DO: STREAMLINE INTO INPUT PROCESS AS PER INITIAL BLOCKS CONSTRUCTION
+//I.E DO SCANNER ONLY ONCE
 //make an index (like an R vector) to determine nature of each line of markdown file
+
+/*
+In effect, this is looking for annotations that are additional to a normal markdown file.
+Reading in a normal .Rmd or .md file and creating a simple index to define 'blocks' with heading does not require as many steps as here.
+*/
+
 public ArrayList<Integer> makeMDfileindex(String input) {
 		ArrayList<Integer> fileindex = new ArrayList<Integer>();
 		
@@ -264,6 +385,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 				//Scanner scanner2= new Scanner(thisRow).useDelimiter("#");
 				
 				System.out.println(nl+") "+thisRow);
+				
 				//short row
 				if (thisRow.length()<2) {
 					if (brackets==0) {
@@ -350,6 +472,7 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 		            	} 
 		            }
 					System.out.println(nl+") "+firstpart);
+					//this should find first line in file
 					switch (firstpart) {
 	            		case "# ":  
 		            		if (brackets==0) {

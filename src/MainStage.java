@@ -1,7 +1,7 @@
 //(c) Craig Duncan 2017-2020
 //www.craigduncan.com.au
 
-//import utilities needed for Arrays lists etc
+//import utilities needed for ArraysLists, lists etc
 import java.util.*; //collections too
 
 //JavaFX
@@ -198,7 +198,7 @@ Color shelfborder=Color.BLACK;
 ArrayList<Layer>layersCollection = new ArrayList<Layer>();
 
 //To store collection of "Books" with main content data.  Also stores X,Y in each book for now.
-Project myProject = new Project();
+Project myProject = new Project(); //this is OK without waiting for constructor?
 //ArrayList<Book> booksOnShelf = new ArrayList<Book>(); //generic store of contents of boxes
 
 //Currently, 'selected' is kind of GUI property, reflected in individual Book property as well.
@@ -290,11 +290,19 @@ public void setExtensions(){
   myExtFilter = new FileChooser.ExtensionFilter("Shelf markdown",myextlist);
 }
 
-public checkExtensions(String thefilename){
+//this takes full path as input, or other?
+public Boolean checkExtensions(File file){
+    String thefilename=file.getName();
     String ext1=thefilename.substring(thefilename.length() - 3);
     String ext2=thefilename.substring(thefilename.length() - 4);
     //for now have 1 parser for these two file types
-     if (ext1.equals(".md")==true || ext2.equals(".rmd")==true || ext2.equals(".Rmd")==true) {
+    if (ext1.equals(".md")==true) {
+      myProject.setExtension("md");
+      return true;
+    }
+
+    else if (ext2.equals(".rmd")==true || ext2.equals(".Rmd")==true){
+      myProject.setExtension("rmd");
       return true;
     }
     else {
@@ -302,28 +310,36 @@ public checkExtensions(String thefilename){
     }
 }
 
+//input is File, so setting filename sets full local path
 public void processMarkdown(File file) {
-  //String filename=System.out.print(file.toString()); // this is full path
+    System.out.println("processing markdown file...");
+    System.out.println(file.toString()); // this is full path
     String thefilename=file.getName();
-    Boolean isOK = checkExtensions(thefilename);
+    Boolean isOK = checkExtensions(file);
     if (isOK==true) {
       //TemplateUtil myUtil = new TemplateUtil();
+      setFile(file);
       String contents = getFileText(file);
-      setFilename(thefilename); //both window and in data file
-      
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
-      // Split the MD file.  blocklist is list of 
-      ArrayList<String> blocklist= myParser.splitMDfile(contents); //should return file split into blocks per #
+      // Split the MD file.  
+      ArrayList<String> blocklist = new ArrayList<String>();
+      if (myProject.getExt().equals("md")) {
+          blocklist = myParser.splitMDfile(contents);
+      } //should return file split into blocks per #
+      if (myProject.getExt().equals("rmd")) {
+          blocklist = myParser.splitRMDfile(contents);
+      }
       int length = blocklist.size();  // number of blocks
-      System.out.println(length);
+      System.out.println(length); //each of these numbered blocks is a string.
       if (length>0) {
         Iterator<String> iter = blocklist.iterator(); 
           while (iter.hasNext()) {
               Book newBook=myParser.parseMDfile(MainStage.this,PressBox,DragBox,iter.next());
               if (newBook!=null) {
                 System.out.println("Starting iteration of block lines in MD");
+                //To DO: Do not add to stage until complete
                 AddNewBookFromParser(newBook);
               }
               else {
@@ -342,7 +358,7 @@ public void processMarkdown(File file) {
 //Simple utility to return contents of file as String
 public String getFileText(File myFile) {
   StringBuffer myText = new StringBuffer(); //mutable String
-  String endOfLine="\n";
+  String endOfLine="\n"; //to do - operating system independent
   try {
     Scanner scanner1 = new Scanner(myFile);
     if (scanner1==null) {
@@ -372,25 +388,33 @@ public String getFileText(File myFile) {
 
 public void processMarkdownAsRow(File file) {
   //String filename=System.out.print(file.toString()); // this is full path
-    String thefilename=file.getName();
-    Boolean isOK = checkExtensions(thefilename);
+    Boolean isOK = checkExtensions(file);
     if (isOK==true) {
       String contents = getFileText(file);
-      setFilename(thefilename); //update title on window / workspace too
+      setFile(file); //update title on window / workspace too
 
       //Recents myR = new Recents();
       //myR.updateRecents(file.getName());
       Parser myParser=new Parser();
-      // Split the MD file.  blocklist is list of 
+      // For the first level of internal structure, we split the MD file.  
+      // into blocks based on # division (for now).
+      
       ArrayList<String> blocklist= myParser.splitMDfile(contents); //should return file split into blocks per #
       int length = blocklist.size();  // number of blocks
       System.out.println(length);
+
+      //if we have a set of blocks we process the internal structure further
+      //We have already checked first block is not an R markdown header, but that is stored
+      //TO DO: keep track of start of 'notes' or 'code' blocks as a block property
+
       if (length>0) {
         Iterator<String> iter = blocklist.iterator(); 
           while (iter.hasNext()) {
               Book newBook=myParser.parseMDfileAsRow(MainStage.this,PressBox,DragBox,iter.next());
               if (newBook!=null) {
                 System.out.println("Starting iteration of block lines in MD");
+                //Originally, this checked the location of each book, but what if new file?
+                //What if no current GUI information?
                 AddNewBookFromParser(newBook);
               }
          } //end while
@@ -411,32 +435,37 @@ public Integer getRowofActiveBook() {
 }
 
 //use row for positions
+//This is called from 'Main' so it returns the 'File' for future use.
+//It could equally return the 'myProject' object that contains file details etc?
 public File openMarkdown() {
         //System.exit(0);
         // final FileChooser fileChooser = new FileChooser();
-        File file = new File (this.getFilename());
+        File file = new File (myProject.getFilename()); //just in case
         if (file==null) {
             file = new File ("untitled.md");
+            System.out.println("No File at Time of Open handler");
         } 
         Stage myStage = new Stage();
         myStage.setTitle("Open File");
         this.currentFileChooser.setTitle("Open A Shelf File");
         //this.currentFileChooser.setSelectedExtensionFilter(this.myExtFilter);   
         this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
+        //Now try and get File
         File tryfile = currentFileChooser.showOpenDialog(myStage);
         if (tryfile != null) {
           file = tryfile;
-          processMarkdown(file);
+          processMarkdown(file); //this will setFile(file) and get data
+          //TO DO: Event so that double clicking on filename opens it?
           myFileList.add(file.getName()); //add string reference
           myObList.setAll(myFileList); //does a clear and refresh?
           System.out.println(myFileList.size()+","+file.getName());
-          setFilename(file.getPath());
-          setShortFilename(file.getName());
+          //setFile(file);
         } 
         else {
             //DO SOMETHING
         }
-    return file;
+    System.out.println("Finished processing file in MainStage");
+    return file; 
 }
 
 //use row for positions
@@ -446,7 +475,7 @@ public File openMarkdownAsRow(Integer row) {
         System.out.println("Row check:"+row+", spriteY:"+this.spriteY);
         //System.exit(0);
         // final FileChooser fileChooser = new FileChooser();
-        File file = new File (this.getFilename());
+        File file = new File (myProject.getFilename());
         if (file==null) {
             file = new File ("untitled.md");
         } 
@@ -459,8 +488,7 @@ public File openMarkdownAsRow(Integer row) {
         if (tryfile != null) {
           file = tryfile;
           processMarkdownAsRow(file);
-          setFilename(file.getPath());
-          setShortFilename(file.getName());
+          setFile(file);
         } 
         else {
             //DO SOMETHING
@@ -472,15 +500,14 @@ public File openMarkdownAsRow(Integer row) {
 public void saveAs() {
     Stage myStage = new Stage();
     myStage.setTitle("Save As ...");
-    String myFilename= getShortFilename(); //SaveAs will use current path so only name is needed
+    String myFilename= myProject.getFilename(); //SaveAs will use current path so only name is needed
     this.currentFileChooser.setTitle("Save Shelf File As");
     this.currentFileChooser.setInitialFileName(myFilename);  
     this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
     //System.exit(0);
     File file = currentFileChooser.showSaveDialog(myStage);
     if (file != null) {
-        setFilename(file.getPath());
-        setShortFilename(file.getName());
+        setFile(file);
         writeFileOut();
         } 
         else {
@@ -492,15 +519,15 @@ public void saveAs() {
 public void saveRowAs(Integer row) {
     Stage myStage = new Stage();
     myStage.setTitle("Save As ...");
-    String myFilename=getShortFilename()+"_row"; //SaveAs will use current path so only name is needed.  Add suffix to avoid accidents.
+    //does this add extension before the '_row?'
+    String myFilename=myProject.getFilenameNoExt()+"_row"; //SaveAs will use current path so only name is needed.  Add suffix to avoid accidents.
     this.currentFileChooser.setTitle("Save Row As File");
-    this.currentFileChooser.setInitialFileName(myFilename);  
+    this.currentFileChooser.setInitialFileName(myFilename); //with no ext? 
     this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
     //System.exit(0);
     File file = currentFileChooser.showSaveDialog(myStage);
     if (file != null) {
-        setFilename(file.getPath());
-        setShortFilename(file.getName());
+        setFile(file);
         writeRowOut(row);
         } 
         else {
@@ -540,7 +567,7 @@ public void writeRowOut(Integer row) {
 }
 
 public void writeOutWord(ArrayList<Book> mySaveBooks) {    //
-    String filepath=this.getFilename();
+    String filepath=myProject.getFilename();
     System.out.println("Saving: "+filepath);
     Parser myP = new Parser();
     Iterator<Book> myIterator = mySaveBooks.iterator();
@@ -560,7 +587,7 @@ public void writeOutWord(ArrayList<Book> mySaveBooks) {    //
 public void writeOutBooks(ArrayList<Book> mySaveBooks) {    //
     Iterator<Book> myIterator = mySaveBooks.iterator();
     String myOutput="";
-    String filepath=this.getFilename();
+    String filepath=myProject.getFilename();
     System.out.println("Saving: "+filepath);
          while (myIterator.hasNext()) {
             Book myNode=myIterator.next();
@@ -583,14 +610,14 @@ public void setBooksOnShelf(ArrayList<Book> inputObject) {
 public void writeOutHTML(ArrayList<Book> inputObject, String author, String year) {
   //header section
   String byline="(c)"+year+" "+author;
-  String label=getShortFilename();
-  String maintitle=label.substring(0,label.length()-3);
+  String name=myProject.getFilename(); //maybe redundant.  Full path?
+  String maintitle=myProject.getFilenameNoExt(); //otherwise get from label 
   String logString = "<html><head>"; //use StringBuffer?
   logString=logString+"<title>"+maintitle+" "+byline+"</title>";
   //logString=logString+"<script> border {border-style:dotted;}</script>"; //css - put in shared css file?
   logString=logString+"<link rel=\"stylesheet\" href=\"shelf.css\">";
   logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
-  //logString=logString+"<p><b>"+label+"</b></p>";
+  //logString=logString+"<p><b>"+name+"</b></p>";
   logString=logString+"<H1>"+maintitle+"</H1>";
   logString=logString+"<p class=\"feature\">"+byline+"</p>";
   logString=logString+"<div class=\"grid\">";
@@ -598,15 +625,17 @@ public void writeOutHTML(ArrayList<Book> inputObject, String author, String year
   ArrayList<Book> bookList =inputObject;
   int pagecount=1;
   //path to main .md file
-  String name=this.getFilename(); //this is full path
-  Path path = Paths.get(name);
+  
+  Path path = Paths.get(name); //from filename
   String parent=path.getParent().toString();
-  String fileNoExt=name.substring(0,name.length()-3); //still has a full filepath?
+  //Possibly use Files to do this in future
+  String fileNoExt=myProject.getFilenameNoExt(); //name.substring(0,name.length()-3); //still has a full filepath?
+  //
   String filenamelink="../"+maintitle+".html"; //try to do do relative links here?
   String htmlfilename=fileNoExt+".html"; //local file sysetm
   System.out.println("The parent:"+parent);
-  System.out.println("The filename:"+filename);
   System.out.println("The filelink:"+filenamelink);
+  System.out.println("New function filename no ext:"+fileNoExt);
   System.out.println("The filename no ext:"+name);
   System.out.println("Main title:"+maintitle);
   String newdir="/"+fileNoExt;
@@ -724,7 +753,7 @@ public void setDisplayModeTitles(Integer input){
           item.setDisplayMode(input);
     }
       //'booksOnShelf' is the global arraylist holding books
-      booksOnShelf=myBooksonShelves; //change the pointer
+      myProject.setBooksOnShelf(myBooksonShelves); //change the pointer (if needed?)
     }
     System.out.println("Display Mode set: "+input);
 }
@@ -757,7 +786,7 @@ Integer ycount=0;
         }
     }
     //'booksOnShelf' is the global arraylist holding books
-    myProject.setBooksOnshelf(myBooksonShelves); //change the pointer (if needed?)
+    myProject.setBooksOnShelf(myBooksonShelves); //change the pointer (if needed?)
 }
 
 public void singleSelection(Book thisBook){
@@ -777,8 +806,9 @@ public void singleSelection(Book thisBook){
   refreshSelectedBooksColour();
 }
 
+//no need for these to be sorted
 public void refreshSelectedBooksColour() {
-  ArrayList<Book> sorted= myProject.listBooksShelfOrder(); //can this be stored, only updated when needed?
+  ArrayList<Book> sorted= myProject.getBooksOnShelf(); //can this be stored, only updated when needed?
   Iterator <Book> myIterator = sorted.iterator();
   while(myIterator.hasNext()){
     Book item = myIterator.next();
@@ -1018,7 +1048,7 @@ private void basicFileWriter(String logstring,String filename) {
 private void basicWordWriter(String logstring,String name) {
     //String reportfile=this.templatefolder+filename+".md";
     String myRefFile="wordlib/StylesTemplate.docx";
-    String filename=name.substring(0,name.length()-3)+".docx"; //remove .md  
+    String filename=myProject.getNameNoExt(name)+".docx";//name.substring(0,name.length()-3)+".docx"; //remove .md  
     //we need to take logstring, insert it into document.xml and then zip it up with rest of docx
     File sourceFile = new File("wordlib/LittleDoc.xml");
     String docXML=getFileText(sourceFile); //alternatively, extract from StylesTemplate
@@ -1038,28 +1068,42 @@ public Node getSceneRoot() {
 
 
 //FILE I/O DATA
+/*
 public String getFilename() {
-    return this.filename;
+    return myProject.getFilename();
+}
+*/
+
+//This can be called locally, or from 'Main' class which will setFile initially
+public void setFile(File myFile){
+  myProject.setFile(myFile);
+  this.shelfFileName.setText(myProject.getFilename());
+  this.setTitle(myProject.getFilename()); //update title on window
 }
 
 //set filename to currently open file.
 //add filename to current list view (TO DO: remove once closed)
 public void setFilename(String myFile) {
-    myProject.setFilename(myFile);
-    this.shelfFileName.setText(this.filename);
-    this.setTitle(this.filename); //update title on window
+    myProject.setFilenameFromString(myFile);
+    String fn = myProject.getFilename(); //after checks
+    this.shelfFileName.setText(fn);
+    this.setTitle(fn); //update title on window
 }
 
+/*
 public void setShortFilename(String myFile) {
     //this.shortfilename = myFile;
     myProject.setShortFilename(myFile);
     //this.shelfFileName.setText(this.filename);
 }
+*/
 
+/*
 public String getShortFilename() {
   return myProject.getShortFilename();
     //return this.shortfilename;
 }
+*/
 
 public int getDocCount() {
     return this.doccount;
@@ -1261,8 +1305,9 @@ public void clearAllBooks() {
     this.bookgroupNode.getChildren().clear();
     myProject.clearAllBooks(); 
     this.resetBookOrigin();
-    String title = "default.md";
-    setFilename(title);
+    String title = "default.md"; //this is not a full path cf other situations
+    setFilename(title); //to do - clear all File object in Project?
+    //To do - reconcile data here with Main class and Project class.  Or is just GUI?
     this.parentClass.resetFileNames(title); //to update general file name etc
 }
 
@@ -2177,20 +2222,26 @@ public Book getActiveBook() {
 }
 
 
-//Called by LoadSave and iterates through the nodes in the parsed MD file.
-//Is this deprecated?
+//Called by THIS CLASS [NOT XX LoadSave] and iterates through the nodes in the parsed MD file.
+//Adds a node and (for now) adds it immediately to stage.
+//TO DO: if this is called from parser, why not do entire set, and just layout all blocks in order
+// unless existing coordinates?
+
 public void AddNewBookFromParser(Book newBook) throws NullPointerException {
-    System.out.println("bookgroupNode in AddNewBookFromParser");
-    System.out.println(this.bookgroupNode);
+    
+    //update Data Model and check if myBook is valid.
+    //Book newBook=myProject.addBookToProject(newBook);
     try {
-        addBookToStage(newBook);
-        System.out.println(newBook.toString());
-        //System.exit(0);
+        myProject.addBookToProject(newBook);
+        System.out.println("finished adding new book as data to project");
     }
     catch (NullPointerException e) {
         System.out.println("NullPointerException in AddNewBookFromParser");
         System.exit(0);
     } 
+    //
+    addBookToStage(newBook); //TO DO: just add all books from Parser as a set
+    System.out.println("finished adding new book to stage");
 }
 
 //method to put new book on stage.  cf if you have an existing Book object. addBookToStage
@@ -2214,13 +2265,15 @@ public void addNewBookToView () {
     double ypos=b.getY();
     b.setTranslateX(xpos);
     b.setTranslateY(ypos); 
-    setActiveBook(b);
-    addBookToStage(b); //differs from Main 
+    //setActiveBook(b); //TO DO: as part of adding to stage?
+    //
     if (b==null) {
         System.out.println("Book null in addnodetoview");
         System.exit(0);
     }
-   
+    myProject.addBookToProject(b); //data model
+    //addBookToStage(b); //view.  differs from Main 
+    
     System.out.println("bookgroupNode in addnodetoview");
     System.out.println(this.bookgroupNode);  
 }
@@ -2234,20 +2287,23 @@ TO DO: consider if the 'layer' matters, in terms of positioning this book relati
 
 private void addBookToStage(Book myBook) {
 
-    //update Data Model
-    Book newBook=myProject.addBookToStage(newBook);
-
-    this.bookgroupNode.getChildren().add(newBook);
+    this.bookgroupNode.getChildren().add(myBook);
     
     try { 
-        setActiveBook(newBook); 
+        setActiveBook(myBook); //TO DO - set Active in Data Model for last book added, not every time added to stage.
         }
     catch (NullPointerException e ){
         System.out.println("NullPointer Stage...1:");
         System.exit(0);
     }
-    advanceBookPositionHor();
-    positionBookOnStage(newBook); //snap to shelf after horizontal move    
+    // checks the book position based on current global SpriteX,Y 
+    advanceBookPositionHor();  
+    positionBookOnStage(myBook); //snap to shelf after horizontal move  
+
+    /*
+    System.out.println("bookgroupNode in AddNewBookFromParser");
+    System.out.println(this.bookgroupNode);
+    */
 }
 
 public void removeBookFromStage(Book thisBook) {
