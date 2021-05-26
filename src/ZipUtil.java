@@ -5,10 +5,42 @@ import java.util.*; //scanner, HashMap, ArrayList etc, Zip...
 import java.nio.charset.StandardCharsets; 
 
 public class ZipUtil {
+	//instance variables for Word/docx zip contents
+	String myDocument="";
+	String myStyles="";
+	String myNumbering="";
 
 public ZipUtil() {
 
 }
+
+// -- getters and setters for Word Docs
+
+public String getDocument(){
+	return this.myDocument;
+}
+
+public void setDocument(String input) {
+	this.myDocument=input;
+}
+
+public String getStyles(){
+	return this.myStyles;
+}
+
+public void setStyles(String input) {
+	this.myStyles=input;
+}
+
+public String getNumbering(){
+	return this.myNumbering;
+}
+
+public void setNumbering(String input) {
+	this.myNumbering=input;
+}
+
+//--- main I/O
 
 //input is a File or String?
 public ArrayList<ZipEntry> readZip(String fileZip){
@@ -64,6 +96,14 @@ public String getFileText(File myFile) {
 }
 
 //need to check compression format...
+/* inputs are:
+String myRefFile="wordlib/StylesTemplate.docx";
+fileZip is the .docx file
+docxml is the new document.xml text
+outFile is the output file name (no extension)
+also: target is the internal path inside the zip file for document.xml
+*/
+
 public ArrayList<ZipEntry> readAndReplaceZip(String fileZip, String docxml, String outFile) {
 	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
 	File f = new File(outFile); //outputfile
@@ -137,6 +177,131 @@ public ArrayList<ZipEntry> readAndReplaceZip(String fileZip, String docxml, Stri
 		e.printStackTrace();
 	}
 	return myItemList;
+}
+
+/* extract the document.xml from the opened .docx 
+
+This will update myProject with the content of lvl 0 headings from styles.xml too
+
+*/
+
+/* inputs are:
+A File object with the input file that is selected .docx from FileChooser
+
+Variables used:
+String myRefFile=input file path.  if we are passed a File object, just getPath()
+e..g. "wordlib/StylesTemplate.docx";
+
+target is the internal path inside the zip file for document.xml
+
+fileZip is the local .docx file path, with filename.docx included
+
+outFile is the output file name (no extension).  Unusued
+
+Output: string contents of the document.xml in the .docx file
+
+*/
+
+//read in the document.xml from file
+public docXML OpenDocX(File file) {
+	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
+	String mainfile="word/document.xml";
+	String numfile="word/numbering.xml";
+	String stylesfile="word/styles.xml";
+	String myText=""; //the variable to hold data and return as output
+	String myNum="";
+	String myStyles="";
+	docXML myXML = new docXML(); //class to hold string data
+	try  {
+		//String fileZip = file.getName();
+		String fileZip = file.getPath(); //or use myProject?
+		//file-level streams
+		FileInputStream myFileStream = new FileInputStream(fileZip);
+		ZipInputStream zis = new ZipInputStream(myFileStream);
+
+		//Setup 2 zip streams (these are relative to the input/output files)
+		String outFile = "docOpentest.docx"; //unused
+		File f = new File(outFile); //outputfile
+		FileOutputStream myOutputStream = new FileOutputStream(f);
+		ZipOutputStream out = new ZipOutputStream(myOutputStream,java.nio.charset.StandardCharsets.UTF_8); //utf 8 for docx;
+		
+	    ZipEntry zipItem = zis.getNextEntry();
+	    int count=0;
+	    while (zipItem!= null) {
+	    		 //a ZipEntry is used in the Zip file system.  automatically closes last entry
+	    	count++;
+	    		
+	    	String name = zipItem.getName();
+	    	System.out.println(name);
+	    	//unzip the target file to a String
+	    	if (name.equals(mainfile)) {
+				//we need to buffer the byte reads because we don't know byte size
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+				int rdlength;
+				byte[] data = new byte[1024]; //size for the maximum bytes read at any time
+		    				
+		    	//write the zipped file, as read, to a buffer (i.e. now it is uncompressed)
+				while ((rdlength = zis.read(data,0,data.length)) != -1) {
+						buffer.write(data,0, rdlength); //add our latest bytes to the buffer
+				}
+				buffer.flush(); //finish buffering
+				byte[] byteArray = buffer.toByteArray(); //convert buffer back to byte array of actual length
+				//Obtain the String from the byte buffer
+				myText = new String(byteArray, StandardCharsets.UTF_8);
+				setDocument(myText);
+				//System.out.println(myText);
+				out.closeEntry(); //close our output buffer
+			} //end of target loop.  
+			if (name.equals(numfile)) {
+				//we need to buffer the byte reads because we don't know byte size
+				ByteArrayOutputStream buffer2 = new ByteArrayOutputStream();
+				int rdlength;
+				byte[] data = new byte[1024]; //size for the maximum bytes read at any time
+		    				
+		    	//write the zipped file, as read, to a buffer (i.e. now it is uncompressed)
+				while ((rdlength = zis.read(data,0,data.length)) != -1) {
+						buffer2.write(data,0, rdlength); //add our latest bytes to the buffer
+				}
+				buffer2.flush(); //finish buffering
+				byte[] byteArray = buffer2.toByteArray(); //convert buffer back to byte array of actual length
+				//Obtain the String from the byte buffer
+				myNum = new String(byteArray, StandardCharsets.UTF_8);
+				setNumbering(myNum);
+				//System.out.println(myNum);
+				out.closeEntry(); //close our output buffer
+			} //end of target loop.  Otherwise, do nothing in this loop
+			if (name.equals(stylesfile)) {
+				//we need to buffer the byte reads because we don't know byte size
+				ByteArrayOutputStream buffer2 = new ByteArrayOutputStream();
+				int rdlength;
+				byte[] data = new byte[1024]; //size for the maximum bytes read at any time
+		    				
+		    	//write the zipped file, as read, to a buffer (i.e. now it is uncompressed)
+				while ((rdlength = zis.read(data,0,data.length)) != -1) {
+						buffer2.write(data,0, rdlength); //add our latest bytes to the buffer
+				}
+				buffer2.flush(); //finish buffering
+				byte[] byteArray = buffer2.toByteArray(); //convert buffer back to byte array of actual length
+				//Obtain the String from the byte buffer
+				myStyles = new String(byteArray, StandardCharsets.UTF_8);
+				setStyles(myStyles);
+				//System.out.println(myStyles);
+				out.closeEntry(); //close our output buffer
+				//System.exit(0);
+			}
+			zipItem = zis.getNextEntry();
+	    } //end while
+	    out.close(); //close the output stream and file.  zis?
+	}
+	catch (FileNotFoundException fnf) {
+		System.out.println("FNF Exception");
+		fnf.printStackTrace();
+	}
+	catch (IOException e) {
+		System.out.println("IO Exception");
+		e.printStackTrace();
+	}
+	return myXML;
 }
 
 //need to check compression format...
