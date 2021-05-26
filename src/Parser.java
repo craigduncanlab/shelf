@@ -130,6 +130,19 @@ Parsing algo:
 
 */
 
+/*
+Function to read in a Word docx, sliced as if it were a markdown file...
+However, OOXML files do not have EOL characters,   The <w:p> tags are the principal dividor of text stream.
+Why?  XML defines these 'objects' in the file stream with tags alone.
+
+The input:
+Text of the document.xml (or similar)
+Output:
+Blocks that are not 'lines' with EOL as they are in markdown files , but an array of the <w:p> enclosed tags
+that appear in document.xml files.
+
+*/
+
 //called externally to split up an MD file into separate blocks
 //blocks were originally just an array of Strings split on # 
 
@@ -146,6 +159,15 @@ public ArrayList<String> splitRMDfile(String input) {
 	ArrayList<String> newblocks = packageBlocksFromLines (myLines, fileindex);
 	return newblocks;
 }
+
+/* 
+Function below returns lines in a markdown file.
+
+For OOXML there may not by end of lines like normal text files, 
+so to 'partition' the file into lines, we would have to split it based on suitable OOXML tags
+However, the goal of this s to be able to test individual units of text that might contain a heading.
+So ultimately, we want to split it on <w: or <w:p or similar as I've done in python before
+*/
 
 public ArrayList<String> getFileLines(String input){
 	ArrayList<String>myLines = new ArrayList<String>();
@@ -177,78 +199,148 @@ public ArrayList<Integer> codeMDLines(ArrayList<String>myLines) {
 	ArrayList<Integer> fileindex = new ArrayList<Integer>();
 	
 	for (String thisRow : myLines) {
-		fileindex.add(setMDLineCode(thisRow));
+		int bcode=setMDLineCode(thisRow);
+		fileindex.add(bcode);
 	} 
 	return fileindex;
 }
 
+/* 
+
+This function helps divide up line index codes in RMD file so that they are 0 for main dividers, and then 5 or 6 for notes sections.
+In this way, the file can be divided up into sections (based on 0 codes), but retains the 'notes' information for future internal structure.
+
+
+A complication of rmd files is that a # inside ``` is a comment, not a markdown tag!
+To do: map as FSM and see if the logic can be coded that way.
+
+*/
 public ArrayList<Integer> codeRMDLines(ArrayList<String> myLines) {
-	ArrayList<Integer> fileindex = new ArrayList<Integer>();
+	ArrayList<Integer> fileindex = codeMDLines(myLines);
 	int header = 0;
-	String linePrefix="";
+	int ntest=0;
+	
+	int linecount=0;
+	int blocktype=0;
+
+	//fileindex=codeMDLines(myLines); //simple 0 for headings, otherwise 1. (some will be inside notes) 
+
 	for (String thisRow : myLines) {
-		int blocktype=setMDLineCode(thisRow); //inherit MD
-		//iterative processing of header code, state
-		if (thisRow.length()>=3) {
+		String linePrefix="";
+		String lineSuffix="";
+		//classify as 0 or 1 based on 'heading', for 'split'
+		int bcode = fileindex.get(linecount);
+		//System.out.println(linecount+")"+thisRow+"["+bcode+"]");  
+		//distinguish notes sections first, then check on the # outside this
+        String codetest="```";
+        //int oldcode=fileindex.get(linecount);
+        //System.out.println(linecount+","+oldcode);
+       int rowlength=thisRow.length();
+       if (rowlength>=3) {
 			linePrefix = thisRow.substring(0,3);
+			if (rowlength>linePrefix.length()) {
+				lineSuffix = thisRow.substring(thisRow.length()-3,thisRow.length());
+			}
 		} 
-		else {linePrefix=thisRow;}
-		header = getRMDHeaderCode(linePrefix,header); 
-        switch (header) {
+		else {linePrefix=thisRow;lineSuffix="";}
+		//System.out.println("pre:"+linePrefix+", suf:"+lineSuffix);
+        ntest = getRMDblockstate(rowlength,linePrefix,lineSuffix,ntest,codetest,codetest);  
+        switch (ntest) {
         	case 0:
-        		break;
+        		blocktype=0; //just reset.  No action.
+        		break; //default . no change to blockcodes from MD
         	case 1:
-        		blocktype=3;
+        		blocktype=3; //don't capture (later: capture after the prefix on firstline).
+        		break;
+        	case 2:
+        		blocktype=6; //capture the inside line
         		break;
         	case 3:
-        		blocktype=3;
-        		break;
-        	case 4:
-        		blocktype=4;
+        		blocktype=3;  //don't capture. end of code
+        		break; 	
+        	case 5:
+        		blocktype=5;  //Same line, so reset it here
         		break;
         	default:
         		//no change
         		break;
         }  
-		fileindex.add(blocktype);   
+        if (ntest>0){ //blocktype==3 || blocktype == 5 || blocktype==6
+        	fileindex.set(linecount,blocktype);
+        	//System.out.println(linecount+")"+thisRow+"["+blocktype+"]");  
+        }
+        System.out.println(linecount+")"+thisRow+"["+fileindex.get(linecount)+"] ntest:"+ntest+" blocktype:"+blocktype);  
+		
+       
+		linecount++;
 	}
+	//TO DO: Extend this idea to headers, with the '---' as the search code, and case 2 : blocktype = 4
+	//System.exit(0);
 	return fileindex;
 }
 
-//Stream processor: iteratively processes current line plus 'state' of headercode
- public int getRMDHeaderCode(String visFlag, int hc) {
+
+/*
+Stream processor: iteratively processes current line plus 'state' of a testcode (e.g. "---")
+[model as FSM, or equivalent to regex]
+Cycles through states (#) 0-->1(w) -->2 ::::> (#)2-->3(w)-->0
+This could possibly be generalised to detect first/second tag for any open/close pair
+
+it works with case statements only if you have hardcoded test cases. 
+*/
+
+//START HERE TO DO: ensure it doesn't capture ``` line and then captures inside as 6
+//CUrrently capturing '6' i.e. out=4 for the first line?
+ public int getRMDblockstate(int rowlength,String prefixString, String suffixString,int hc, String testcode, String endcode) {
         //for R markdown, we check any time we find dashes, but only deal with first line
         int out=hc;
-        switch (visFlag) {
-        	case "---":		if (hc==0) {
-        						out=1;}		
-			        		if (hc==4) { //end of header
-			    				out=3;
-							}
-			        		break;
-        	default:
-					//if still in header section but not yet '---'
-        	 		if (hc==1) {
-        	 			out=4;
-        	 		}
-        	 		//outside header, after having parsed it.
-        	 		if (hc==3) {
-        	 			out=0; //back to default.  no change to blockcodes from MD
-        	 		}
-        			break;
-            } 
+        if (prefixString.equals(testcode) && hc==0) {
+			out=1;
+		}	//detected "---" start of coded section	
+		if (prefixString.equals(endcode) && hc==2) {
+			out=3;
+		}	 //detected "---" start of line, but end of coded section
+		if (suffixString.equals(endcode) && out==1) {
+			out=5; //detected "---" endcode on same line;
+		}
+        if (hc==1) {
+        	out=2; //detect string/words (w) shift to inside coded section
+        }
+        if (hc==3 || hc==5) {
+        	out=0; //detect string/words (w) shift back to default.  
+        }
 
     return out;
 }
 
+ public int getRMDcode(String inputString, String suffixString,int hc, String testcode, String endcode) {
+        //for R markdown, we check any time we find dashes, but only deal with first line
+        int out=hc;
+        if (inputString.equals(testcode) && hc==0) {
+			out=1;
+		}	//detected "---" start of coded section	
+		if (suffixString.equals(endcode) && hc==0) {
+			out=5; //detected "---" endcode on same line;
+		}
+		if (inputString.equals(endcode) && hc==2) {
+			out=3;
+		}	 //detected "---" end of coded section
+        if (hc==1) {
+        	out=2; //detect string/words (w) shift to inside coded section
+        }
+        if (hc==3) {
+        	out=0; //detect string/words (w) shift back to default.  
+        }
+
+    return out;
+}
 
 //set a linecode for this line based on a few prefix characters
 //line code distinguishes between division in stream (#) or RMD headers
 
 public int setMDLineCode(String thisRow) {
 		int blocktype=1; //default, even if row length small
-		String firstpart="";
-		//if row is long enough to check for hash prefix
+		//if row is long enough to check for hash prefix; if row is not already inside a notes section
 		if (thisRow.length()>=2) {
 			if (thisRow.substring(0,2).equals("# ")) {
 				return 0;
@@ -257,15 +349,53 @@ public int setMDLineCode(String thisRow) {
      return blocktype;
  }
 
+/*
+
+Set a linecode for this line based on relevant tag in OOXML
+binary distinction here between H1 level and everything else.
+
+The H1string refers to 'ilvl' tag, which is based on the 'indent level' 
+Indent level is Word's way of encoding Heading Styles if one has been applied.
+i.e so we used that convention as an analogue of the # division in markdown.
+Note: ilvl may be a deprecated .doc convention.
+The setting of a w:pStyle w:val="Heading1" with custom name may be only indication in document.xml
+In latest (2021) versions, in order to determine if this is H1, we also need to inspect numbering.xml?
+
+*/
+
+public int setOOXMLLineCode(String thisRow) {
+		int blocktype=1; //default, even if row length small
+		//String H1string="<w:ilvl w:val=\"0\"/>";
+		String H1string="<w:outlineLvl w:val=\"0\"/>"; //w:outlineLvl w:val="0"
+		//if row is long enough to check for hash prefix; if row is not already inside a notes section
+		if (thisRow.length()>=2) {
+			if (thisRow.contains(H1string)) {
+				return 0;
+			}
+			/*
+			if (thisRow.substring(0,2).equals("# ")) {
+				return 0;
+			}
+			*/
+		}
+     return blocktype;
+ }
+
 /* 
-Function: creation of new array of block strings as # portions of original .md or .rmd files
+Function: creation of new array of block strings based on '0 in block index
+(this is Outline Lvl 1 for Word, or # portions of original .md or .rmd files
+
 TO DO:
 This is not using the benefit of the prior scanning i.e. fileindex codes by line and array entries
-In the 'myLines' array we have fileindex array with '0's for # lines and '1's for other lines.
+In the 'myLines' array we have text.  
+In fileindex array : '0's for # lines and '1's for other lines.
 Also '3' for start of R markdown header and '4' for end of R markdown header
+Also '5' and '6' for notes sections.
+
 We could further code the stream (new index, or with further coding)
 One or more passes to code sections with consecutive index codes that then become 'sub-blocks'
 i.e. improve passing on of information to parseMDblock();
+To do: store in a Book data object and refine later.
 */ 
 
 public ArrayList<String> packageBlocksFromLines(ArrayList<String> myLines, ArrayList<Integer> fileindex) {
@@ -289,8 +419,8 @@ public ArrayList<String> packageBlocksFromLines(ArrayList<String> myLines, Array
 				currentblock.append(thisLine); // in any case start a new block, or start first
 				currentblock.append(System.getProperty("line.separator"));
 		}
-		//for linecode = 0 or 1, add and ignore anything else
-		if (linecode<=1) { 
+		//for linecode > 0, add it (could ignore lines with other codes, or pre-process, but don't do it for now)
+		if (linecode>0) { 
 				currentblock.append(thisLine);
 				currentblock.append(System.getProperty("line.separator"));//EOL
 		}
@@ -315,7 +445,7 @@ public ArrayList<String> packageBlocksFromLines(ArrayList<String> myLines, Array
 }
 
 /* 
-Called by parseMDfile() to prepare new index, line by line, 
+Called by parseMDfile() to prepare new index of internal structure of String, line by line, 
 Input : Takes an unprocessed String as input (one that has been constructed from those arrays).
 The string has already been 'split' from a .md file into sections.
 Output: creates a new 'Book' object (the one used for GUI etc) with internal structure from index.
@@ -323,6 +453,11 @@ Output: creates a new 'Book' object (the one used for GUI etc) with internal str
 TO DO:
 This is currently inefficient because the splitting before input created its own index and arrays.
 Past processing is not retained.  As a computing machine, energy is wasted.  *Software as energy paths*
+Create an RMD parser that will separate out the notes from the fileindex codes.
+
+Pass any GUI-specific information (i.e. not part of base RMD) as a separate step.
+e.g X,Y coordinates etc.  This is part of 'symbolic' or 'structural' markdown.
+
 */
 
 public Book parseMDblock(String input) {
@@ -599,6 +734,20 @@ public ArrayList<Integer> makeMDfileindex(String input) {
 
 
 //process/filter a markdown file using the prepared index of line content types
+
+/* Input: 
+a fileindex for the String, for itnernal structure.
+The String itself
+
+TO DO:
+This is currently processing both regular markdown, as well as custom tags like [x,y] for the GUI.
+Try and prepare separate steps.
+The main benefit for markdown processing is to distinguish between notes and other text, 
+which is already done in the earlier steps of preparing the file index.
+
+
+*/
+
 public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		StringBuffer mdStream = new StringBuffer();
 		StringBuffer notesStream = new StringBuffer();
@@ -842,6 +991,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		//could do this in method that receives below but do it here for now
 		return newNode;
 		} //end method
+
 
 //Convert the MD section of current Book to styled Word paragraphs	
 public String getOOXMLfromContents(Book myBook) {
