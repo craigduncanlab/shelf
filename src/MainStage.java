@@ -1,8 +1,15 @@
-//(c) Craig Duncan 2017-2020
+//(c) Craig Duncan 2017-2021
 //www.craigduncan.com.au
 
 //import utilities needed for ArraysLists, lists etc
 import java.util.*; //collections too
+//File i/o
+import java.io.*;
+import java.io.File;
+//for file handling
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 //JavaFX
 import javafx.stage.Stage;
@@ -74,9 +81,6 @@ import javafx.scene.web.HTMLEditor;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-//File i/o
-import java.io.*;
-import java.io.File;
 //Desktop etc and file chooser
 import java.awt.Desktop;
 //collections for listview
@@ -85,10 +89,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.ListChangeListener; //for obs list
 //adding listview
 import javafx.util.Callback; //for listview cells
-//for file handling
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
+
 
 /* Stages will always be on top of the parent window.  This is important for layout
 Make sure the smaller windows are owned by the larger window that is always visible
@@ -281,21 +282,35 @@ public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage
     this.currentFileChooser.getExtensionFilters().add(myExtFilter);
 }
 
+/* 
+Function to set extensions that are permitted to be Opened in open dialogue
+*/
+
 public void setExtensions(){
   String string1="*.md";
   String string2="*.rmd";
+  String string3="*.docx";
   ArrayList<String> myextlist = new ArrayList<String>();
   myextlist.add(string1);
   myextlist.add(string2);
-  myExtFilter = new FileChooser.ExtensionFilter("Shelf markdown",myextlist);
+  myextlist.add(string3);
+  myExtFilter = new FileChooser.ExtensionFilter("Stream formats",myextlist);
 }
 
-//this takes full path as input, or other?
+/* This function checks to see what filename extension is, and sets ones app recognises
+
+Based on this, it will set the kind of file the project is working with as an input.
+This will affect how the program interprets input, and converts to OOP etc
+
+TO DO: check minimum filename length of 5
+
+*/
 public Boolean checkExtensions(File file){
     String thefilename=file.getName();
     String ext1=thefilename.substring(thefilename.length() - 3);
     String ext2=thefilename.substring(thefilename.length() - 4);
-    //for now have 1 parser for these two file types
+    String ext3=thefilename.substring(thefilename.length() - 5);
+    
     if (ext1.equals(".md")==true) {
       myProject.setExtension("md");
       return true;
@@ -305,32 +320,234 @@ public Boolean checkExtensions(File file){
       myProject.setExtension("rmd");
       return true;
     }
+
+     else if (ext3.equals(".docx")==true){
+      myProject.setExtension("docx");
+      return true;
+    }
     else {
       return false;
     }
 }
 
-//input is File, so setting filename sets full local path
-public void processMarkdown(File file) {
-    System.out.println("processing markdown file...");
+/*
+
+Opens up a file, creates a generic 'block' object to hold meaningful divisions in file,
+creates an array of those blocks for the GUI.
+
+This does not internally process the blocks to distinguish notes and other text, but this is easy to do for markdown since this is already coded for .
+
+*/
+
+public ArrayList<Book> openFileGetBooklist(File file) {
+    System.out.println("processing docx/markdown file...");
     System.out.println(file.toString()); // this is full path
     String thefilename=file.getName();
-    Boolean isOK = checkExtensions(file);
-    if (isOK==true) {
-      //TemplateUtil myUtil = new TemplateUtil();
-      setFile(file);
-      String contents = getFileText(file);
-      //Recents myR = new Recents();
-      //myR.updateRecents(file.getName());
+    Boolean isOK = checkExtensions(file); //also sets extensions in myProject
+    ArrayList<Book> myBookSet = new ArrayList<Book>();
+    Parser myParser=new Parser();
+    //File splitting, depending on file type
+
+    if (isOK==true && myProject.getExt().equals("md")) {
+        setFile(file);
+        mdFile myMD = new mdFile();
+        myMD.openMD(file);
+        myBookSet=myMD.getBooklist();
+    } 
+    //should return file split into blocks per #
+    if (isOK==true && myProject.getExt().equals("rmd")) {
+        setFile(file);
+        System.out.println("Processing RMD file.");
+        mdFile myRMD = new mdFile();
+        myBookSet=myRMD.getBooklist();
+    }
+    if (isOK==true && myProject.getExt().equals("docx")) {
+        //integrate filename information into docx object?
+        setFile(file);
+        String fn=myProject.getFilenameNoExt();
+        String filename=fn+"_2.docx";
+        myProject.setFilenameFromString(filename); //update it so it doesn't save over old docx
+        System.out.println(myProject.getFilename());
+
+        docXML myDoc = new docXML();
+        myDoc.openDocx(file); 
+        myBookSet=myDoc.getBooklist(); //Change to non JavaFX dependency
+    }
+    return myBookSet;
+    }
+
+public void unpackBooksAsCol(File file) {
+    ArrayList<Book> myBooks = openFileGetBooklist(file);
+    //System.out.println("Book count myBooks:"+myBooks.size());
+    //System.exit(0);
+    addBooksVerticalFromBooklist(myBooks);
+}
+
+public void unpackBooksAsRow(File file) {
+    ArrayList<Book> myBooks = openFileGetBooklist(file);
+    addBooksHorizontalFromBooklist(myBooks);
+}
+
+public void AddNewBookToStage(Book newBook) throws NullPointerException {
+     
+    //update Data Model and check if myBook is valid.
+    //Book newBook=myProject.addBookToProject(newBook);
+    try {
+        myProject.addBookToProject(newBook);
+        setActiveBook(newBook);
+        System.out.println("finished adding new book to project.  R,C:"+newBook.getRow()+","+newBook.getCol());
+        this.bookgroupNode.getChildren().add(newBook);
+        setXYfromRowCol(newBook);
+        //positionBookOnStage(newBook);  //not needed outside drags
+    }
+    catch (NullPointerException e) {
+        System.out.println("NullPointerException in AddNewBookToStage");
+        System.exit(0);
+    } 
+    //
+    //addBookToStage(newBook); //TO DO: just add all books from Parser as a set
+    System.out.println("finished adding new book to stage");
+}
+
+/*
+Internal method to add sprite to the Group/Pane of this Node Viewer 
+This is to add an existing GUI 'box/node' to the Child Node section of this Viewer.
+i.e. this adds a specific object, rather than updating the view from whole underlying data set.
+TO DO: consider if the 'layer' matters, in terms of positioning this book relative to others.
+*/
+
+/*
+private void addBookToStage(Book myBook) {
+
+    this.bookgroupNode.getChildren().add(myBook);
+    
+    try { 
+        setActiveBook(myBook);
+         //TO DO - set Active in Data Model for last book added, not every time added to stage.
+        }
+    catch (NullPointerException e ){
+        System.out.println("NullPointer Stage...1:");
+        System.exit(0);
+    }
+    // checks the book position based on current global SpriteX,Y 
+    
+    advanceBookPositionHor(); 
+    positionBookOnStage(myBook); //snap to shelf after horizontal move  
+
+}
+*/
+
+/* input:
+The blocklist (strings) plus docXML info to obtain metadata
+//TO DO: Use objects/Project data model to store/get blocklists, rather than arbitrary blocklists.
+Two steps here:
+Update the GUI location for the blocks
+Add the blocks to stage.
+Have MainStage functions that will add blocks vertically or horizontally (2 Views)
+
+TO DO: Have a separate data object that can be created by file format classes:
+One that has no JavaFX dependencies.
+
+*/
+public void addBooksVerticalFromBooklist(ArrayList<Book> myBookSet){
+  //not yet the project booklist? DO THAT.  get these books from project.
+  int length = myBookSet.size();  // number of blocks
+  System.out.println(length); //each of these numbered blocks is a string.
+  int rowcount=0;
+  if (length>0) {
+    Iterator<Book> iter = myBookSet.iterator(); 
+      while (iter.hasNext()) {
+          Book thisBook =iter.next(); 
+          //
+          if (thisBook!=null) {
+           
+            //set position as part of data model
+            thisBook.setRow(rowcount); //default col is 0.
+            thisBook.setCol(0);
+            }
+            else {
+              System.out.println("No book to add");
+            }
+            //Stage/GUI parameters. TO DO: Separate Book data from the JavaFX aspects.
+            thisBook.setHandlers(PressBox,DragBox);
+            setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
+            System.out.println("Book to be added: X:"+thisBook.getX()+" Y:"+thisBook.getY()+" R:"+thisBook.getRow()+" C:"+thisBook.getCol());
+            AddNewBookToStage(thisBook); //adds new book to myProject books (and stage) 
+            rowcount++;
+          } //end while
+     } //end if
+  } 
+
+//TO DO: Allow function to take a row number for insert.
+
+public void addBooksHorizontalFromBooklist(ArrayList<Book> myBookSet){
+  //not yet the project booklist? DO THAT.  get these books from project.
+  int length = myBookSet.size();  // number of blocks
+  System.out.println(length); //each of these numbered blocks is a string.
+  int colcount=1;
+  if (length>0) {
+    Iterator<Book> iter = myBookSet.iterator(); 
+      while (iter.hasNext()) {
+          Book thisBook =iter.next(); 
+          //
+          if (thisBook!=null) {
+            System.out.println("Starting iteration of block lines in MD");
+            //set position as part of data model
+            thisBook.setCol(colcount); //default col is 0.
+            thisBook.setRow(1);
+            }
+            else {
+              System.out.println("No book to add");
+            }
+            //Stage/GUI parameters. TO DO: Separate Book data from the JavaFX aspects.
+            thisBook.setHandlers(PressBox,DragBox); //in case not set
+            setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
+            AddNewBookToStage(thisBook); //adds new book to myProject books (and stage) 
+            colcount++;
+          } //end while
+     } //end if
+  } 
+
+public void wrapBooksHorizontalFromBooklist(ArrayList<Book> myBookSet){
+  //not yet the project booklist? DO THAT.  get these books from project.
+  int length = myBookSet.size();  // number of blocks
+  System.out.println(length); //each of these numbered blocks is a string.
+  int colcount=0;
+  int rowcount=1;
+  if (length>0) {
+    Iterator<Book> iter = myBookSet.iterator(); 
+      while (iter.hasNext()) {
+          Book thisBook =iter.next(); 
+          //
+          if (thisBook!=null) {
+            System.out.println("Starting iteration of block lines in MD");
+            //set position as part of data model
+            thisBook.setRow(colcount); //default col is 0.
+            thisBook.setRow(rowcount);
+            }
+            else {
+              System.out.println("No book to add");
+            }
+            //Stage/GUI parameters. TO DO: Separate Book data from the JavaFX aspects.
+            thisBook.setHandlers(PressBox,DragBox); //in case not set
+            setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
+            AddNewBookToStage(thisBook); //adds new book to myProject books (and stage) 
+          } //end while
+          colcount++;
+          if (colcount>10) {
+            colcount=0;
+            rowcount=rowcount+1;
+          }
+     } //end if
+  } 
+
+//Take a raw file, split into sections, and convert to Books...
+//TO DO: use a different function for docx
+//deprecated?
+
+public void addBooksFromBlocklist(ArrayList<String> blocklist){
       Parser myParser=new Parser();
-      // Split the MD file.  
-      ArrayList<String> blocklist = new ArrayList<String>();
-      if (myProject.getExt().equals("md")) {
-          blocklist = myParser.splitMDfile(contents);
-      } //should return file split into blocks per #
-      if (myProject.getExt().equals("rmd")) {
-          blocklist = myParser.splitRMDfile(contents);
-      }
+      //starting with the blocklist, get blocks and put each one inside a 'Book' object
       int length = blocklist.size();  // number of blocks
       System.out.println(length); //each of these numbered blocks is a string.
       if (length>0) {
@@ -340,22 +557,19 @@ public void processMarkdown(File file) {
               if (newBook!=null) {
                 System.out.println("Starting iteration of block lines in MD");
                 //To DO: Do not add to stage until complete
-                AddNewBookFromParser(newBook);
+                AddNewBookToStage(newBook); //adds new book to myProject books
               }
               else {
                 System.out.println("Nothing returned from parser");
               }
          } //end while
       } //end if
-      else {
-        System.out.println("No blocks returned from file split");
-      }
-      System.out.println("Finished parse in 'open button' makeStage");
-      //LoadSave.this.ListOfFiles();// print out current directory
-    }
 }
 
 //Simple utility to return contents of file as String
+//This is used to read in styles for Word doc output.
+// TO DO: create a docx class for output, store styles in there.
+
 public String getFileText(File myFile) {
   StringBuffer myText = new StringBuffer(); //mutable String
   String endOfLine="\n"; //to do - operating system independent
@@ -386,6 +600,39 @@ public String getFileText(File myFile) {
   return myText.toString();
 }
 
+
+//use row for positions
+//NO need to return file as it will be stored in specific file that is opened.
+//TO DO: Describe funciton as 'Open File as Row'?
+public void openFileAsRow(Integer row) {
+        this.spriteX=(int)convertColtoX(0);
+        this.spriteY=(int)convertRowtoY(row);
+        System.out.println("Row check:"+row+", spriteY:"+this.spriteY);
+        //System.exit(0);
+        // final FileChooser fileChooser = new FileChooser();
+        File file = new File (myProject.getFilename());
+        if (file==null) {
+            file = new File ("untitled.md");
+        } 
+        Stage myStage = new Stage();
+        myStage.setTitle("Open File");
+        this.currentFileChooser.setTitle("Open A File");
+        //this.currentFileChooser.setSelectedExtensionFilter(this.myExtFilter);   
+        this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
+        File tryfile = currentFileChooser.showOpenDialog(myStage);
+        if (tryfile != null) {
+          file = tryfile;
+          unpackBooksAsRow(file); 
+        } 
+        else {
+            //DO SOMETHING
+        }
+    //return file;
+}
+
+//TO DO: vary data per input file type. Separate data from GUI.
+//This file should take a blocklist and represent it as row, not handle the parsing.
+/*
 public void processMarkdownAsRow(File file) {
   //String filename=System.out.print(file.toString()); // this is full path
     Boolean isOK = checkExtensions(file);
@@ -415,7 +662,7 @@ public void processMarkdownAsRow(File file) {
                 System.out.println("Starting iteration of block lines in MD");
                 //Originally, this checked the location of each book, but what if new file?
                 //What if no current GUI information?
-                AddNewBookFromParser(newBook);
+                AddNewBookToStage(newBook);
               }
          } //end while
       } //end if
@@ -424,7 +671,10 @@ public void processMarkdownAsRow(File file) {
       //LoadSave.this.ListOfFiles();// print out current directory
     }
 }
+*/
 
+
+//what is returned by getrow?
 public Integer getRowofActiveBook() {
     Integer row=0;
     Book thisBook = getActiveBook();
@@ -436,8 +686,10 @@ public Integer getRowofActiveBook() {
 
 //use row for positions
 //This is called from 'Main' so it returns the 'File' for future use.
+//TO DO: store in myproject.
 //It could equally return the 'myProject' object that contains file details etc?
-public File openMarkdown() {
+//Distinguish between 'Import to Project' and 'Open to GUI and show contents' (as here)
+public File openNewFile() {
         //System.exit(0);
         // final FileChooser fileChooser = new FileChooser();
         File file = new File (myProject.getFilename()); //just in case
@@ -447,14 +699,16 @@ public File openMarkdown() {
         } 
         Stage myStage = new Stage();
         myStage.setTitle("Open File");
-        this.currentFileChooser.setTitle("Open A Shelf File");
+        this.currentFileChooser.setTitle("Open A File");
         //this.currentFileChooser.setSelectedExtensionFilter(this.myExtFilter);   
         this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
         //Now try and get File
         File tryfile = currentFileChooser.showOpenDialog(myStage);
         if (tryfile != null) {
           file = tryfile;
-          processMarkdown(file); //this will setFile(file) and get data
+          
+          //if markdown activate process markdown directly
+          unpackBooksAsCol(file); //this will setFile(file) and get data
           //TO DO: Event so that double clicking on filename opens it?
           myFileList.add(file.getName()); //add string reference
           myObList.setAll(myFileList); //does a clear and refresh?
@@ -464,37 +718,11 @@ public File openMarkdown() {
         else {
             //DO SOMETHING
         }
-    System.out.println("Finished processing file in MainStage");
+    System.out.println("Finished processing file for MainStage");
     return file; 
 }
 
-//use row for positions
-public File openMarkdownAsRow(Integer row) {
-        this.spriteX=(int)convertColtoX(0);
-        this.spriteY=(int)convertRowtoY(row);
-        System.out.println("Row check:"+row+", spriteY:"+this.spriteY);
-        //System.exit(0);
-        // final FileChooser fileChooser = new FileChooser();
-        File file = new File (myProject.getFilename());
-        if (file==null) {
-            file = new File ("untitled.md");
-        } 
-        Stage myStage = new Stage();
-        myStage.setTitle("Open File");
-        this.currentFileChooser.setTitle("Open A Shelf File");
-        //this.currentFileChooser.setSelectedExtensionFilter(this.myExtFilter);   
-        this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
-        File tryfile = currentFileChooser.showOpenDialog(myStage);
-        if (tryfile != null) {
-          file = tryfile;
-          processMarkdownAsRow(file);
-          setFile(file);
-        } 
-        else {
-            //DO SOMETHING
-        }
-    return file;
-}
+
 
 //for save as
 public void saveAs() {
@@ -540,9 +768,12 @@ public void writeFileOut() {
     //using existing filename
     ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();//getBooksOnShelf();
     writeOutBooks(mySaveBooks);
+    //we could only do this if needed (i.e. if original file was docx?). cf export md to Word, vs resave
     writeOutWord(mySaveBooks);
     String author="Craig Duncan";
     String year="2021";
+    System.out.println("Debugging break in writeFileOut - MainStage");
+    System.exit(0);
     writeOutHTML(mySaveBooks,author,year);
 }
 
@@ -575,7 +806,12 @@ public void writeOutWord(ArrayList<Book> mySaveBooks) {    //
          while (myIterator.hasNext()) {
             Book myNode=myIterator.next();
             //System.out.println(myNode.toString());
-            String myWordString=myP.getOOXMLfromContents(myNode); //this gets wordcodes every time
+            
+            String myWordString = myNode.getOOXMLtext();
+
+            //Convert text to OOXML
+            //String myWordString=myP.getOOXMLfromContents(myNode); //this gets wordcodes every time
+            
             myWordOutput.append(myWordString);
             myWordString="";
              //option: prepare string here, then write once.
@@ -626,7 +862,7 @@ public void writeOutHTML(ArrayList<Book> inputObject, String author, String year
   int pagecount=1;
   //path to main .md file
   
-  Path path = Paths.get(name); //from filename
+  Path path = Paths.get(name); //from filename.  But if you have changed this?
   String parent=path.getParent().toString();
   //Possibly use Files to do this in future
   String fileNoExt=myProject.getFilenameNoExt(); //name.substring(0,name.length()-3); //still has a full filepath?
@@ -770,13 +1006,6 @@ Integer xcount=0;
 Integer ycount=0;
     for (int x=0;x<booknum;x++) {
         Book item = myBooksonShelves.get(x);
-        item.setRow(ycount);
-        item.setCol(xcount);
-        double newX=convertColtoX(xcount);
-        item.setX(newX);
-        double newY=convertRowtoY(ycount);
-        item.setY(newY);
-        //index 9 is the 10th column
         if (xcount<9) {
           xcount=xcount+1;
         }
@@ -784,25 +1013,34 @@ Integer ycount=0;
           xcount=0;
           ycount=ycount+1;
         }
+        setXYfromNewRowCol(item,ycount,xcount);
     }
     //'booksOnShelf' is the global arraylist holding books
     myProject.setBooksOnShelf(myBooksonShelves); //change the pointer (if needed?)
 }
 
 public void singleSelection(Book thisBook){
+  System.out.println(selectedBooks.toString());
   int numsel=selectedBooks.size();
   if (numsel!=0) {
     for (int x=0;x<numsel;x++){
       selectedBooks.get(x).endAlert(); //option: remove objects from old array
     }
   }
+  else {
+      System.out.println("No selected books");
+  }
   ArrayList<Book> newSelection= new ArrayList<Book>();
+
   newSelection.add(thisBook);
   this.focusBook=thisBook;
-  thisBook.doAlert(); //change this so there is a general 'undo alert'
+  
+  
+  thisBook.doAlert(); //Change this so there is a general 'undo alert'
   selectedBooks=newSelection;
   int nums=selectedBooks.size();
   //refresh selected books
+  //System.out.println(thisBook.getOOXMLtext()); 
   refreshSelectedBooksColour();
 }
 
@@ -2103,7 +2341,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                 if (ke.isMetaDown() && ke.getCode().getName().equals("O")) {
                      System.out.println("CMD-O pressed for open");
                      Integer row = 0;
-                     MainStage.this.openMarkdown();
+                     MainStage.this.openNewFile();
                      //currentBook.cycleBookColour();
                 }
                 //Stage_WS.addNewBookToView();
@@ -2132,7 +2370,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                         double xp=MainStage.this.clipboardBook.getX();
                         MainStage.this.clipboardBook.setX(xp+cellgap_x); //offset
                         System.out.println(MainStage.this.clipboardBook+", check: "+myBook);
-                        MainStage.this.AddNewBookFromParser(MainStage.this.clipboardBook);
+                        MainStage.this.AddNewBookToStage(MainStage.this.clipboardBook);
                         //System.exit(0);
                      }  
                 }
@@ -2194,6 +2432,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
 
 //set active sprite.  if problem with tracker, ignore.
 public void setActiveBook(Book b) {
+
    singleSelection(b);
   /*
     try {
@@ -2219,29 +2458,6 @@ public Book getActiveBook() {
         return null;//just creates one
     }
     return this.focusBook;
-}
-
-
-//Called by THIS CLASS [NOT XX LoadSave] and iterates through the nodes in the parsed MD file.
-//Adds a node and (for now) adds it immediately to stage.
-//TO DO: if this is called from parser, why not do entire set, and just layout all blocks in order
-// unless existing coordinates?
-
-public void AddNewBookFromParser(Book newBook) throws NullPointerException {
-    
-    //update Data Model and check if myBook is valid.
-    //Book newBook=myProject.addBookToProject(newBook);
-    try {
-        myProject.addBookToProject(newBook);
-        System.out.println("finished adding new book as data to project");
-    }
-    catch (NullPointerException e) {
-        System.out.println("NullPointerException in AddNewBookFromParser");
-        System.exit(0);
-    } 
-    //
-    addBookToStage(newBook); //TO DO: just add all books from Parser as a set
-    System.out.println("finished adding new book to stage");
 }
 
 //method to put new book on stage.  cf if you have an existing Book object. addBookToStage
@@ -2276,34 +2492,6 @@ public void addNewBookToView () {
     
     System.out.println("bookgroupNode in addnodetoview");
     System.out.println(this.bookgroupNode);  
-}
-
-/*
-Internal method to add sprite to the Group/Pane of this Node Viewer 
-This is to add an existing GUI 'box/node' to the Child Node section of this Viewer.
-i.e. this adds a specific object, rather than updating the view from whole underlying data set.
-TO DO: consider if the 'layer' matters, in terms of positioning this book relative to others.
-*/
-
-private void addBookToStage(Book myBook) {
-
-    this.bookgroupNode.getChildren().add(myBook);
-    
-    try { 
-        setActiveBook(myBook); //TO DO - set Active in Data Model for last book added, not every time added to stage.
-        }
-    catch (NullPointerException e ){
-        System.out.println("NullPointer Stage...1:");
-        System.exit(0);
-    }
-    // checks the book position based on current global SpriteX,Y 
-    advanceBookPositionHor();  
-    positionBookOnStage(myBook); //snap to shelf after horizontal move  
-
-    /*
-    System.out.println("bookgroupNode in AddNewBookFromParser");
-    System.out.println(this.bookgroupNode);
-    */
 }
 
 public void removeBookFromStage(Book thisBook) {
@@ -2466,10 +2654,36 @@ public double convertColtoX(Integer myCol) {
 }
 
 /*
+Function to update Book X,Y position based on Row,Col coordinates
+
+*/
+
+public void setXYfromRowCol(Book myBook) {
+    int minimumY=40;
+    double newY=this.cellgap_y*myBook.getRow()+minimumY;
+    double newX=this.cellgap_x*myBook.getCol();
+    myBook.setXY(newX,newY);
+}
+
+/*
+Function to update Book X,Y position based on Row,Col coordinates
+*/
+
+public void setXYfromNewRowCol(Book myBook, Integer row, Integer col) {
+    int minimumY=40;
+    double newY=this.cellgap_y*row+minimumY;
+    double newX=this.cellgap_x*col;
+    myBook.setXY(newX,newY);
+}
+
+/*
 public ArrayList<Book> getBooksOnShelf() {
     return this.booksOnShelf;
 }
 */
+
+
+//TO DO: simplify so that Row,Col is used if not being dragged.
 
 public void positionBookOnStage(Book myBook) {
         
@@ -2507,7 +2721,7 @@ private void newBookColumn() {
 }
 
 //TO DO: Reset sprite positions when re-loading display.  To match a Grid Layout.
-//Layout horizontall on one shelf.
+//TO DO: use Row, Col and convert to abs X,Y later
 private void advanceBookPositionHor() {
         if (this.spriteX>((this.cellcols+1)*this.cellgap_x)) {
                 this.spriteY=spriteY+this.cellgap_y; //drop down

@@ -127,6 +127,9 @@ TextArea filepathTextArea = new TextArea();
 TextArea imagepathTextArea = new TextArea();
 TextArea urlTextArea = new TextArea();
 TextArea mdTextTabA = new TextArea();
+TextArea mdTextTabB = new TextArea();
+TextArea mdTextTabC = new TextArea();
+TextArea mdTextTabD = new TextArea();
 TabPane mdTabPane = new TabPane();
 TextArea bookLabelTextArea = new TextArea();
 TextArea codeNotesTextArea = new TextArea();
@@ -317,10 +320,11 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
     System.out.println("is Control Down: " + ke.isControlDown());
     System.out.println("is Meta(Command) Down: " + ke.isMetaDown());
     //'live' conversion of typing into HTML (not as efficient but typists don't notice)
+    
     Book targetBook = BookMetaStage.this.getActiveBook();
     targetBook.setMD(mdTextTabA.getText()); //cf updateBookMeta
     BookMetaStage.this.updateHTMLpreview(targetBook);
-
+    mdTextTabB.setText(targetBook.getHTML());
     //shortcuts
     if (ke.isMetaDown() && ke.getCode().getName().equals("Z")) {
          System.out.println("CMD-Z pressed");
@@ -653,6 +657,14 @@ public void restoreBookMeta() {
         dateLabelTextArea.setText(updateNode.getdate());
         timeLabelTextArea.setText(updateNode.gettime());
         mdTextTabA.setText(updateNode.getMD()); //update the markdown text
+        /*
+        mdTextTabB.setText(updateNode.getHTML()); 
+        mdTextTabC.setText(updateNode.getOOXML());
+        mdTextTabD.setText(updateNode.getNotes());  
+        */
+        mdTextTabB.setText("test B"); 
+        mdTextTabC.setText("test C");
+        mdTextTabD.setText("test D");
         codeNotesTextArea.setText(updateNode.getNotes());
         visibleCheck.setSelected(updateNode.getVisible()); //check box
         outputTextArea.setText(updateNode.getOutputText()); //output node contents
@@ -829,6 +841,19 @@ private void makeSceneForBookMetaView() {
         mdTextTabA.setPrefRowCount(20); //for markdown.  Add to boxPane
         mdTextTabA.setWrapText(true);
         mdTextTabA.setStyle(terminalStyle);
+
+        mdTextTabB.setPrefRowCount(20); //for markdown.  Add to boxPane
+        mdTextTabB.setWrapText(true);
+        mdTextTabB.setStyle(terminalStyle);
+
+        mdTextTabC.setPrefRowCount(20); //for markdown.  Add to boxPane
+        mdTextTabC.setWrapText(true);
+        mdTextTabC.setStyle(terminalStyle);
+
+        mdTextTabD.setPrefRowCount(20); //for markdown.  Add to boxPane
+        mdTextTabD.setWrapText(true);
+        mdTextTabD.setStyle(terminalStyle);
+
         imagepathTextArea.setPrefRowCount(1);
         filepathTextArea.setPrefRowCount(1);
         urlTextArea.setPrefRowCount(1);
@@ -890,20 +915,20 @@ private void makeSceneForBookMetaView() {
 
           //Create Tabs for Tab Pane, which will sit inside editor
           Tab tabA = new Tab();
-          tabA.setText("Tab A");
+          tabA.setText("Markdown");
           tabA.setContent(mdTextTabA); //can we put a text area inside a tab?
           mdTabPane.getTabs().add(tabA);
           Tab tabB = new Tab();
-          tabB.setText("Tab B");
-          //tabB.setContent(tv2); //this should be
+          tabB.setText("HTML");
+          tabB.setContent(mdTextTabB); //this should be
           mdTabPane.getTabs().add(tabB);
           Tab tabC = new Tab();
-          tabC.setText("Tab C");
-          //tabC.setContent(tv2); //this should be another text area
+          tabC.setText("OOXML");
+          tabC.setContent(mdTextTabC); //this should be another text area
           mdTabPane.getTabs().add(tabC);
           Tab tabD = new Tab();
-          tabD.setText("Tab D");
-          //tabC.setContent(tv2); //this should be another text area (judgment/conclusion)
+          tabD.setText("Notes");
+          tabD.setContent(mdTextTabD);
           mdTabPane.getTabs().add(tabD);
 
         //handle null case

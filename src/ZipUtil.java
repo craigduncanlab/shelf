@@ -5,7 +5,7 @@ import java.util.*; //scanner, HashMap, ArrayList etc, Zip...
 import java.nio.charset.StandardCharsets; 
 
 public class ZipUtil {
-	//instance variables for Word/docx zip contents
+	//instance variables to store unzipped Word/docx contents
 	String myDocument="";
 	String myStyles="";
 	String myNumbering="";
@@ -203,7 +203,7 @@ Output: string contents of the document.xml in the .docx file
 */
 
 //read in the document.xml from file
-public docXML OpenDocX(File file) {
+public void OpenDocX(File file) {
 	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
 	String mainfile="word/document.xml";
 	String numfile="word/numbering.xml";
@@ -211,7 +211,6 @@ public docXML OpenDocX(File file) {
 	String myText=""; //the variable to hold data and return as output
 	String myNum="";
 	String myStyles="";
-	docXML myXML = new docXML(); //class to hold string data
 	try  {
 		//String fileZip = file.getName();
 		String fileZip = file.getPath(); //or use myProject?
@@ -301,7 +300,7 @@ public docXML OpenDocX(File file) {
 		System.out.println("IO Exception");
 		e.printStackTrace();
 	}
-	return myXML;
+	//return myXML;
 }
 
 //need to check compression format...

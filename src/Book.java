@@ -63,6 +63,7 @@ String time="";
 String output="";
 String htmlString="";
 String mdString="";
+String OOXMLtext="";
 Boolean visible = true;
 Text bookspinetext = new Text ("new book");//Default label text for every Book
 double myXpos = 100; //default for shelves. not needed?
@@ -106,6 +107,19 @@ public Book(EventHandler PressBox, EventHandler DragBox, String label, String te
     FXsetup();
 }
 
+//constructor for OOXML (docx) files
+public Book(String ooxml) {
+	setOOXMLtext(ooxml);
+	setMD(ooxml);   
+}
+
+//Function to set GUI event handlers separate to main data
+public void setHandlers(EventHandler PressBox, EventHandler DragBox){
+	setPressBox(PressBox); //local
+    setDragBox(DragBox);
+    FXsetup(); //will this work?
+}
+
 //general update text function
 public void updateMDText(String label, String text, String note) {
 	//setDocName(name);
@@ -134,6 +148,19 @@ public void updateEditedText(String filepath,String urlpath, String imagepath, S
     setNotes(note);
     setCode(code);
 }
+
+
+// --- OOXML
+
+public String getOOXMLtext(){
+	return this.OOXMLtext;
+}
+
+public void setOOXMLtext(String input){
+	this.OOXMLtext=input;
+}
+
+// -- project info ---
 
 //return the meta info regarding filepath
 public String getdocfilepath() {
@@ -732,6 +759,7 @@ public Book cloneBook() {
 No position data is set here for the actual Stackpane.
 Position can also be set externally by the calling class */
 
+//Initial GUI setup
 public void FXsetup() {
     this.myBookIcon = new BookIcon();   //Uses defaults.
     Font boxfont=Font.font ("Arial", 12); //check this size on monitor/screen.  cf Verdana
@@ -761,13 +789,12 @@ private void updatePosition() {
     this.setTranslateX(this.myXpos);
 	this.setTranslateY(this.myYpos);
 }
- 
+
 //helper function to return label of underlying BookIcon 
 public String getLabel() {
     return this.booklabel; //return the stored value, not the book spine
     //this.bookspinetext.getText();
 }
-
 
 private void setVisibleNodeText(String myLabel) {
 	if (myLabel.length()>50) {
@@ -793,7 +820,7 @@ public Boolean isAlert() {
 //helper function to set alert and update appearance
 public void doAlert() {
     this.isAlert=true;
-    updateAppearance();
+    updateAppearance(); //<--bug here.
 }
  public void endAlert() {
     this.isAlert=false;

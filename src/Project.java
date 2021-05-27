@@ -17,11 +17,12 @@ String filename = "";
 String shortfilename=""; //current filename for saving this project's contents
 String extension="";
 String Rmd_header="";
+ArrayList<String> docxStyles;
 
 
 //constructor
 public Project() {
-
+    docxStyles = new ArrayList<String>();
 }
 
 // --- FILE OPERATIONS (BASED ON IO.FILE FOR NOW)
@@ -90,6 +91,17 @@ public String getFilenameNoExt(){
 public String getNameNoExt(String name){
 	String output = name.substring(0,name.lastIndexOf("."));
     return output;
+}
+
+// -- METADATA FOR DOCX PROJECTS
+
+public void setdocxStyles(ArrayList<String> input){
+    this.docxStyles=input;
+}
+
+
+public ArrayList<String> getdocxStyles(){
+    return this.docxStyles;
 }
 
 // --- PRESERVE METADATA FOR R MARKDOWN and/or Markdown

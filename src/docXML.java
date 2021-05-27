@@ -10,7 +10,9 @@ String docStylesString;
 String docNumberingString;
 ArrayList<String> docxStyles;
 ArrayList<String> lvl0StyleNames;
-ArrayList<String> headingTextList;		
+ArrayList<String> headingTextList;
+ArrayList<String> blocklist;
+ArrayList<Book>  booklist;		
 
 //constructor
 public docXML() {
@@ -20,22 +22,30 @@ public docXML() {
 
 //-- LOADER
 
+/* 
+Since the .docx format is compressed and based on OOXML, it needs to be unzipped, then the contents extracted.
+Those contents need to be interpreted to find out the 'intent' of paragraph properties like styles, numbering.
+It is best to store them in-memory to work on them later
+*/
+
 public void openDocx(File file){
       ZipUtil myZip = new ZipUtil();
       myZip.OpenDocX(file);
       setDocString(myZip.getDocument());
       setStylesString(myZip.getStyles()); //sets string and populates list
       setDocNumberingString(myZip.getNumbering());
+      //populate blocklist for future use
+      setInitialBlocklist();
+      makeBooksFromBlocklist();
 }
 
 //--blocklist for main API
-public ArrayList<String> getBlocklist() {
+
+public void setInitialBlocklist() {
     ArrayList<String>myLines = getOOXMLParasInclusive(); 
     ArrayList<Integer> fileindex = codeOOXMLLines(myLines);//TO DO - Lines format should save headings too
-    //System.out.println("Processing Word file:" + contents);
     Parser myParser=new Parser();
-    ArrayList<String> blocklist = myParser.packageBlocksFromLines(myLines,fileindex); 
-    return blocklist;
+    setBlocklist(myParser.packageBlocksFromLines(myLines,fileindex)); 
 }
 
 // -- METADATA FOR DOCX PROJECTS
@@ -96,6 +106,25 @@ public void setDocNumberingString(String input) {
 public String getDocNumberingString() {
     return this.docNumberingString;
 }
+
+// - BLOCKS/BOOKS API
+
+public void setBlocklist(ArrayList<String> input) {
+    this.blocklist = input;
+}
+
+public ArrayList<String> getBlocklist() {
+    return this.blocklist;
+}
+
+public void setBooklist(ArrayList<Book> input) {
+    this.booklist = input;
+}
+
+public ArrayList<Book> getBooklist() {
+    return this.booklist;
+}
+
 
 // --- Parsers
 
@@ -324,9 +353,10 @@ public ArrayList<String> getTagAttribInclusive(String thispara,String starttag, 
 }
 
 /*
-input: name of parameter.  Do not include = or ""
+input: name of parameter, where it is specified in OOXML tag.  Do not include = or ""
 
 output: value of parameter
+
 */
 
 public String getParameterValue(String thispara,String parameter) {
@@ -355,5 +385,43 @@ public String getParameterValue(String thispara,String parameter) {
     return output;
 }
 
-
+public void makeBooksFromBlocklist(){
+    ArrayList<Book> myBookList = new ArrayList<Book>();
+      Parser myParser=new Parser();
+      int headingcount=0;
+      ArrayList<String> headList = getHeadingList();
+      //starting with the blocklist, get blocks and put each one inside a 'Book' object
+      int length = this.blocklist.size();  // number of blocks
+      System.out.println(length); //each of these numbered blocks is a string.
+      int rowcount=0;
+      if (length>0) {
+        Iterator<String> iter = this.blocklist.iterator(); 
+          while (iter.hasNext()) {
+              //creates new Book, fills data from internal structure of String file, but this assumes markdown
+              //TO DO: create new book with data.  Add GUI properties after
+              //Book newBook=myParser.parseMDfile(MainStage.this,PressBox,DragBox,iter.next());
+              //constructor: make new meta data with label of book
+             //DO we need Event handlers for a data object? Add them to a purely GUI object?
+              Book newBook =new Book(iter.next()); //TO DO:separate data model more
+              //
+              if (newBook!=null) {
+                System.out.println("Starting iteration of block lines in MD");
+                //set position as part of data model
+                newBook.setRow(rowcount); //default col is 0.
+                newBook.setCol(0);
+                //add heading from docXML.  Needs to align to 'read' of headings and 0 codes.
+                if (headList.size()>headingcount){
+                  newBook.setLabel(headList.get(headingcount));
+                  headingcount++;
+                } 
+              }
+              else {
+                System.out.println("Nothing returned from parser");
+              }
+              myBookList.add(newBook);
+              rowcount++;
+         } //end while
+      } //end if
+    setBooklist(myBookList);
+    }
 }

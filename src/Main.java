@@ -334,7 +334,7 @@ public void importAsRowBelowMethod() {
     Integer newRow=row+1;
     insertRowAfterMethod(row); //clear out the row.
     //to do - see if 'length' of array with Books from Row x+1 is zero.  If so, just import.  If not, 'insert' row first.
-    Stage_WS.openMarkdownAsRow(newRow);
+    Stage_WS.openFileAsRow(newRow);
 }
 
 //inserts a row before input row
@@ -472,18 +472,24 @@ public void deleteSpriteGUI(Book myBook) {
     //FILE LOADERS AND SAVERS
     //This is called from the GUI and Event Handler (OpenTempl on Main menu).
     public void mainFileLoader() {
-        this.currentOpenFile=Main.this.Stage_WS.openMarkdown();
+        this.currentOpenFile=Main.this.Stage_WS.openNewFile();
     }
 
+    //TO DO: Link this to 'Project' class, which will hold filetypes, and kind of file we loaded.
     //if we have a list of the Book objects inside the Books, and they have the relevant metadata (including x,y),
     //Then we do not need to actually query the Book class - we can just save as per clause container
+
+/* Save the current file.
+The myProject settings should be used by default.
+*/
+
     public void mainFileSaver() {
-        this.Stage_WS.setFile(this.currentOpenFile);
+        //this.Stage_WS.setFile(this.currentOpenFile);
         this.Stage_WS.writeFileOut();
     }
 
     public void saveAsFileSaver() {
-        this.Stage_WS.setFile(this.currentOpenFile);
+        //this.Stage_WS.setFile(this.currentOpenFile);
         this.Stage_WS.saveAs();
     }
 
