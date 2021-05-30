@@ -28,16 +28,21 @@ public BookIcon() {
         this.setWidth(this.stdWith); //was (40,150) (width,height)
         this.setHeight(this.stdHeight);
         //setArcWidth(60);  //do this enough you get a circle.  option
-        //setArcHeight(60);                
+        //setArcHeight(60);  
+        this.setArcWidth(10);
+        this.setArcHeight(10); 
+        setStrokeWidth(4);             
         setStroke(Color.BLACK); //stroke is border colour
 
      }  
 
-    //constructor with colour
+    //constructor with colour (not used?)
     public BookIcon(String mycol) {
         //default
         
         //this.setColour(mycol);
+        this.setArcWidth(18);
+        this.setArcHeight(18);
         this.setWidth(this.stdWith); //was (40,150) (width,height)
         this.setHeight(this.stdHeight);
         /* image too.  
@@ -48,7 +53,9 @@ public BookIcon() {
         //setArcWidth(60);  //do this enough you get a circle
         //setArcHeight(60);                
         setStroke(Color.BLACK);
+        setStrokeWidth(5);
         setColour(Color.WHITE); //default just in case
+        
      } 
 
      //TO DO: Use key, value pairs
@@ -57,8 +64,8 @@ public BookIcon() {
       public void setColour (Color myColour) {
         //Color myColour = colourPicker(mycol);
         //this.boxcolour=myColour;//not updated yet?
-        //update the Rectangle Colour for display; allows for transparency
-        setFill(myColour.deriveColor(0, 1.2, 1, 0.6));
+        //--->update the Rectangle Colour for display; allows for transparency
+        setFill(myColour.deriveColor(0, 1.2, 1, 0.95)); //0.6 is partly transparent
      } 
 
      public void rotateBookColour() {
@@ -72,7 +79,8 @@ public BookIcon() {
             this.colourIndex=0;
         }
         Color myColour=newArray.get(this.colourIndex);
-        setFill(myColour.deriveColor(0, 1.2, 1, 0.6)); //transparency
+        //The individual rectangle colour
+        setFill(myColour.deriveColor(0, 1.2, 1, 1)); //transparency of the rectangle 0.6 is partly transparent.
      }
 
      //this is public so can be generally useful to other objects
