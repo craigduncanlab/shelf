@@ -30,6 +30,7 @@ public Project() {
 public void setFile(File myFile) {
     this.file = myFile;
     setFilepath(this.file.getPath());
+    //This will return full path to folder where myFile is located)
     setParentpath(this.file.getParent());
     setFilename(myFile);
 }
@@ -56,6 +57,11 @@ public void setFilepath(String myPath) {
 
 public void setParentpath(String myParent) {
     this.parentpath = myParent;
+}
+
+//This will return full path (to where project file was loaded from)
+public String getParentPath() {
+    return this.parentpath;
 }
 
 public void setExtension(String myExt) {

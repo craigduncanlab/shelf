@@ -662,15 +662,27 @@ public void restoreBookMeta() {
         mdTextTabC.setText(updateNode.getOOXML());
         mdTextTabD.setText(updateNode.getNotes());  
         */
-        mdTextTabB.setText("test B"); 
-        mdTextTabC.setText("test C");
-        mdTextTabD.setText("test D");
+        
+
         codeNotesTextArea.setText(updateNode.getNotes());
         visibleCheck.setSelected(updateNode.getVisible()); //check box
         outputTextArea.setText(updateNode.getOutputText()); //output node contents
         //RHS
         //dynamic update of Book's HTML data
         updateHTMLpreview(updateNode);
+        //put OOXML in if there is some.  For docx files this will also be the markdown text (at this stage).
+        //Should probably gather it from source data i.e. Block class.
+        mdTextTabB.setText(updateNode.getHTML()); 
+        String ootext = "No OOXML";
+        if (updateNode.getOOXMLtext().length()>0) {
+            ootext=updateNode.getOOXMLtext();
+        }
+        String notext = "";
+        if (updateNode.getNotes().length()>0) {
+            notext=updateNode.getNotes();
+        }
+        mdTextTabC.setText(ootext);
+        mdTextTabD.setText(notext);
 }
 
 public void updateBookMeta() {
@@ -1008,147 +1020,11 @@ private void makeSceneForBookMetaView() {
 }
 
 public void updateHTMLpreview(Book myBook){
-    String newHTML=getHTMLfromContents(myBook);
-    myBook.setHTML(newHTML);
-    htmlEditor.setHtmlText(newHTML);
+    HTMLFile myHTML = new HTMLFile();
+    myBook.setHTML(myHTML.getHTMLfromContents(myBook));
+    htmlEditor.setHtmlText(myBook.getHTML()); //for GUI
+    //at this stage, the HTML is dependent on the markdown.  If it becomes independent, remove this.
 }
-
-//Convert the MD section of current Book to some HTML and update the HTML parameter  
-//TO DO: Can this function be enclosed in a Book object?   
-public String getHTMLfromContents(Book myBook) {
-    String input = myBook.getMD();
-    String label = myBook.getLabel();
-    String notes = myBook.getNotes();
-    Boolean showNotes=false;
-    if (notes.length()>0) {
-        showNotes=true;
-    }
-    String fontfamily = "Garamond"; //Arial
-    String logString="";
-    //take out any existing headers?
-    //String replaceString = input.replaceAll("(<html[ =\\w\\\"]*>{1})|(<body[ =\\w\\\"]*>{1})|<html>|</html>|<body>|</body>|<head>|</head>",""); //regEx
-    int index =0; //
-    String cssString="<style> .bordered { font-family: Arial; font-size: small; width: 900px; padding: 20px; background-color: #ddd; border: 1px dashed darkorange; border-radius: 8px; } .a {font-family: Arial;} </style>";
-    //top row or heading
-    if(index==0) {
-        logString = "<html><head>";
-        logString=logString+"<title>"+label+"</title>";
-        logString=logString+cssString; //css
-        logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
-        //logString=logString+"<p><b>"+label+"</b></p>";
-        //logString=logString+"<H1>"+label+"</H1>";
-        //logString = "<html><head><title>"+label+"</title></head>"+"<body>";// use the label for the html page (if needed)
-        //logString=logString+"<p><b>"+label+"</b></p>";
-        logString=logString+"<H1><span style=\"font-family: Arial;\">"+label+"<span style=\"font-family: Arial;\"></H1>";
-     }
-
-    //date and time
-    String dtstring=myBook.getdate();
-    String timestring=myBook.gettime();
-    if(timestring.length()>0 && dtstring.length()>0) {
-        dtstring=dtstring+","+timestring;
-    }
-    else if (timestring.length()>0 && dtstring.length()==0) {
-        dtstring=timestring;
-    }
-     if (dtstring.length()>1) {
-         /*String dtprefix="<p><span style=\"font-family: "+fontfamily+";\">";
-         String dtsuffix="</span></p>";
-         String dtfile = dtprefix+dtstring+dtsuffix;
-         */
-         String h2prefix="<H2><span style=\"font-family: Arial;\">";
-         String h2suffix="</H2>";
-         String dtfile=h2prefix+dtstring+h2suffix;
-         logString=logString+dtfile;
-    }
-     //iterate and create rest of file
-    Scanner scanner1 = new Scanner(input);
-    String prefix = "<p class=\"a\">";
-    String suffix="</span></p>";
-    // filter md content for h2 or p
-    String h2code="## ";
-    String h2prefix="<H2><span style=\"font-family: Arial;\">";
-    String h2suffix="</H2>";
-    int mdFormatCode=0;
-    String balanceString="";
-     while (scanner1.hasNextLine()) {
-        //just make paragraphs for now, unless h2
-        String thisLine=scanner1.nextLine();
-        int testlength=thisLine.length();
-        if (testlength>3) {
-            String testString=thisLine.substring(0,3);
-            balanceString=thisLine.substring(3,testlength);
-        //System.out.println(testString);
-            if (testString.equals(h2code)) {
-                mdFormatCode=2;
-            }
-        }  //end length if
-        if (mdFormatCode==2) {
-            logString=logString+h2prefix+balanceString+h2suffix;
-            mdFormatCode=0; //reset
-        }
-        else {
-             logString=logString+prefix+thisLine+suffix; //normal paragraph
-        }
-       
-     } //end while
-     //notes
-     if (showNotes==true) {
-         Scanner scanner2 = new Scanner(notes);
-         String prefixdiv="<div class=\"bordered\">";
-         String suffixdiv="</div>";
-         String prefix2="<p>";
-         logString=logString+prefixdiv;
-         while (scanner2.hasNextLine()) {
-            String notesLine=scanner2.nextLine();
-            logString=logString+prefix2+notesLine+suffix;
-            System.out.println(notesLine);
-         }
-         logString=logString+suffixdiv;
-     }
-     //
-     String linkpath=myBook.getdocfilepath();
-     if (linkpath.length()>0) {
-         String linkprefix="<p><span style=\"font-family: Arial;\"><a href=\"";
-         String linksuffix="\">Filelink</a></span></p>";
-         String linkfile = linkprefix+linkpath+linksuffix;
-         logString=logString+linkfile;
-    }
-    //embedded links will probably only open www addresses in the inbuilt JavaFX WebView.  You can open these from the Button in edit view.
-    String urlpath=myBook.geturlpath();
-     if (urlpath.length()>0) {
-         String urlprefix="<p><span style=\"font-family: "+fontfamily+";\"><a href=\"";
-         String urlsuffix="\">weblink</a></span></p>";
-         String urlfile = urlprefix+urlpath+urlsuffix;
-         logString=logString+urlfile;
-    }
-    //link.  Can we show the image?
-    String imagepath=myBook.getimagefilepath();
-    //the image path must be converted to URI or URL so webView can read it
-     if (imagepath.length()>0) {
-        File myFile = new File (imagepath);
-        URI imageURI = myFile.toURI();
-        System.out.println(imageURI);
-        //<img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
-         String imgprefix="<p><img src=\"";
-         String imgsuffix="\" alt=\"user image\" width=\"600\" title=\""+notes+"\"></p>";
-
-         String imgfile = imgprefix+imageURI+imgsuffix;
-         logString=logString+imgfile;
-    }
-    /*
-    String imagepath=myBook.getimagefilepath();
-     if (imagepath.length()>0) {
-         String imgprefix="<p><span style=\"font-family: Arial;\"><a href=\"";
-         String imgsuffix="\">imagelink</a></span></p>";
-         String imgfile = imgprefix+imagepath+imgsuffix;
-         logString=logString+imgfile;
-    }
-    */
-    logString=logString+"</body></html>";
-    System.out.println(logString);
-    return logString;
-    }
 
 /* New Local mouse event handler */
 

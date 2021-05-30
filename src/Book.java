@@ -10,6 +10,8 @@ import javafx.event.EventHandler;
 //
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
+//Padding
+import javafx.geometry.Insets;
 //text
 //Scene - Text as text, with font option
 import javafx.scene.text.Text; 
@@ -17,6 +19,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.*;
 //Layout - use StackPane for now
 import javafx.scene.layout.StackPane;
+
 //Events
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Cursor;
@@ -71,8 +74,8 @@ double myYpos = 50;
 double myZpos=1; //layers
 Boolean isAlert=false;
 Color defaultColour=Color.WHITE;
-Color userColour=Color.LIGHTBLUE;
-Color alertColour=Color.RED;
+Color userColour=Color.WHITE;//Color.LIGHTBLUE;
+Color alertColour=Color.PINK; //RED
 BookIcon myBookIcon;
 String userMetaView; //how to display metadata
 Integer rowNumber=0;
@@ -111,6 +114,13 @@ public Book(EventHandler PressBox, EventHandler DragBox, String label, String te
 public Book(String ooxml) {
 	setOOXMLtext(ooxml);
 	setMD(ooxml);   
+}
+
+public Book(xmlBlock input) {
+	setOOXMLtext(input.getBlockText());
+	setNotes(input.getNotesText());
+	setMD(input.getBlockText()); //check this is ok? 
+	setLabel(input.getHeaderText());
 }
 
 //Function to set GUI event handlers separate to main data
@@ -231,6 +241,8 @@ public void setZ(double z) {
 	updatePosition(); //update actual position in scene
 }
 
+//---UPDATE TEXT DISPLAYED ON BOX
+
 public void setDisplayMode(Integer mode) {
 	if (mode>0) {
 		this.displayMode=mode;
@@ -238,32 +250,38 @@ public void setDisplayMode(Integer mode) {
 	updateDisplay();
 }
 
+ //helper function to set label of underlying BookIcon 
+public void setLabel(String myString) {
+    if (!myString.equals("")) {
+    	this.booklabel=myString;
+    	updateDisplay();
+    }
+}
+
 public void updateDisplay(){
 	if (this.displayMode==2) {
 		String update = getdate()+" "+gettime()+" "+getLabel();
-        setDisplayText(update);
+        setVisibleNodeText(update);
 	}
 	else if (this.displayMode==3) {
 		String update = getdate()+" "+gettime();
-        setDisplayText(update);
+        setVisibleNodeText(update);
 	}
 	else if (this.displayMode==1) {
 		String update = getLabel();
-        setDisplayText(update);
+        setVisibleNodeText(update);
 	}
 }
 
-//filter the display text for display and update the node data (visible book spine)
-//use this only as private function
-private void setDisplayText(String input){
-	this.displaylabel=input;
-	/*
-	if (this.displaylabel.length()>50){
-		this.setDisplayText(this.displaylabel.substring(0,50));
-	}
-	*/
-	setVisibleNodeText(this.displaylabel); 
+private void setVisibleNodeText(String myLabel) {
+	this.displaylabel=myLabel;
+	if (myLabel.length()>50) {
+		myLabel=myLabel.substring(0,50); //limit book label to first "# " + 10 characters
+		}
+		this.bookspinetext.setText(myLabel);
 }
+
+// ---- 
 
 public double getX() {
 	return this.myXpos;
@@ -761,15 +779,29 @@ Position can also be set externally by the calling class */
 
 //Initial GUI setup
 public void FXsetup() {
-    this.myBookIcon = new BookIcon();   //Uses defaults.
+    this.myBookIcon = new BookIcon();   //Uses defaults.  Essentially, it's a 'Rectangle'
+
+    //we add text to the Rectangle
+
     Font boxfont=Font.font ("Arial", 12); //check this size on monitor/screen.  cf Verdana
     this.bookspinetext.setFont(boxfont);
     //this.bookspinetext.setRotate(270); //for vertical text
     this.bookspinetext.setFill(myBookIcon.colourPicker("black")); //black Text
     this.bookspinetext.setWrappingWidth(this.stdWidth);
+
     this.setCursor(Cursor.HAND);
     //add these other GUI child nodes to this Stackpane i.e. to this Object as a 'Stackpane' in JavaFX
+
+    /* This will add text to the 'Rectangle' here.
+    We could add text directly, but to get a nice padding beween text and edges we insert Text object into
+    a StackPane first, and set some padding.
+    StackPane stack = new StackPane();
+	stack.getChildren().addAll(agent, text);
+	*/
+	//Any general Padding set on this StackPane object will pad out the enclosed rectangle (shifting it right)
+	//this.setPadding(new Insets(10)); //because 'this' is a StackPane object in JavaFX?
     this.getChildren().addAll(myBookIcon,bookspinetext);  // - a BookIcon (type Rectangle) and a Text object
+    
     updatePosition(); //set position relative to current scene?
 }
 
@@ -794,21 +826,6 @@ private void updatePosition() {
 public String getLabel() {
     return this.booklabel; //return the stored value, not the book spine
     //this.bookspinetext.getText();
-}
-
-private void setVisibleNodeText(String myLabel) {
-	if (myLabel.length()>50) {
-		myLabel=myLabel.substring(0,50); //limit book label to first "# " + 10 characters
-		}
-		this.bookspinetext.setText(myLabel);
-}
-
- //helper function to set label of underlying BookIcon 
-public void setLabel(String myString) {
-    if (!myString.equals("")) {
-    	this.booklabel=myString;
-    	updateDisplay();
-    }
 }
 
 // ----------- COLOURS FOR STATES

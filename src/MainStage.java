@@ -193,6 +193,7 @@ Integer filenameoffset_x=400; //how far across the filename appears
 Integer cellrowoffset_y=30;
 Integer boxtopmargin=10;
 Color shelfborder=Color.BLACK;
+Color gridOuterColor=Color.LIGHTBLUE; //Color.WHITE;
 //Color shelffill=Color.WHITE; //background to 'grid' cf. DARKSLATEGREY
 
 
@@ -364,11 +365,6 @@ public ArrayList<Book> openFileGetBooklist(File file) {
     if (isOK==true && myProject.getExt().equals("docx")) {
         //integrate filename information into docx object?
         setFile(file);
-        String fn=myProject.getFilenameNoExt();
-        String filename=fn+"_2.docx";
-        myProject.setFilenameFromString(filename); //update it so it doesn't save over old docx
-        System.out.println(myProject.getFilename());
-
         docXML myDoc = new docXML();
         myDoc.openDocx(file); 
         myBookSet=myDoc.getBooklist(); //Change to non JavaFX dependency
@@ -728,20 +724,32 @@ public File openNewFile() {
 public void saveAs() {
     Stage myStage = new Stage();
     myStage.setTitle("Save As ...");
+    //change filename just in case, for Word
     String myFilename= myProject.getFilename(); //SaveAs will use current path so only name is needed
-    this.currentFileChooser.setTitle("Save Shelf File As");
+    //if Word let's prompt to make sure we don't harm original
+    if (myProject.getExt().equals("docx")) {
+      String fn=myProject.getFilenameNoExt();
+      String filename=fn+"_v2.md";
+      myProject.setFilenameFromString(filename);
+      myFilename=filename;
+    }
+    this.currentFileChooser.setTitle("Save Project/File As");
     this.currentFileChooser.setInitialFileName(myFilename);  
     this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
     //System.exit(0);
     File file = currentFileChooser.showSaveDialog(myStage);
     if (file != null) {
-        setFile(file);
+        setFile(file); //sets name of file in myProject
         writeFileOut();
+        writeOutBooksToWord(); //This is just writing from notes for now (not the docx)
+        writeOutHTML();
         } 
         else {
             //DO SOMETHING
         }
     }
+
+
 
 //for save Row as
 public void saveRowAs(Integer row) {
@@ -763,18 +771,23 @@ public void saveRowAs(Integer row) {
         }
     }
 
-//for direct save
+//for save of "Books"
+public void writeOutHTML(){
+  ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();
+  HTMLFile myHTML = new HTMLFile();
+  String name=myProject.getFilename(); //maybe redundant.  Full path?
+  String filename=myProject.getFilenameNoExt(); //otherwise get from label 
+  //Path path = Paths.get(nameExt); //from filename.  But if you have changed this?
+  //String parent=path.getParent().toString();
+  //This works for Mac.  Better to obtain path through new Directory
+  String htmlfolderpath = myProject.getParentPath()+"/"+filename;
+  myHTML.writeOutHTML(mySaveBooks,name,filename,htmlfolderpath);
+}
+
+//for direct save - of 'Books'
 public void writeFileOut() {
-    //using existing filename
-    ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();//getBooksOnShelf();
-    writeOutBooks(mySaveBooks);
-    //we could only do this if needed (i.e. if original file was docx?). cf export md to Word, vs resave
-    writeOutWord(mySaveBooks);
-    String author="Craig Duncan";
-    String year="2021";
-    System.out.println("Debugging break in writeFileOut - MainStage");
-    System.exit(0);
-    writeOutHTML(mySaveBooks,author,year);
+    ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();
+    writeOutBooks(mySaveBooks);  
 }
 
 //for direct Row save
@@ -797,28 +810,25 @@ public void writeRowOut(Integer row) {
     writeOutBooks(myBookRow);
 }
 
-public void writeOutWord(ArrayList<Book> mySaveBooks) {    //
+//We can only arrive here from a Save As, not Save.  It saves word based on mdnotes, conversion to OOXML
+//So that's only a basic version of a Word docx (not based on an original Word doc)
+//TO DO (FUTURE): Write out a new docx using the docXML contents.
+public void writeOutBooksToWord() {    //
+    ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();//getBooksOnShelf();
     String filepath=myProject.getFilename();
-    System.out.println("Saving: "+filepath);
-    Parser myP = new Parser();
-    Iterator<Book> myIterator = mySaveBooks.iterator();
-    StringBuffer myWordOutput=new StringBuffer();
-         while (myIterator.hasNext()) {
-            Book myNode=myIterator.next();
-            //System.out.println(myNode.toString());
-            
-            String myWordString = myNode.getOOXMLtext();
-
-            //Convert text to OOXML
-            //String myWordString=myP.getOOXMLfromContents(myNode); //this gets wordcodes every time
-            
-            myWordOutput.append(myWordString);
-            myWordString="";
-             //option: prepare string here, then write once.
-        }
-        //System.exit(0);
-        basicWordWriter(myWordOutput.toString(),filepath);
+    docXML myDocSave = new docXML(); //we may be able to use the existing docXML in future.
+    myDocSave.writeOutWordFromBooks(filepath,mySaveBooks);
 }
+
+/*
+//inputs: name is the full path name
+private void basicWordWriter(String logstring,String name) {
+    //String reportfile=this.templatefolder+filename+".md";
+    String filename=myProject.getNameNoExt(name)+".docx";//name.substring(0,name.length()-3)+".docx"; //remove .md  
+    docXML myDoc = new docXML();
+    docXML.basicWordWriter(filename);
+} 
+*/
 
 public void writeOutBooks(ArrayList<Book> mySaveBooks) {    //
     Iterator<Book> myIterator = mySaveBooks.iterator();
@@ -833,151 +843,9 @@ public void writeOutBooks(ArrayList<Book> mySaveBooks) {    //
             myString="";
              //option: prepare string here, then write once.
         }
-        basicFileWriter(myOutput,filepath);
+        ZipUtil util = new ZipUtil();
+        util.basicFileWriter(myOutput,filepath);
 }
-
-//input: the shelf books/objects
-//output: an html page in similar layout to the grid items in the editor
-/*
-public void setBooksOnShelf(ArrayList<Book> inputObject) {
-    this.booksOnShelf = inputObject;
-}
-*/
-public void writeOutHTML(ArrayList<Book> inputObject, String author, String year) {
-  //header section
-  String byline="(c)"+year+" "+author;
-  String name=myProject.getFilename(); //maybe redundant.  Full path?
-  String maintitle=myProject.getFilenameNoExt(); //otherwise get from label 
-  String logString = "<html><head>"; //use StringBuffer?
-  logString=logString+"<title>"+maintitle+" "+byline+"</title>";
-  //logString=logString+"<script> border {border-style:dotted;}</script>"; //css - put in shared css file?
-  logString=logString+"<link rel=\"stylesheet\" href=\"shelf.css\">";
-  logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
-  //logString=logString+"<p><b>"+name+"</b></p>";
-  logString=logString+"<H1>"+maintitle+"</H1>";
-  logString=logString+"<p class=\"feature\">"+byline+"</p>";
-  logString=logString+"<div class=\"grid\">";
-  //
-  ArrayList<Book> bookList =inputObject;
-  int pagecount=1;
-  //path to main .md file
-  
-  Path path = Paths.get(name); //from filename.  But if you have changed this?
-  String parent=path.getParent().toString();
-  //Possibly use Files to do this in future
-  String fileNoExt=myProject.getFilenameNoExt(); //name.substring(0,name.length()-3); //still has a full filepath?
-  //
-  String filenamelink="../"+maintitle+".html"; //try to do do relative links here?
-  String htmlfilename=fileNoExt+".html"; //local file sysetm
-  System.out.println("The parent:"+parent);
-  System.out.println("The filelink:"+filenamelink);
-  System.out.println("New function filename no ext:"+fileNoExt);
-  System.out.println("The filename no ext:"+name);
-  System.out.println("Main title:"+maintitle);
-  String newdir="/"+fileNoExt;
-  createNewHTMLDir(fileNoExt); //for html and images
-  
-  //
-  int pagemax=bookList.size();
-  String navlink="";
-  String mainlink="<a href=\""+filenamelink+"\">index</a>";
-  Iterator<Book> myIterator=bookList.iterator();
-  while(myIterator.hasNext()) {
-        Book item = myIterator.next();
-        Integer checkRow=item.getRow();
-        Integer checkCol=item.getCol();
-        String label2 = item.getLabel();
-        String pagename=pagecount+"_"+label2;
-        //+maintitle in link?
-        String linkname=pagecount+".html";
-        //page links
-        if (pagecount==1 && pagemax==1){
-           navlink=mainlink;
-        }
-        if (pagecount==1 && pagemax>1){
-          String nextlinkname=pagecount+1+".html";
-          String nextlink="<a href=\""+nextlinkname+"\">"+"next:"+(pagecount+1)+"</a>";
-          navlink=mainlink+" | "+nextlink+" > ";
-        }
-        if (pagecount>1 && pagemax>pagecount){
-          String prevlinkname=pagecount-1+".html";
-          String nextlinkname=pagecount+1+".html";
-          //absolute links - redundant
-          //String prevlink="<a href=\""+fileNoExt+"/"+prevlinkname+"\">"+"prev:"+(pagecount-1)+"</a>";
-          //String nextlink="<a href=\""+fileNoExt+"/"+nextlinkname+"\">"+"next:"+(pagecount+1)+"</a>";
-          //relative links
-          String prevlink="<a href=\""+prevlinkname+"\">"+"prev:"+(pagecount-1)+"</a>";
-          String nextlink="<a href=\""+nextlinkname+"\">"+"next:"+(pagecount+1)+"</a>";
-          navlink="< "+prevlink+" | "+mainlink+" | "+nextlink+" >";
-        }
-        if (pagecount>1 && pagemax==pagecount){
-          String prevlinkname=pagecount-1+".html";
-          String prevlink="<a href=\""+prevlinkname+"\">"+"prev:"+(pagecount-1)+"</a>";
-          navlink=prevlink+" | "+mainlink;
-        }
-        //absolute Links in the main grid contents page
-        //String link="<a href=\""+fileNoExt+"/"+linkname+"\">"+pagename+"</a>";
-        //relative links
-        String sublink=maintitle+"/"+pagecount+".html"; //relative link
-        String link="<a href=\""+sublink+"\">"+pagename+"</a>";
-        logString=logString+"<div class=\"cell\">"+link+"</div>";
-        //
-        String notes = item.getNotes();
-        //String bookpage = item.getHTML();
-        //Get new HTML pages, each with nav links, save into new directory
-        String bookpage = item.getHTMLlink(navlink,newdir);
-        
-        String linkpath=newdir+"/"+linkname;
-        basicFileWriter(bookpage,linkpath);
-        //Advance page counter
-        pagecount++;
-    }
-    logString=logString+"</div></body></html";
-    basicFileWriter(logString,htmlfilename);
-    System.out.println("Write out HTML completed");
-    writeOutCSS(parent);
-}
-
-//create new HTML directories in local file system, where source .md file is found
-public void createNewHTMLDir(String fileNoExt) {
-  // Create directory to hold individual HTML pages
-  String newdir="/"+fileNoExt; //Works to create dir on local file system.  
-  String newimagedir=newdir+"/images";
-  System.out.println("New dir name/path:"+newdir);
-  try {
-
-    Path dpath = Paths.get(newdir);
-    Path ipath = Paths.get(newimagedir);
-
-    //java.nio.file.Files;
-    Files.createDirectories(dpath);
-    Files.createDirectories(ipath);
-
-    System.out.println("Directory(s) is created!");
-
-  } catch (IOException e) {
-
-    System.err.println("Failed to create directory!" + e.getMessage());
-
-  }
-}
-
-public void writeOutCSS(String parent) {
-    String mycss=".grid { display: grid; grid-template-columns: auto auto;} \ndiv.cell {background: LightBlue; border: 1px solid Blue;  padding: 10px;}";
-    //\ndiv.border {border-style:dotted;}
-    //Query if width should be here?  width: 900px; 
-    String h1="h1 {text-align:center;}";
-    String f1="\n.feature {display: block; margin-left: auto; margin-right: auto; width: 50%};";
-    String body="\nbody { background-color:#00A8C5; font-family:Lucida,Helvetica,sans-serif; font-weight:500; text-decoration: none;  position: relative;  width: 100%; margin-left: 0px;}";
-    String borders="\n.border { font-family: Arial; font-size: small; padding: 20px; background-color: #ddd; border: 1px dashed darkorange; border-radius: 8px; }";
-    String arial="\n.a {font-family: Arial;}";
-    mycss=mycss+h1+body+f1+borders+arial;
-    String cssname=parent+"/shelf.css";
-    System.out.println(cssname);
-    basicFileWriter(mycss,cssname);
-    System.out.println("Write out CSS completed");
-}
-
 
 //function to change way box labels are displayed
 public void setDisplayModeTitles(Integer input){
@@ -1262,6 +1130,7 @@ private String trim(String input){
     return output;
 }
 
+/*
 //will save this file (assumes it is text, html etc)
 private void basicFileWriter(String logstring,String filename) {
     //String reportfile=this.templatefolder+filename+".md";
@@ -1280,20 +1149,8 @@ private void basicFileWriter(String logstring,String filename) {
             t.printStackTrace();
             return;
         }
-}  
-
-//inputs: name is the full path name
-private void basicWordWriter(String logstring,String name) {
-    //String reportfile=this.templatefolder+filename+".md";
-    String myRefFile="wordlib/StylesTemplate.docx";
-    String filename=myProject.getNameNoExt(name)+".docx";//name.substring(0,name.length()-3)+".docx"; //remove .md  
-    //we need to take logstring, insert it into document.xml and then zip it up with rest of docx
-    File sourceFile = new File("wordlib/LittleDoc.xml");
-    String docXML=getFileText(sourceFile); //alternatively, extract from StylesTemplate
-    String newDoc=docXML.replace("XXXXXX",logstring); //we now have a new document.xml
-    ZipUtil util = new ZipUtil();
-    util.readAndReplaceZip(myRefFile,newDoc,filename);
 } 
+*/ 
 
 //JAVAFX SCENE GRAPH GUI INFO (THIS IS NOT THE DATA NODE!)
 public void setSceneRoot(Node myNode) {
@@ -2116,7 +1973,9 @@ private Group makeWorkspaceTree() {
 
         //myScrollPane.setVmax(500);
         workspacePane.getChildren().addAll(displayAreaGroup);
-        String wpaneStyle="-fx-background-color:white; ";
+        //String wpaneStyle="-fx-background-color:white; ";
+        //String wpaneStyle="-fx-background-color:LightGrey; "; //main grid background colour
+        String wpaneStyle="-fx-background-color: CADETBLUE; "; 
         workspacePane.setStyle(wpaneStyle);
          //make it big enough for number of rows/cols
         //ScrollPane myScrollPane= new ScrollPane();
@@ -2191,7 +2050,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
         
         //construct scene with its root node Color.DARKSLATEGREY
        
-        Scene workspaceScene = new Scene (myGroup,getBigX(),getBigY(), Color.WHITE);
+        Scene workspaceScene = new Scene (myGroup,getBigX(),getBigY(), this.gridOuterColor);
                 
         //nb do not change focus unless click on sprite group
         //Nodes etc inherit Event Target so you can check it in the event chain.
