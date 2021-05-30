@@ -95,6 +95,29 @@ public String getFileText(File myFile) {
   return myText.toString();
 }
 
+//will save this file (assumes it is text, html etc)
+public void basicFileWriter(String logstring,String filename) {
+    //String reportfile=this.templatefolder+filename+".md";
+
+    try {
+      PrintStream console = System.out;
+      PrintStream outstream = new PrintStream(new FileOutputStream(filename,false)); //true = append.  This overwrites.
+      System.setOut(outstream);
+      //String logString = Integer.toString(myNode.getNodeRef())+"@@P"+myNode.getDocName()+"@@P"+myNode.getHeading()+"@@P"+myNode.getNotes()+"@@P"+myNode.getHTML()+"@@P@EOR";
+      System.out.print(logstring); //don't use println.  No CR needed.
+      outstream.close();
+      System.setOut(console);
+    }
+        catch (Throwable t)
+        {
+            t.printStackTrace();
+            return;
+        }
+}  
+
+
+// ---ZIP
+
 //need to check compression format...
 /* inputs are:
 String myRefFile="wordlib/StylesTemplate.docx";
