@@ -1,5 +1,5 @@
-//mdBlock Class to hold line-related objects from .md, docx text streams
 /*
+Class to hold xmlPara objects as a block, based on outline levels.
 This retains line codes from original file, to help subdivide for Books object later.
 It is a helper Class in the data model that processes text stream into Books
 */

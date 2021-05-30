@@ -616,8 +616,6 @@ public String includeImageRel(String newdir){
 			System.out.println(imageURI);
 			//DO A STD COPY
 			int count=1;
-			
-			//<img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
 			String linkfile = "image"+count+"."+imagepath.substring(imagepath.length()-3,imagepath.length());
 			standardCopy(count,imagepath,newdir,linkfile); //TO DO: get image filenames or use sequence
 			String linkpath="images/"+linkfile;
@@ -793,14 +791,9 @@ public void FXsetup() {
     //add these other GUI child nodes to this Stackpane i.e. to this Object as a 'Stackpane' in JavaFX
 
     /* This will add text to the 'Rectangle' here.
-    We could add text directly, but to get a nice padding beween text and edges we insert Text object into
-    a StackPane first, and set some padding.
-    StackPane stack = new StackPane();
-	stack.getChildren().addAll(agent, text);
-	*/
-	//Any general Padding set on this StackPane object will pad out the enclosed rectangle (shifting it right)
-	//this.setPadding(new Insets(10)); //because 'this' is a StackPane object in JavaFX?
-    this.getChildren().addAll(myBookIcon,bookspinetext);  // - a BookIcon (type Rectangle) and a Text object
+   	TO DO: insert some padding
+   */
+   this.getChildren().addAll(myBookIcon,bookspinetext);  // - a BookIcon (type Rectangle) and a Text object
     
     updatePosition(); //set position relative to current scene?
 }

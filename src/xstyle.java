@@ -81,7 +81,6 @@ public void extractId(){
 	String parameter = "w:styleId";
 	xmlTool myP = new xmlTool();
 	String output=myP.getParameterValue(this.styleString,parameter);
-	//System.out.println(parameter+","+item+"--->"+output);
 	setId(output);
 }
 
@@ -89,20 +88,16 @@ public void extractName(){
 	String parameter="w:name w:val";
 	xmlTool myP = new xmlTool();
 	String output=myP.getParameterValue(this.styleString,parameter);
-	//System.out.println(parameter+","+item+"--->"+output);
 	setName(output);
 }
 
-//w:basedOn w:val
 public void extractBasedOn(){
 	String parameter="w:basedOn w:val";
 	xmlTool myP = new xmlTool();
 	String output=myP.getParameterValue(this.styleString,parameter);
-	//System.out.println(parameter+","+item+"--->"+output);
 	setBasedOn(output);
 }
 
-//<w:outlineLvl w:val=\"0\"/>
 public void extractOutlineLevel(){
 	String output="99";
 	String parameter="w:outlineLvl w:val";
@@ -112,7 +107,6 @@ public void extractOutlineLevel(){
 	if (result.length()>0) {
 		output=result;
 	}
-	//System.out.println(parameter+","+item+"--->"+output);
 	setOutlineLevel(output);
 }
 }

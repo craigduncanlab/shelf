@@ -206,9 +206,7 @@ public ArrayList<ZipEntry> readAndReplaceZip(String fileZip, String docxml, Stri
 
 This will update myProject with the content of lvl 0 headings from styles.xml too
 
-*/
-
-/* inputs are:
+inputs are:
 A File object with the input file that is selected .docx from FileChooser
 
 Variables used:

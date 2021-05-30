@@ -44,7 +44,7 @@ public void openDocx(File file){
 //--blocklist for main API
 
 public void setInitialBlocklist() {
-    ArrayList<xmlPara>myLines=getOOXMLParasInclusive(); //lines are coded as they are added
+    ArrayList<xmlPara>myLines=extractParas(); //lines are coded as they are added
     setBlocklist(makeBlocksFromParas(myLines)); 
 }
 
@@ -81,20 +81,6 @@ public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
     if (currentblock.getStoredLines()>0) {
         newBlocks.add(currentblock); //add the current block to newBlocks array
     }
-    /*
-    int linecount=0;
-    System.out.println("Size of results:"+myLines.size());
-    System.out.println("Lines, then stop");
-    //int linecount=1;
-    for (xmlBlock item: newBlocks) {
-        System.out.println(linecount);
-        System.out.println (item.toString());
-        linecount++;
-    }
-     
-    System.out.println("Stopping in makeBlocks");
-    System.exit(0);
-    */
     return newBlocks;
 }
 
@@ -203,79 +189,35 @@ public ArrayList<Book> getBooklist() {
 
 // --- Parsers
 
-//get OOXML paras (modelled on my xmlutil.py)
+//get OOXML <w:p> paras (modelled on my xmlutil.py)
 /* input:
 This is the entire document.xml (could be a smaller string, if needed)
 output:
 An array of String type with elements that inclusively match the requested tags
 */
-public ArrayList<xmlPara> getOOXMLParasInclusive(){
+public ArrayList<xmlPara> extractParas(){
 	String contents = getDocString(); 
     String starttag="<w:p>";
     String endtag="</w:p>";
     //ArrayList<String> result=getTagAttribInclusive(contents,starttag,endtag);
     ArrayList<xmlPara> result=getXMLparas(contents,starttag,endtag);
-    
-    /*
-    int linecount=0;
-    System.out.println("Size of results:"+result.size());
-    System.out.println("Lines, then stop");
-    //int linecount=1;
-    for (xmlPara item: result) {
-        System.out.println(linecount);
-        System.out.println ("Code:"+item.getLineCode());
-        System.out.println (item.getParaString());
-        linecount++;
-    }
-     
-    System.out.println("Stopping in getOOXMLParasInclusive");
-    System.exit(0);
-    */
     return result;
 }
 
 /*
 input: styles.xml (String equivalent)
-
+Preparing an array of styles from styles.xml
 output: Array of each <w;style> tag as String
 */
 
 public ArrayList<String> getStylesInclusive(){
-	System.out.println("Preparing an array of styles from styles.xml");
+	
 	String contents = getStylesString(); 
     String starttag="<w:style ";
     String endtag="</w:style>";
     ArrayList<String> result=getTagAttribInclusive(contents,starttag,endtag);
-    /*
-    for (String item: result) {
-    	System.out.println(item);
-    }
-    System.exit(0);
-    */
     return result;
 }
-
-
-
-/*
-public void codeOOXMLLines(ArrayList<xmlPara> myLines) {
-	System.out.println("Starting OOXML code checks");
-	System.out.println("Lines to process:"+myLines.size());
-	int linecount=1;
-	for (xmlPara thisPara : myLines) {
-		//System.out.println("Current Row:\n"+thisRow);
-        String thisText = thisPara.getLineText();
-		int bcode=thisPara.setLevel0Code(this.myStyles);
-		System.out.println(linecount+")"+bcode);
-		//int bcode=setOOXMLLineCode(thisRow);
-		thisPara.setLineCode(bcode);
-        thisPara.setLineIndex(linecount);
-		linecount++;
-	} 
-	//System.exit(0);
-	return myLines;
-}
-*/
 
 /*
 # removes end of start tag so that included attributes section can be found
@@ -340,12 +282,6 @@ public ArrayList<xmlPara> getXMLparas(String input,String starttag, String endta
                 //if testpict not in thistext:
                 currentPara.setParaString(thistext); //initialise the paragraph with text
                 currentPara=setmyParaCode(currentPara); //update object
-                /*
-                if (currentPara.getLineCode()==0) {
-                    System.out.println("Retained a 0 code");
-                    System.exit(0);
-                }
-                */
                 output.add(currentPara); // add to the array
                 newstart=findex+endtag.length(); //len(endtag);
             }
@@ -357,10 +293,7 @@ public ArrayList<xmlPara> getXMLparas(String input,String starttag, String endta
             newstart=newstart+1;
         }
     }
-    /*
-    System.out.println("Stopped in getXMLparas");
-    System.exit(0);
-    */
+   
     return output;
 }
 
@@ -408,7 +341,7 @@ public void writeOutWordFromBooks(String filepath, ArrayList<Book> mySaveBooks) 
             //to preserve original word contents:
             //String myWordString = myNode.getOOXMLtext(); //or get markdown?
 
-            //Convert text to OOXML
+            //Convert Book text to OOXML.  To do: put in Book class?
             String myWordString=myP.getOOXMLfromContents(myNode); //this gets wordcodes every time
             
             myWordOutput.append(myWordString);
