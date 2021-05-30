@@ -62,6 +62,7 @@ public String getparaId(){
 	return this.paraId;
 }
 
+//HEX number
 public void setparaId(String input){
 	this.paraId=input;
 }

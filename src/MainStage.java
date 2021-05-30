@@ -263,7 +263,7 @@ public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage
     setMenuBar(myMenu); //storesmenubar object for later
     //TO DO: setLocalSpriteSelect(processLocalBoxClick);
     //set event handlers as local instance variables.  These are used at time of Book creation
-    //They are set here so that the Bookes can access BookMetaStage level data
+    //They are set here so that the Books can access BookMetaStage level data
     //See the 'addNodeToView' function that creates a new Book here.
     setPressBox(processLocalBoxClick); //stores this in a variable to pass to Book.
     //setPressBox(PressBox);
@@ -405,33 +405,6 @@ public void AddNewBookToStage(Book newBook) throws NullPointerException {
     System.out.println("finished adding new book to stage");
 }
 
-/*
-Internal method to add sprite to the Group/Pane of this Node Viewer 
-This is to add an existing GUI 'box/node' to the Child Node section of this Viewer.
-i.e. this adds a specific object, rather than updating the view from whole underlying data set.
-TO DO: consider if the 'layer' matters, in terms of positioning this book relative to others.
-*/
-
-/*
-private void addBookToStage(Book myBook) {
-
-    this.bookgroupNode.getChildren().add(myBook);
-    
-    try { 
-        setActiveBook(myBook);
-         //TO DO - set Active in Data Model for last book added, not every time added to stage.
-        }
-    catch (NullPointerException e ){
-        System.out.println("NullPointer Stage...1:");
-        System.exit(0);
-    }
-    // checks the book position based on current global SpriteX,Y 
-    
-    advanceBookPositionHor(); 
-    positionBookOnStage(myBook); //snap to shelf after horizontal move  
-
-}
-*/
 
 /* input:
 The blocklist (strings) plus docXML info to obtain metadata
@@ -626,49 +599,6 @@ public void openFileAsRow(Integer row) {
     //return file;
 }
 
-//TO DO: vary data per input file type. Separate data from GUI.
-//This file should take a blocklist and represent it as row, not handle the parsing.
-/*
-public void processMarkdownAsRow(File file) {
-  //String filename=System.out.print(file.toString()); // this is full path
-    Boolean isOK = checkExtensions(file);
-    if (isOK==true) {
-      String contents = getFileText(file);
-      setFile(file); //update title on window / workspace too
-
-      //Recents myR = new Recents();
-      //myR.updateRecents(file.getName());
-      Parser myParser=new Parser();
-      // For the first level of internal structure, we split the MD file.  
-      // into blocks based on # division (for now).
-      
-      ArrayList<String> blocklist= myParser.splitMDfile(contents); //should return file split into blocks per #
-      int length = blocklist.size();  // number of blocks
-      System.out.println(length);
-
-      //if we have a set of blocks we process the internal structure further
-      //We have already checked first block is not an R markdown header, but that is stored
-      //TO DO: keep track of start of 'notes' or 'code' blocks as a block property
-
-      if (length>0) {
-        Iterator<String> iter = blocklist.iterator(); 
-          while (iter.hasNext()) {
-              Book newBook=myParser.parseMDfileAsRow(MainStage.this,PressBox,DragBox,iter.next());
-              if (newBook!=null) {
-                System.out.println("Starting iteration of block lines in MD");
-                //Originally, this checked the location of each book, but what if new file?
-                //What if no current GUI information?
-                AddNewBookToStage(newBook);
-              }
-         } //end while
-      } //end if
-      
-      System.out.println("Finished parse in 'open button' makeStage");
-      //LoadSave.this.ListOfFiles();// print out current directory
-    }
-}
-*/
-
 
 //what is returned by getrow?
 public Integer getRowofActiveBook() {
@@ -816,19 +746,9 @@ public void writeRowOut(Integer row) {
 public void writeOutBooksToWord() {    //
     ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();//getBooksOnShelf();
     String filepath=myProject.getFilename();
-    docXML myDocSave = new docXML(); //we may be able to use the existing docXML in future.
+    docXMLmaker myDocSave = new docXMLmaker(); //we may be able to use the existing docXML in future.
     myDocSave.writeOutWordFromBooks(filepath,mySaveBooks);
 }
-
-/*
-//inputs: name is the full path name
-private void basicWordWriter(String logstring,String name) {
-    //String reportfile=this.templatefolder+filename+".md";
-    String filename=myProject.getNameNoExt(name)+".docx";//name.substring(0,name.length()-3)+".docx"; //remove .md  
-    docXML myDoc = new docXML();
-    docXML.basicWordWriter(filename);
-} 
-*/
 
 public void writeOutBooks(ArrayList<Book> mySaveBooks) {    //
     Iterator<Book> myIterator = mySaveBooks.iterator();
@@ -991,53 +911,6 @@ public void shiftedSelection(Book thisBook) {
     } //end while
    }
 
-/*
-//sort books by shelf order
-public ArrayList<Book> listBooksShelfOrder() {
-    ArrayList<Book> myBooksonShelves = getBooksOnShelf();
-    ArrayList<Integer> scoreIndexes = new ArrayList();
-    Integer booknum=myBooksonShelves.size();
-    for (int x=0;x<booknum;x++) {
-        Book item = myBooksonShelves.get(x);
-        Integer score=item.getRowScore();
-        scoreIndexes.add(score);
-    }
-    Collections.sort(scoreIndexes); //performs a sort
-    //System.out.println(scoreIndexes);
-    //System.exit(0);
-    System.out.println("Books num: "+booknum);
-    ArrayList<Book> sortedBooks = new ArrayList<Book>();
-    Iterator<Integer> myIterator = scoreIndexes.iterator();
-    //System.out.println("Book score printout:\n");
-         while (myIterator.hasNext()) {
-            Integer targetscore = myIterator.next();
-            //System.out.println("target:"+targetscore);
-            Iterator<Book> bookIterator = myBooksonShelves.iterator();
-            while (bookIterator.hasNext()) {
-                Book item = bookIterator.next();
-                Integer test = item.getRowScore();
-                //System.out.println("test score:"+test);
-                if (test.equals(targetscore)) {
-                    System.out.println("matched");
-                    sortedBooks.add(item);
-                }
-            }
-        }
-       
-        return sortedBooks;
-}
-*/
-
-//This was above 'return sortedBooks'
- /*Iterator<Book> bookIterator=sortedBooks.iterator();
-        while (bookIterator.hasNext()) {
-            Book item = bookIterator.next();
-            String label = item.getLabel();
-            System.out.println(label);
-        }
-        System.exit(0);
-        */
-
 //Convert this book meta into a String of markdown.  Only write links if data is there.
 public String convertBookMetaToString(Book myBook) {
     String myOutput="# "+trim(myBook.getLabel()); //check on EOL
@@ -1048,10 +921,6 @@ public String convertBookMetaToString(Book myBook) {
         String tmp = myBook.getdocfilepath();
         Integer len = tmp.length();
         myOutput=myOutput+"[filepath]("+tmp+")"+System.getProperty("line.separator");
-        /*if (tmp.substring(len-1,len)!="\n") {
-             myOutput=myOutput+"\n";
-        }; 
-        */
     }
     if (myBook.getdate().length()>6) {
         myOutput=myOutput+"[date]("+myBook.getdate()+")"+System.getProperty("line.separator");

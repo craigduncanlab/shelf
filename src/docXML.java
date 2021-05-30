@@ -334,42 +334,6 @@ public void makeBooksFromBlocklist(){
     setBooklist(myBookList);
     }
 
-//write out Word just from notes in blocks, using some Standard styles
-public void writeOutWordFromBooks(String filepath, ArrayList<Book> mySaveBooks) {
-    System.out.println("Saving: "+filepath);
-    Parser myP = new Parser();
-    Iterator<Book> myIterator = mySaveBooks.iterator();
-    StringBuffer myWordOutput=new StringBuffer();
-         while (myIterator.hasNext()) {
-            Book myNode=myIterator.next();
-            //System.out.println(myNode.toString());
-            
-            //to preserve original word contents:
-            //String myWordString = myNode.getOOXMLtext(); //or get markdown?
 
-            //Convert Book text to OOXML.  To do: put in Book class?
-            String myWordString=myP.getOOXMLfromContents(myNode); //this gets wordcodes every time
-            
-            myWordOutput.append(myWordString);
-            myWordString="";
-             //option: prepare string here, then write once.
-        }
-        //System.exit(0);
-        WordWriter(myWordOutput.toString(),filepath);
-}
-
-
-//basic writer to create a de novo Word Doc from just the String (i.e. mdnotes)
-
-public void WordWriter(String inputstring, String filename) {
-    String myRefFile="wordlib/StylesTemplate.docx";
-    //we need to take inputstring, insert it into document.xml and then zip it up with rest of docx
-    File sourceFile = new File("wordlib/LittleDoc.xml");
-    ZipUtil util = new ZipUtil();
-    String myDocument = util.getFileText(sourceFile); //alternatively, extract from StylesTemplate
-    String newDoc=myDocument.replace("XXXXXX",inputstring); //we now have a new document.xml
-   
-    util.readAndReplaceZip(myRefFile,newDoc,filename);
-}
 
 }

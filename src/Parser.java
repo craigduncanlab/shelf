@@ -14,7 +14,7 @@ public class Parser {
 EventHandler PressBox;
 EventHandler DragBox;
 MainStage mainstage;
-HashMap<String,String> myHM;
+
 Project projectCopy;
 
 //default constructor
@@ -25,39 +25,6 @@ public Parser(){
 //constructor with myProject object passed in
 public Parser(Project inputProject){
 	this.projectCopy=inputProject;
-}
-
-//parse the Word styles markdown file (key line starts with #, then the paragraph)
-public HashMap<String,String> readWordStyles() {
-	System.out.println("RWS");
-	HashMap<String,String> styleMap=new HashMap();
-	String myKey="";
-	String myValue="";
-	File codeFile=new File ("wordlib/styledict.md");
-	 try {
-    Scanner scanner1 = new Scanner(codeFile);
-    if (scanner1==null) {
-      	System.out.println("No content");
-     	 return null;
-	}
-    int nl=0;
-    while (scanner1.hasNextLine()) {
-			String line1 = scanner1.nextLine();
-			String line2 = scanner1.nextLine();
-			myKey=line1.substring(2,line1.length());
-			myValue=line2;
-			System.out.println("Key: "+myKey);
-			System.out.println("Value: "+myValue);
-			styleMap.put(myKey,myValue);
-	      	//
-		} //end while
-	} //end try
-	catch (Exception e) {
-		//
-	}
-	//System.out.println(styleMap.toString());
-	//System.exit(0);
-	return styleMap;
 }
 
 
@@ -797,145 +764,5 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		//could do this in method that receives below but do it here for now
 		return newNode;
 		} //end method
-
-
-//Convert the MD section of current Book to styled Word paragraphs	
-public String getOOXMLfromContents(Book myBook) {
-	String input = myBook.getMD();
-	String label = myBook.getLabel();
-	String dtstring=myBook.getdate();
-	String tmstring=myBook.gettime();
-	String headingstring = "";
-	if (dtstring.length()>0 && tmstring.length()>0) {
-		headingstring=dtstring+","+tmstring+" : "+label;
-	}
-	else if (dtstring.length()>0 && tmstring.length()==0) {
-		headingstring=dtstring+" : "+label;
-	}
-	else if (dtstring.length()==0 && tmstring.length()>0) {
-		headingstring=tmstring+" : "+label;
-	}
-	else if (dtstring.length()==0 && tmstring.length()==0) {
-		headingstring=label;
-	}
-	if (this.myHM==null) {
-		this.myHM = readWordStyles();
-	}
-	 //iterate and create rest of file
-	Scanner scanner1 = new Scanner(input);
- 	String h1_style=myHM.get("H1");
- 	String h2_style=myHM.get("H2");
- 	String p_style=myHM.get("Default");
- 	/*
- 	System.out.println(h1_style);
- 	System.out.println(h2_style);
- 	System.out.println(p_style);
- 	System.exit(0);
- 	*/
- 	StringBuffer output = new StringBuffer();
- 	String fix_h=fixEscapeChars(headingstring);
- 	String h = h1_style.replace("XXX",fix_h); //heading1
- 	output.append(h);
- 	Boolean lasthead2=false; //track level 2 headings
-	while (scanner1.hasNextLine()) {
-		String wordline="";
-	 	//just make paragraphs for now
-	 	String thisLine=scanner1.nextLine();
-		thisLine=fixEscapeChars(thisLine);
-	 	if (thisLine.length()==0 && lasthead2==true) {
-	 		lasthead2=false;
-	 		//do nothing
-	 	}
-	 	else if (thisLine.length()>3) {
-	 			String code = thisLine.substring(0,3);
-	 			if (code.equals("## ")) {
-			 		wordline=h2_style.replace("XXX",thisLine.substring(3,thisLine.length()));
-			 		lasthead2=true;
-	 			}
-	 			else {
-	 				if (thisLine.length()>0) {
-	 					wordline=p_style.replace("XXX",thisLine);
-	 					lasthead2=false;
-	 				}
-	 				else if(lasthead2=true) {
-	 					lasthead2=false; //don't add another line
-	 				}
-	 		}
-	 	}
-	 	else if (thisLine.length()<=3) {
-	 		wordline=p_style.replace("XXX",thisLine);
-	 		lasthead2=false;
-	 	}	
-	 	output.append(wordline);
-	 }
-	String stringOut=output.toString();
-	//System.out.println(stringOut);
-	return stringOut;
-}
-
-//escape characters for the OOXML output
-	 	/*
-	 	' -> &apos;
-		" -> &quot;
-		> -> &gt;
-		< -> &lt;
-		& -> &amp;
-		*/
-public String fixEscapeChars(String thisLine){
-	String rep1=thisLine.replace("&","&amp;");
- 	String rep2=rep1.replace("<","&lt;");
- 	String rep3=rep2.replace(">","&gt;");
- 	String rep4=rep3.replace("\"","&quot;");
- 	String output=rep4.replace("\'","&apos;");
- 	return output;
-}
-
-//Convert the MD section of current Book to some HTML and update the HTML parameter	
-/*	
-public String getHTMLfromContents(Book myBook) {
-	String input = myBook.getMD();
-	String label = myBook.getLabel();
-	String notes = myBook.getNotes();
-	String logString="";
-	//take out any existing headers?
-	//String replaceString = input.replaceAll("(<html[ =\\w\\\"]*>{1})|(<body[ =\\w\\\"]*>{1})|<html>|</html>|<body>|</body>|<head>|</head>",""); //regEx
-	int index =0; //
-	//top row or heading
-	if(index==0) {
-	 	logString = "<html><head>";
-	 	logString=logString+"<title>"+label+"</title>";
-	 	logString=logString+"<script> border {border-style:dotted;}</script>"; //css
-	 	logString=logString+"</head>"+"<body>";// use the label for the html page (if needed)
-	 	//logString=logString+"<p><b>"+label+"</b></p>";
-	 	logString=logString+"<H1>"+label+"</H1>";
-	 }
-	 //iterate and create rest of file
-	Scanner scanner1 = new Scanner(input);
- 	String prefix = "<p>";
- 	String suffix="</p>";
-
-	 while (scanner1.hasNextLine()) {
-	 	//just make paragraphs for now
-	 	String thisLine=scanner1.nextLine();
-	 	logString=logString+prefix+thisLine+suffix;
-	 }
-	 //
-	 Scanner scanner2 = new Scanner(notes);
-	 String prefixdiv="<div id=\"border\">";
-	 String suffixdiv="</div>";
-	 logString=logString+prefixdiv;
-	 while (scanner2.hasNextLine()) {
-	 	String notesLine=scanner2.nextLine();
-	 	logString=logString+prefix+notesLine+suffix;
-	 	System.out.println(notesLine);
-	 }
-	 logString=logString+suffixdiv;
-	 //
-	 logString=logString+"</body></html>";
-	 System.out.println(logString);
-	 //System.exit(0);
-	return logString;
-	}
-	*/
 
 } //end class
