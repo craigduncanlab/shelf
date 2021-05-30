@@ -9,10 +9,12 @@ String docString;
 String docStylesString;
 String docNumberingString;
 ArrayList<String> docxStyles;
+ArrayList<String> stylesList;
 ArrayList<String> lvl0StyleNames;
 ArrayList<String> headingTextList;
-ArrayList<String> blocklist;
-ArrayList<Book>  booklist;		
+ArrayList<xmlBlock> blocklist;
+ArrayList<Book>  booklist;	
+xmlStyles myStyles = new xmlStyles();
 
 //constructor
 public docXML() {
@@ -32,7 +34,7 @@ public void openDocx(File file){
       ZipUtil myZip = new ZipUtil();
       myZip.OpenDocX(file);
       setDocString(myZip.getDocument());
-      setStylesString(myZip.getStyles()); //sets string and populates list
+      myStyles.setStylesString(myZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
       setDocNumberingString(myZip.getNumbering());
       //populate blocklist for future use
       setInitialBlocklist();
@@ -42,11 +44,97 @@ public void openDocx(File file){
 //--blocklist for main API
 
 public void setInitialBlocklist() {
-    ArrayList<String>myLines = getOOXMLParasInclusive(); 
-    ArrayList<Integer> fileindex = codeOOXMLLines(myLines);//TO DO - Lines format should save headings too
-    Parser myParser=new Parser();
-    setBlocklist(myParser.packageBlocksFromLines(myLines,fileindex)); 
+    ArrayList<xmlPara>myLines=getOOXMLParasInclusive(); //lines are coded as they are added
+    setBlocklist(makeBlocksFromParas(myLines)); 
 }
+
+//TO DO: block for first page
+public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
+    ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
+    xmlBlock currentblock = new xmlBlock();
+    
+    String headertext="";
+    int cl=0;
+    for (xmlPara thisPara: myLines) {
+        int linecode=thisPara.getLineCode();//.get(cl);
+        //if this row is a heading
+        System.out.println(cl+") ["+linecode+"] "+thisPara.getParaString());
+
+        //SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
+        if (linecode==0) { //if we encounter start of next block (#)
+            //first line
+                if (currentblock.getStoredLines()>0) {
+                    newBlocks.add(currentblock); //add the current block to newBlocks array
+                    currentblock=new xmlBlock(); //reset it to a new pointer
+                }
+                //Adds xmlPara to Block, then makes text property from it.
+                currentblock.addLineObject(thisPara); 
+        }
+        //for linecode > 0, add it (could ignore lines with other codes, or pre-process, but don't do it for now)
+        if (linecode>0) { 
+                currentblock.addLineObject(thisPara);
+        }
+        cl++; //increase line count for index   
+    }   //end loop
+
+    //add last block or we drop 1 each time
+    if (currentblock.getStoredLines()>0) {
+        newBlocks.add(currentblock); //add the current block to newBlocks array
+    }
+    /*
+    int linecount=0;
+    System.out.println("Size of results:"+myLines.size());
+    System.out.println("Lines, then stop");
+    //int linecount=1;
+    for (xmlBlock item: newBlocks) {
+        System.out.println(linecount);
+        System.out.println (item.toString());
+        linecount++;
+    }
+     
+    System.out.println("Stopping in makeBlocks");
+    System.exit(0);
+    */
+    return newBlocks;
+}
+
+// -- CODING PARAGRAPHS BASED ON STYLES OR OTHER FEATURES
+
+/*  
+
+Input: a <w:p> tagged paragraph from OOXML document.xml
+Also, linecount to see where we are in file.
+ 
+Function: checks to see if the StyleId in this paragraph is same as the list of StyleIds that
+have Outline lvl 0.  
+
+Output: If  a match, returns 0 (as if H1 or # in markdown). Otherwise returns 1.
+*/
+
+public xmlPara setmyParaCode(xmlPara thisPara) {
+        int code=1;
+        //System.out.println("Row:"+thisRow);
+        String paraStyle = thisPara.getpStyle(); 
+        //no style found to check against
+        if (paraStyle.length()==0) {
+            //return code;
+            thisPara.setLineCode(code);
+        }
+        //make reference to all the styles
+        xmlStyles stylesObject = getStylesObject(); //(xmlStyles).  
+        ArrayList<xstyle> stylesList=stylesObject.getOutline0Styles(); //just the Outline 0 styles
+        for (xstyle item : stylesList) {
+            String styleId=item.getId();
+            //match
+            if (paraStyle.equals(styleId)) {
+                thisPara.setLineCode(0);
+            }
+            else {
+                thisPara.setLineCode(code);
+            }
+    }
+    return thisPara; //need to do this to update the object 
+ }
 
 // -- METADATA FOR DOCX PROJECTS
 
@@ -56,15 +144,6 @@ public void setdocxStyles(ArrayList<String> input){
 
 public ArrayList<String> getdocxStyles(){
     return this.docxStyles;
-}
-
-public void setLvl0Styles(ArrayList<String> input){
-    this.lvl0StyleNames=input;
-}
-
-
-public ArrayList<String> getlvl0Styles(){
-    return this.lvl0StyleNames;
 }
 
 /* Add another heading to the heading text list */
@@ -87,16 +166,12 @@ public String getDocString() {
 	return docString;
 }
 
-public void setStylesString(String input) {
-	docStylesString = input;
-	//update other states that use styles
-	ArrayList<String> myStyles=getStylesInclusive();
-	setStyleLvlNames(myStyles);
-	//setLvl0Styles();
-}
-
 public String getStylesString() {
 	return docStylesString;
+}
+
+public xmlStyles getStylesObject(){
+    return this.myStyles;
 }
 
 public void setDocNumberingString(String input) {
@@ -109,11 +184,11 @@ public String getDocNumberingString() {
 
 // - BLOCKS/BOOKS API
 
-public void setBlocklist(ArrayList<String> input) {
+public void setBlocklist(ArrayList<xmlBlock> input) {
     this.blocklist = input;
 }
 
-public ArrayList<String> getBlocklist() {
+public ArrayList<xmlBlock> getBlocklist() {
     return this.blocklist;
 }
 
@@ -134,11 +209,28 @@ This is the entire document.xml (could be a smaller string, if needed)
 output:
 An array of String type with elements that inclusively match the requested tags
 */
-public ArrayList<String> getOOXMLParasInclusive(){
+public ArrayList<xmlPara> getOOXMLParasInclusive(){
 	String contents = getDocString(); 
     String starttag="<w:p>";
     String endtag="</w:p>";
-    ArrayList<String> result=getTagAttribInclusive(contents,starttag,endtag);
+    //ArrayList<String> result=getTagAttribInclusive(contents,starttag,endtag);
+    ArrayList<xmlPara> result=getXMLparas(contents,starttag,endtag);
+    
+    /*
+    int linecount=0;
+    System.out.println("Size of results:"+result.size());
+    System.out.println("Lines, then stop");
+    //int linecount=1;
+    for (xmlPara item: result) {
+        System.out.println(linecount);
+        System.out.println ("Code:"+item.getLineCode());
+        System.out.println (item.getParaString());
+        linecount++;
+    }
+     
+    System.out.println("Stopping in getOOXMLParasInclusive");
+    System.exit(0);
+    */
     return result;
 }
 
@@ -163,161 +255,34 @@ public ArrayList<String> getStylesInclusive(){
     return result;
 }
 
-/* 
-get the styleId of the current style in styles.xml 
-*/
-
-public String getStyleId(String item){
-	String parameter = "w:styleId";
-	String output=getParameterValue(item,parameter);
-	//System.out.println(parameter+","+item+"--->"+output);
-	return output;
-}
-
-/* 
-get the styleId of the current document.xml paragraph <w:p>
-*/
-//w:pStyle w:val
-public String getParaStyleId(String item){
-	String parameter = "pStyle w:val";
-	String output=getParameterValue(item,parameter);
-	//System.out.println(parameter+","+item+"--->"+output);
-	return output;
-}
-
-/*
-input: inclusive arraylist of styles tags from styles.xml (as full strings)
-
-output: only a list of names of styles that contain outline lvl= 0
-*/
-
-public void setStyleLvlNames(ArrayList<String> input) {
-	  System.out.println("Preparing a list of lvl 0 styles from styles list");
-      ArrayList<String> output = new ArrayList<String>();
-      int length = input.size();  // number of blocks
-      if (length>0) {
-        Iterator<String> iter = input.iterator(); 
-          while (iter.hasNext()) {
-              String item = iter.next();
-              if (item.contains("<w:outlineLvl w:val=\"0\"/>")) {
-              		String name=getStyleId(item);
-              		System.out.println("Match in this para:"+item);
-              		System.out.println(name);
-                	output.add(name);
-              }
-              else {
-                //do nothing
-              }
-         } //end while
-      } //end if
-      //list and exit for now
-      System.out.println(output.toString());
-      setLvl0Styles(output);
-}
-
-/*  
-
-Input: a <w:p> tagged paragraph from OOXML document.xml
-Also, linecount to see where we are in file.
- 
-Function: checks to see if the StyleId in this paragraph is same as the list of StyleIds that
-have Outline lvl 0.  
-
-Output: If  a match, returns 0 (as if H1 or # in markdown). Otherwise returns 1.
-*/
-
-public int getOOXMLLevel0code(String thisRow, int linecount) {
-		int code=1;
-		System.out.println("Row:"+thisRow);
-		String styleID = getParaStyleId(thisRow);
-		System.out.println("Detected style in this para:"+styleID);
-		//no style found to check against
-		if (styleID.length()==0) {
-			return code;
-		}
-		
-		ArrayList<String> stylesList = getlvl0Styles();
-		for (String item : stylesList) {
-			System.out.println("Checking this from list:"+item);
-			//match
-			if (item.contains(styleID)) {
-				//if we haven't add heading text for first part of file
-				if (linecount>0 && this.headingTextList.size()==0) {
-					this.headingTextList.add("First page");
-				}
-				String headingText=getTextTags(thisRow);
-				addHeadingText(headingText);
-				//System.out.println("Heading Text:"+headingText);
-				//System.exit(0);
-				return 0;
-			}
-	}
-     return code;
- }
 
 
 /*
-input: a paragraph string from document.xml
-
-output: just the <w:t> tags section
-*/
-
-public String getTextTags(String input){
-	String starttag="<w:t>";
-	String endtag="</w:t>";
-	ArrayList<String> result = getTagAttribInclusive(input,starttag,endtag); 
-	ArrayList<String> result2 =  new ArrayList<String>();
-	//remove ad hoc internal <w:t> tag
-	for (String item: result) {
-		item = item.replace("<w:t xml:space=\"preserve\">",""); 
-		result2.add(item);
-	}
-	String output = removeTags(result2,starttag,endtag);
-	//System.out.println(output);
-	return output;
-}
-
-/*
-Remove input tags from string
-Input: a <w:t> set from <x:p> sourced from document.xml
-
-*/
-
-public String removeTags(ArrayList<String> inputList, String tag1, String tag2) {
-	String empty="";
-	String output="";
-	for (String input: inputList) {
-		//TO DO: move this to <w:t> text specific area
-		String output1 = input.replace(tag1,empty);
-		String output2 = output1.replace(tag2,empty);
-		output=output+output2;
-	}
-	return output;
-}
-
-public ArrayList<Integer>codeOOXMLLines(ArrayList<String> myLines) {
+public void codeOOXMLLines(ArrayList<xmlPara> myLines) {
 	System.out.println("Starting OOXML code checks");
 	System.out.println("Lines to process:"+myLines.size());
-	//System.out.println("Lines :"+myLines.toString());
-	ArrayList<Integer> fileindex = new ArrayList<Integer>();
 	int linecount=1;
-	for (String thisRow : myLines) {
-		System.out.println("Current Row:\n"+thisRow);
-		int bcode=getOOXMLLevel0code(thisRow,linecount);
+	for (xmlPara thisPara : myLines) {
+		//System.out.println("Current Row:\n"+thisRow);
+        String thisText = thisPara.getLineText();
+		int bcode=thisPara.setLevel0Code(this.myStyles);
 		System.out.println(linecount+")"+bcode);
 		//int bcode=setOOXMLLineCode(thisRow);
-		fileindex.add(bcode);
+		thisPara.setLineCode(bcode);
+        thisPara.setLineIndex(linecount);
 		linecount++;
 	} 
 	//System.exit(0);
-	return fileindex;
+	return myLines;
 }
+*/
 
 /*
 # removes end of start tag so that included attributes section can be found
 # e.g. <w:p> becomes <w:p and looks for > ahead.
 # end tag is unaltered
 # To do: use this to replace getTagListInclusive function
+Also: <w:table> will appear in midst of <w:p> tags so need to allow for this in Block creation
 */
 public ArrayList<String> getTagAttribInclusive(String thispara,String starttag, String endtag) {
     ArrayList<String> output= new ArrayList<String>();
@@ -352,68 +317,73 @@ public ArrayList<String> getTagAttribInclusive(String thispara,String starttag, 
     return output;
 }
 
-/*
-input: name of parameter, where it is specified in OOXML tag.  Do not include = or ""
-
-output: value of parameter
-
-*/
-
-public String getParameterValue(String thispara,String parameter) {
-    String output="";
-    int stop = thispara.length();
+public ArrayList<xmlPara> getXMLparas(String input,String starttag, String endtag) {
+    ArrayList<xmlPara> output= new ArrayList<xmlPara>();
+    xmlPara currentPara = new xmlPara();
+    int stop = input.length();
     int newstart=0;
-    //String starttagend=starttag.substring(starttag.length()-1,starttag.length()); // this will be > in all cases
-    String starttag=parameter+"=\""; //starttag.substring(0,starttag.length()-1);// strip off closing >
-    String endtag="\"";
+    String starttagend=starttag.substring(starttag.length()-1,starttag.length()); // this will be > in all cases
+    starttag=starttag.substring(0,starttag.length()-1);// strip off closing >
     while (newstart<=stop) {
-        int sindex=thispara.indexOf(starttag,newstart); //unlike python 'find', stop value not needed
+        currentPara = new xmlPara(); //to reset the reference.
+        int sindex=input.indexOf(starttag,newstart); //unlike python 'find', stop value not needed
         if (sindex==-1) {
             return output; // nothing found to end = None?
         }
-        //find first index of end tag, but start past end of starttag
-        int findex=thispara.indexOf(endtag,sindex+starttag.length()); 
-        //String test=thispara.substring(sindex+starttag.length(),sindex+starttag.length()+1);
-        if (findex!=-1){
-                String thistext=thispara.substring(sindex+starttag.length(),findex);
-                return thistext;
+        int findex=input.indexOf(endtag,sindex); //find first index of end tag
+        String test=input.substring(sindex+starttag.length(),sindex+starttag.length()+1);
+        if (test.equals(starttagend) || test.equals(" ")) {
+            if (findex!=-1){
+                String thistext=input.substring(sindex,findex+endtag.length());
+                // omit if this is a picture
+                //testpict="<w:pict>"
+                //if testpict not in thistext:
+                currentPara.setParaString(thistext); //initialise the paragraph with text
+                currentPara=setmyParaCode(currentPara); //update object
+                /*
+                if (currentPara.getLineCode()==0) {
+                    System.out.println("Retained a 0 code");
+                    System.exit(0);
+                }
+                */
+                output.add(currentPara); // add to the array
+                newstart=findex+endtag.length(); //len(endtag);
             }
             else {
                 newstart=newstart+1;
             }
+        }
+        else {
+            newstart=newstart+1;
+        }
     }
+    /*
+    System.out.println("Stopped in getXMLparas");
+    System.exit(0);
+    */
     return output;
 }
 
+/* 
+Function to make Book (intermediate data object, for GUI) from xmlBlock objects
+*/
 public void makeBooksFromBlocklist(){
     ArrayList<Book> myBookList = new ArrayList<Book>();
-      Parser myParser=new Parser();
-      int headingcount=0;
-      ArrayList<String> headList = getHeadingList();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
       int length = this.blocklist.size();  // number of blocks
       System.out.println(length); //each of these numbered blocks is a string.
       int rowcount=0;
       if (length>0) {
-        Iterator<String> iter = this.blocklist.iterator(); 
+        Iterator<xmlBlock> iter = this.blocklist.iterator(); 
           while (iter.hasNext()) {
-              //creates new Book, fills data from internal structure of String file, but this assumes markdown
-              //TO DO: create new book with data.  Add GUI properties after
-              //Book newBook=myParser.parseMDfile(MainStage.this,PressBox,DragBox,iter.next());
-              //constructor: make new meta data with label of book
-             //DO we need Event handlers for a data object? Add them to a purely GUI object?
-              Book newBook =new Book(iter.next()); //TO DO:separate data model more
+              xmlBlock myBlock = iter.next();
+              Book newBook =new Book(myBlock); 
+              System.out.println("Book heading:"+newBook.getLabel());
               //
               if (newBook!=null) {
-                System.out.println("Starting iteration of block lines in MD");
-                //set position as part of data model
+                //set default position for GUI?
                 newBook.setRow(rowcount); //default col is 0.
                 newBook.setCol(0);
-                //add heading from docXML.  Needs to align to 'read' of headings and 0 codes.
-                if (headList.size()>headingcount){
-                  newBook.setLabel(headList.get(headingcount));
-                  headingcount++;
-                } 
               }
               else {
                 System.out.println("Nothing returned from parser");
@@ -424,4 +394,43 @@ public void makeBooksFromBlocklist(){
       } //end if
     setBooklist(myBookList);
     }
+
+//write out Word just from notes in blocks, using some Standard styles
+public void writeOutWordFromBooks(String filepath, ArrayList<Book> mySaveBooks) {
+    System.out.println("Saving: "+filepath);
+    Parser myP = new Parser();
+    Iterator<Book> myIterator = mySaveBooks.iterator();
+    StringBuffer myWordOutput=new StringBuffer();
+         while (myIterator.hasNext()) {
+            Book myNode=myIterator.next();
+            //System.out.println(myNode.toString());
+            
+            //to preserve original word contents:
+            //String myWordString = myNode.getOOXMLtext(); //or get markdown?
+
+            //Convert text to OOXML
+            String myWordString=myP.getOOXMLfromContents(myNode); //this gets wordcodes every time
+            
+            myWordOutput.append(myWordString);
+            myWordString="";
+             //option: prepare string here, then write once.
+        }
+        //System.exit(0);
+        WordWriter(myWordOutput.toString(),filepath);
+}
+
+
+//basic writer to create a de novo Word Doc from just the String (i.e. mdnotes)
+
+public void WordWriter(String inputstring, String filename) {
+    String myRefFile="wordlib/StylesTemplate.docx";
+    //we need to take inputstring, insert it into document.xml and then zip it up with rest of docx
+    File sourceFile = new File("wordlib/LittleDoc.xml");
+    ZipUtil util = new ZipUtil();
+    String myDocument = util.getFileText(sourceFile); //alternatively, extract from StylesTemplate
+    String newDoc=myDocument.replace("XXXXXX",inputstring); //we now have a new document.xml
+   
+    util.readAndReplaceZip(myRefFile,newDoc,filename);
+}
+
 }
