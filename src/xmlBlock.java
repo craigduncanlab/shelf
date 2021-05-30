@@ -9,12 +9,13 @@ import java.io.IOException;
 import java.util.*; //scanner, HashMap etc
 
 public class xmlBlock {
-	ArrayList<xmlPara> blockLines =new ArrayList<xmlPara>();
+	ArrayList<xmlPara> blockParas =new ArrayList<xmlPara>();
 	int blockIndex=0;
 	int blocktype=1; //default.  in substance this is the 'fileindex' code for this line
 	String blockText="";
 	String notesText="";
 	String headerText="";
+	int OutlineLevel=0; //a way to classify blocks for display etc.
 
 //constructor
 public xmlBlock(){
@@ -29,33 +30,38 @@ public String getHeaderText(){
 	return this.headerText;
 }
 
-public void importBlockLines(ArrayList<xmlPara> myLines){
-	for (xmlPara myItem: myLines) {
-		blockLines.add(myItem);
+public void importblockParas(ArrayList<xmlPara> myParas){
+	for (xmlPara myItem: myParas) {
+		blockParas.add(myItem);
 	}
 }
 
 //Does not update the blocktext each time a new xmlPara object is added to the block
 public void addLineObject(xmlPara myObject){
-	blockLines.add(myObject);
+	blockParas.add(myObject);
 }
 
 public int getStoredLines(){
-	return blockLines.size();
+	return blockParas.size();
 }
 
 //make text from <w:p> paragraphs in this block.  
 public void makeBlockText(){
 	String output="";
-	for (xmlPara myItem: this.blockLines) {
-		int code = myItem.getLineCode();
-		if (code==0) {
+	int numLevels=1;
+	for (xmlPara myItem: this.blockParas) {
+		int code = myItem.getLineCode(); //alternatively, get outline level
+		int level = myItem.getOutlineLevel();
+		//The range of outline levels that will be included as headings/new blocks, starting at 0
+		if (level<numLevels) { 
+			myItem.setOutlineLevel(myItem.getOutlineLevel());
 			String text = myItem.getParaString();
 			String plain = myItem.getplainText(); //removed from <w:t>
 			output=output+text+System.getProperty("line.separator");
 			setHeaderText(plain);
 			}
-		if (code==1) {
+		//code 99 for paragraphs that are included in the blocks as general text/notes etc
+		else  {
 			String text = myItem.getParaString();
 			output=output+text+System.getProperty("line.separator");
 		}
@@ -69,7 +75,7 @@ public void makeBlockText(){
 
 public void makeNotesText(){
 	String output="";
-	for (xmlPara myItem: this.blockLines) {
+	for (xmlPara myItem: this.blockParas) {
 		int code = myItem.getLineCode();
 		if (code==6) {
 			String line = myItem.getParaString();

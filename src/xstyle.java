@@ -7,7 +7,7 @@ public class xstyle {
 	String type="";//this could be paragraph, character or table
 	String customStyle=""; // this is '1' for user defined?
 	String basedOn="";
-	String outlineLevel="";
+	int outlineLevel=99;
 	
 //constructor
 public xstyle(){
@@ -48,11 +48,11 @@ public String getId(){
 	return this.Id;
 }
 
-public void setOutlineLevel(String input){
+public void setOutlineLevel(int input){
 	this.outlineLevel=input;
 }
 
-public String getOutlineLevel(){
+public int getOutlineLevel(){
 	return this.outlineLevel;
 }
 
@@ -99,13 +99,13 @@ public void extractBasedOn(){
 }
 
 public void extractOutlineLevel(){
-	String output="99";
+	int output=99;
 	String parameter="w:outlineLvl w:val";
 	xmlTool myP = new xmlTool();
 	String result=myP.getParameterValue(this.styleString,parameter);
 	//allow for no outline level being present
 	if (result.length()>0) {
-		output=result;
+		output=Integer.parseInt(result);
 	}
 	setOutlineLevel(output);
 }

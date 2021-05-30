@@ -49,19 +49,24 @@ public void setInitialBlocklist() {
 }
 
 //TO DO: block for first page
+//numLevels should match number in xmlBlock 'makeBlockText' function
 public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
+    int numLevels=1;
     ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
     xmlBlock currentblock = new xmlBlock();
     
     String headertext="";
     int cl=0;
     for (xmlPara thisPara: myLines) {
-        int linecode=thisPara.getLineCode();//.get(cl);
+        int linecode=thisPara.getOutlineLevel();//.get(cl);  cf getLineCode
         //if this row is a heading
         System.out.println(cl+") ["+linecode+"] "+thisPara.getParaString());
 
         //SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
-        if (linecode==0) { //if we encounter start of next block (#)
+
+        //check each level in turn and make a new block if it is detected in this paragraph.
+        for (int testlevel=0;testlevel<numLevels;testlevel++) {
+        if (linecode==testlevel) { //if we encounter start of next block (#)
             //first line
                 if (currentblock.getStoredLines()>0) {
                     newBlocks.add(currentblock); //add the current block to newBlocks array
@@ -69,9 +74,10 @@ public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
                 }
                 //Adds xmlPara to Block, then makes text property from it.
                 currentblock.addLineObject(thisPara); 
+            }
         }
         //for linecode > 0, add it (could ignore lines with other codes, or pre-process, but don't do it for now)
-        if (linecode>0) { 
+        if (linecode>(numLevels-1)) { 
                 currentblock.addLineObject(thisPara);
         }
         cl++; //increase line count for index   
@@ -97,8 +103,8 @@ have Outline lvl 0.
 Output: If  a match, returns 0 (as if H1 or # in markdown). Otherwise returns 1.
 */
 
-public xmlPara setmyParaCode(xmlPara thisPara) {
-        int code=1;
+public xmlPara setmyParaOutlineCode(xmlPara thisPara) {
+        int code=99;
         //System.out.println("Row:"+thisRow);
         String paraStyle = thisPara.getpStyle(); 
         //no style found to check against
@@ -108,16 +114,16 @@ public xmlPara setmyParaCode(xmlPara thisPara) {
         }
         //make reference to all the styles
         xmlStyles stylesObject = getStylesObject(); //(xmlStyles).  
-        ArrayList<xstyle> stylesList=stylesObject.getOutline0Styles(); //just the Outline 0 styles
-        for (xstyle item : stylesList) {
+        ArrayList<xstyle> stylesList=stylesObject.getOutlineStyles(); //all the Outline styles
+        for (xstyle item : stylesList ) {
+            thisPara.setLineCode(code); //for custom block definition
             String styleId=item.getId();
-            //match
+            //match on the style with this paragraph
             if (paraStyle.equals(styleId)) {
-                thisPara.setLineCode(0);
-            }
-            else {
-                thisPara.setLineCode(code);
-            }
+                //thisPara.setLineCode(0);
+                thisPara.setOutlineLevel(item.getOutlineLevel()); //para stores same outline level as its style
+                thisPara.setLineCode(item.getOutlineLevel()); //TO DO: can be an indepenent category
+        }
     }
     return thisPara; //need to do this to update the object 
  }
@@ -281,7 +287,7 @@ public ArrayList<xmlPara> getXMLparas(String input,String starttag, String endta
                 //testpict="<w:pict>"
                 //if testpict not in thistext:
                 currentPara.setParaString(thistext); //initialise the paragraph with text
-                currentPara=setmyParaCode(currentPara); //update object
+                currentPara=setmyParaOutlineCode(currentPara); //update para with style information
                 output.add(currentPara); // add to the array
                 newstart=findex+endtag.length(); //len(endtag);
             }
