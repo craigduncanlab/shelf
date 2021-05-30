@@ -181,7 +181,7 @@ CheckBox visibleCheck = new CheckBox("Visible");
 Integer margin_yaxis;
 Integer margin_xaxis;
 Integer cellcols=50;
-Integer cellrows=20;
+Integer cellrows=50; //make this 50 for sure
 Integer cellgap_x=80; //cellwidth x dimension
 Integer cellgap_y=100; //cell width y dimension
 Integer firstcell_x=this.cellgap_x;
@@ -1827,9 +1827,16 @@ Sets up workspace stage with 2 subgroups for vertical separation:
 This method does not update content of the Sprite-display GUI node.
 
 */
-//myGroup_root--->
-//myBP(top)-->menuBarGroup-->myMenu
-//myBP(center)-->myScrollPane-->filename+workspacePane-->displayAreaGroup (for BookIcons etc to be added)
+/* Structure of GUI Nodes:
+
+myGroup_root--->
+myBP(top)-->menuBarGroup-->myMenu
+myBP(center)-->myScrollPane-->filename+workspacePane (Pane) -->displayAreaGroup (for BookIcons etc to be added)+ RowLines (Line) + ColLines (Line)
+
+TO DO: the Pane should only display a 'Window' of content and then shift content, so that it is an infinite size and does not need to be defined.
+We might need at least 30 rows for some outline views of Word docs etc.
+*/
+
 private Group makeWorkspaceTree() {
 
         Group myGroup_root = new Group(); //for root node of Scene
