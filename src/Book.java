@@ -67,6 +67,7 @@ String output="";
 String htmlString="";
 String mdString="";
 String OOXMLtext="";
+String styleXML="";
 Boolean visible = true;
 Text bookspinetext = new Text ("new book");//Default label text for every Book
 double myXpos = 100; //default for shelves. not needed?
@@ -121,6 +122,7 @@ public Book(xmlBlock input) {
 	setNotes(input.getNotesText());
 	setMD(input.getBlockText()); //check this is ok? 
 	setLabel(input.getHeaderText());
+	setStyleXML(input.getStyleXML());
 }
 
 //Function to set GUI event handlers separate to main data
@@ -139,7 +141,7 @@ public void updateMDText(String label, String text, String note) {
 }
 
 //general update text function
-public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String datetext,String timetext,String mdtext, String note) {
+public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String datetext,String timetext,String mdtext, String tabnote, String note) {
 	//setDocName(name);
 	setdocfilepath(filepath);
 	setimagefilepath(imagepath);
@@ -155,7 +157,13 @@ public void updateEditedText(String filepath,String urlpath, String imagepath, S
 	setLabel(label);
 	updateDisplay();
 	setMD(mdtext);
-    setNotes(note);
+	//remove this ambiguity.  Make one 'code'
+	if (tabnote.length()>0){
+		setNotes(tabnote);
+	}
+	else {
+	    setNotes(note);
+	}
     setCode(code);
 }
 
@@ -389,6 +397,14 @@ public String getCode () {
 	return this.code;
 }
 
+public String getStyleXML(){
+	return this.styleXML;
+}
+
+public void setStyleXML(String input){
+	this.styleXML=input;
+}
+
 //default HTML
 private String defaultHTML() {
 	//return "<html dir="ltr"><head></head><body contenteditable="true"></body></html>"
@@ -521,6 +537,7 @@ public Book cloneBook() {
 	clone.setLabel(this.booklabel);
 	clone.setMD(this.mdString);
 	clone.setNotes(this.docnotes);
+	//ooxml
 	clone.setCode(this.code);
 	clone.setdocfilepath(this.docxfilepath);
 	clone.seturlpath(this.urlpath);
