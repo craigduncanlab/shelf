@@ -9,6 +9,7 @@ String docString;
 String docStylesString;
 String docNumberingString;
 ArrayList<String> docxStyles;
+ArrayList<xmlPara> paraList;
 ArrayList<String> stylesList;
 ArrayList<String> lvl0StyleNames;
 ArrayList<String> headingTextList;
@@ -30,22 +31,39 @@ Those contents need to be interpreted to find out the 'intent' of paragraph prop
 It is best to store them in-memory to work on them later
 */
 
+//nb: this Zip object holds the original docx information, whilst it persists.
+
 public void openDocx(File file){
       ZipUtil myZip = new ZipUtil();
       myZip.OpenDocX(file);
       setDocString(myZip.getDocument());
       myStyles.setStylesString(myZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
+      setStylesString(myStyles.getStylesString()); //update the document version of styles.xml
       setDocNumberingString(myZip.getNumbering());
       //populate blocklist for future use
+      setInitialParalist();
       setInitialBlocklist();
       makeBooksFromBlocklist();
 }
 
 //--blocklist for main API
 
-public void setInitialBlocklist() {
+public void setInitialParalist() {
     ArrayList<xmlPara>myLines=extractParas(); //lines are coded as they are added
-    setBlocklist(makeBlocksFromParas(myLines)); 
+    setParaList(myLines);
+}
+
+public void setParaList(ArrayList <xmlPara> input) {
+    this.paraList=input;
+}
+
+public ArrayList<xmlPara>getParaList() {
+    return this.paraList;
+}
+
+public void setInitialBlocklist() {
+    ArrayList<xmlPara>myLines=getParaList(); 
+    setBlocklist(makeBlocksFromParas(myLines)); //lines are coded as they are added
 }
 
 //TO DO: block for first page
@@ -123,6 +141,7 @@ public xmlPara setmyParaOutlineCode(xmlPara thisPara) {
                 //thisPara.setLineCode(0);
                 thisPara.setOutlineLevel(item.getOutlineLevel()); //para stores same outline level as its style
                 thisPara.setLineCode(item.getOutlineLevel()); //TO DO: can be an indepenent category
+                thisPara.setStyleXML(item.getStyle());
         }
     }
     return thisPara; //need to do this to update the object 
@@ -158,8 +177,12 @@ public String getDocString() {
 	return docString;
 }
 
+public void setStylesString(String input) {
+    this.docStylesString=input;;
+}
+
 public String getStylesString() {
-	return docStylesString;
+	return this.docStylesString;
 }
 
 public xmlStyles getStylesObject(){
