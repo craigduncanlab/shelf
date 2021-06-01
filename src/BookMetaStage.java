@@ -130,6 +130,7 @@ TextArea mdTextTabA = new TextArea();
 TextArea mdTextTabB = new TextArea();
 TextArea mdTextTabC = new TextArea();
 TextArea mdTextTabD = new TextArea();
+TextArea mdTextTabE = new TextArea();
 TabPane mdTabPane = new TabPane();
 TextArea bookLabelTextArea = new TextArea();
 TextArea codeNotesTextArea = new TextArea();
@@ -683,13 +684,14 @@ public void restoreBookMeta() {
         }
         mdTextTabC.setText(ootext);
         mdTextTabD.setText(notext);
+        mdTextTabE.setText(updateNode.getStyleXML());
 }
 
 public void updateBookMeta() {
         Book thisBook=getActiveBook();
         System.out.println("This book box : "+thisBook.toString());
         //System.exit(0);
-        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(),bookLabelTextArea.getText(),dateLabelTextArea.getText(),timeLabelTextArea.getText(),mdTextTabA.getText(),codeNotesTextArea.getText());
+        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(),bookLabelTextArea.getText(),dateLabelTextArea.getText(),timeLabelTextArea.getText(),mdTextTabA.getText(),mdTextTabD.getText(),codeNotesTextArea.getText());
         thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
         updateHTMLpreview(thisBook); //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
@@ -866,6 +868,10 @@ private void makeSceneForBookMetaView() {
         mdTextTabD.setWrapText(true);
         mdTextTabD.setStyle(terminalStyle);
 
+        mdTextTabE.setPrefRowCount(20); //for markdown.  Add to boxPane
+        mdTextTabE.setWrapText(true);
+        mdTextTabE.setStyle(terminalStyle);
+
         imagepathTextArea.setPrefRowCount(1);
         filepathTextArea.setPrefRowCount(1);
         urlTextArea.setPrefRowCount(1);
@@ -942,6 +948,11 @@ private void makeSceneForBookMetaView() {
           tabD.setText("Notes");
           tabD.setContent(mdTextTabD);
           mdTabPane.getTabs().add(tabD);
+
+          Tab tabE = new Tab();
+          tabE.setText("StyleXML");
+          tabE.setContent(mdTextTabE);
+          mdTabPane.getTabs().add(tabE);
 
         //handle null case
         if (getActiveBook().getUserView()==null) {
