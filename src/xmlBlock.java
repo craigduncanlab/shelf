@@ -16,6 +16,7 @@ public class xmlBlock {
 	String notesText="";
 	String headerText="";
 	int OutlineLevel=0; //a way to classify blocks for display etc.
+	String StyleXML="";
 
 //constructor
 public xmlBlock(){
@@ -28,6 +29,14 @@ public void setHeaderText(String input){
 
 public String getHeaderText(){
 	return this.headerText;
+}
+
+public void setStyleXML(String input){
+	this.StyleXML=input;
+}
+
+public String getStyleXML(){
+	return this.StyleXML;
 }
 
 public void importblockParas(ArrayList<xmlPara> myParas){
@@ -59,6 +68,7 @@ public void makeBlockText(){
 			String plain = myItem.getplainText(); //removed from <w:t>
 			output=output+text+System.getProperty("line.separator");
 			setHeaderText(plain);
+			setStyleXML(myItem.getStyleXML());
 			}
 		//code 99 for paragraphs that are included in the blocks as general text/notes etc
 		else  {
