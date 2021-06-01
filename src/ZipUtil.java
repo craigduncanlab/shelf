@@ -4,6 +4,8 @@ import java.io.*;  //Buffered Reader, File Reader, IOException, FileNoteFoundExc
 import java.util.*; //scanner, HashMap, ArrayList etc, Zip...
 import java.nio.charset.StandardCharsets; 
 
+/* This Class was originally designed to open files, but it can also substitute new components for re-use */
+
 public class ZipUtil {
 	//instance variables to store unzipped Word/docx contents
 	String myDocument="";
@@ -127,12 +129,16 @@ outFile is the output file name (no extension)
 also: target is the internal path inside the zip file for document.xml
 */
 
-public ArrayList<ZipEntry> readAndReplaceZip(String fileZip, String docxml, String outFile) {
+public ArrayList<ZipEntry> readAndReplaceZip(docXML tempDoc, String templateDocx, String outFile) {
+	
 	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
 	File f = new File(outFile); //outputfile
-	String target="word/document.xml";
+	String maindoc="word/document.xml";
+	String styledoc="word/styles.xml";
+	String docxml = tempDoc.getDocString();
+	String stylexml = tempDoc.getStylesString();
 	try  {
-		FileInputStream myFileStream = new FileInputStream(fileZip);
+		FileInputStream myFileStream = new FileInputStream(templateDocx); //reads in all parts of templateDocx
 		FileOutputStream myOutputStream = new FileOutputStream(f);
 		//Setup 2 streams
 		ZipInputStream zis = new ZipInputStream(myFileStream);
@@ -147,13 +153,25 @@ public ArrayList<ZipEntry> readAndReplaceZip(String fileZip, String docxml, Stri
 	    		
 	    	String name =zipItem.getName();
 
-	    	if (name.equals(target)) {
+	    	if (name.equals(maindoc)) {
 				System.out.println(name);
-				ZipEntry newItem = new ZipEntry(target);
+				ZipEntry newItem = new ZipEntry(maindoc);
 				out.putNextEntry(newItem);
 				byte[] data = docxml.getBytes();  //turn String into bytes since thats what ZipFileOutputStream wants
    				newItem.setSize(data.length); //set size
 				System.out.println(docxml);
+				System.out.println(data.length);
+				System.out.println("About to write");
+				out.write(data);
+				out.closeEntry();
+			}
+			else if (name.equals(styledoc)) {
+				System.out.println(name);
+				ZipEntry newItem = new ZipEntry(styledoc);
+				out.putNextEntry(newItem);
+				byte[] data = stylexml.getBytes();  //turn String into bytes since thats what ZipFileOutputStream wants
+   				newItem.setSize(data.length); //set size
+				System.out.println(stylexml);
 				System.out.println(data.length);
 				System.out.println("About to write");
 				out.write(data);
