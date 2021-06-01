@@ -360,6 +360,7 @@ public ArrayList<Book> openFileGetBooklist(File file) {
         setFile(file);
         System.out.println("Processing RMD file.");
         mdFile myRMD = new mdFile();
+        myRMD.openMD(file);
         myBookSet=myRMD.getBooklist();
     }
     if (isOK==true && myProject.getExt().equals("docx")) {
@@ -372,39 +373,62 @@ public ArrayList<Book> openFileGetBooklist(File file) {
     return myBookSet;
     }
 
-public void unpackBooksAsCol(File file) {
-    ArrayList<Book> myBooks = openFileGetBooklist(file);
-    //System.out.println("Book count myBooks:"+myBooks.size());
-    //System.exit(0);
-    addBooksVerticalFromBooklist(myBooks);
+public void unpackBooksAsCol() {
+    nowrap_addProjectBooksVertical(myProject.getBooksOnShelf());//just in order they were added
 }
 
-public void unpackBooksAsRow(File file) {
-    ArrayList<Book> myBooks = openFileGetBooklist(file);
-    addBooksHorizontalFromBooklist(myBooks);
+public void unpackBooksAsRow() {
+    nowrap_addProjectBooksHorizontal(myProject.getBooksOnShelf());
 }
 
+public void wrapBooks() {
+  wrapProjectBooksHorizontal(myProject.getBooksOnShelf());
+}
+
+//Adds the book passed here (already in the Project list) to the stage.  AddNewBookToView
 public void AddNewBookToStage(Book newBook) throws NullPointerException {
-     
     //update Data Model and check if myBook is valid.
+    if (myProject.getBooksOnShelf().contains(newBook)) {
+      //do nothing.  Check JavaFX objects too?
+    }
+    else {
+      //this should already have been done, but may not have been done for a 'paste'
+      newBook = getNewBookPositionAdjacent(newBook);
+      myProject.addBookToProject(newBook); //data model
+    }
     //Book newBook=myProject.addBookToProject(newBook);
     try {
-        myProject.addBookToProject(newBook);
         setActiveBook(newBook);
+        //setXYfromRowCol(newBook); X and Y are already set
+        this.bookgroupNode.getChildren().add(newBook); //<----JAVAFX ADDS OBJECT. CAN'T DO TWICE (ERROR)
         System.out.println("finished adding new book to project.  R,C:"+newBook.getRow()+","+newBook.getCol());
-        this.bookgroupNode.getChildren().add(newBook);
-        setXYfromRowCol(newBook);
-        //positionBookOnStage(newBook);  //not needed outside drags
+        //System.exit(0);
     }
     catch (NullPointerException e) {
         System.out.println("NullPointerException in AddNewBookToStage");
         System.exit(0);
     } 
     //
-    //addBookToStage(newBook); //TO DO: just add all books from Parser as a set
+    //addBookToStage(newBook); 
     System.out.println("finished adding new book to stage");
 }
 
+//Adds books in project to stage.  TO DO: check not a duplicate?
+public void AddProjectBooksToStage() throws NullPointerException {
+    ArrayList<Book> myBookList = myProject.getBooksOnShelf();
+    for (Book item: myBookList) {
+    try {
+        setActiveBook(item);
+        this.bookgroupNode.getChildren().add(item); //<----JAVAFX ADDS OBJECT. CAN'T DO TWICE (ERROR)
+        setXYfromRowCol(item);
+        //positionBookOnStage(newBook);  //not needed outside drags
+    }
+    catch (NullPointerException e) {
+        System.out.println("NullPointerException in AddNewBookToStage");
+        System.exit(0);
+    } 
+  } //end for loop
+}
 
 /* input:
 The blocklist (strings) plus docXML info to obtain metadata
@@ -418,38 +442,42 @@ TO DO: Have a separate data object that can be created by file format classes:
 One that has no JavaFX dependencies.
 
 */
-public void addBooksVerticalFromBooklist(ArrayList<Book> myBookSet){
+
+//This updates view based on Project.  These are not 'new' books being added.
+
+public void nowrap_addProjectBooksVertical(ArrayList<Book> myBookSet){
   //not yet the project booklist? DO THAT.  get these books from project.
   int length = myBookSet.size();  // number of blocks
   System.out.println(length); //each of these numbered blocks is a string.
   int rowcount=0;
+  //STEP 1: SET GUI PARAMETERS BEFORE ADDING TO STAGE
   if (length>0) {
     Iterator<Book> iter = myBookSet.iterator(); 
       while (iter.hasNext()) {
           Book thisBook =iter.next(); 
-          //
           if (thisBook!=null) {
            
             //set position as part of data model
             thisBook.setRow(rowcount); //default col is 0.
             thisBook.setCol(0);
+            thisBook.setHandlers(PressBox,DragBox);
+            setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
             }
             else {
               System.out.println("No book to add");
-            }
-            //Stage/GUI parameters. TO DO: Separate Book data from the JavaFX aspects.
-            thisBook.setHandlers(PressBox,DragBox);
-            setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
-            System.out.println("Book to be added: X:"+thisBook.getX()+" Y:"+thisBook.getY()+" R:"+thisBook.getRow()+" C:"+thisBook.getCol());
-            AddNewBookToStage(thisBook); //adds new book to myProject books (and stage) 
+            }           
             rowcount++;
           } //end while
      } //end if
+    //STEP 2: UPDATE PROJECT BOOKS AND THEN ADD ALL TO STAGE
+    //for now, set/update project books as this new set
+    myProject.setBooksOnShelf(myBookSet);
+    AddProjectBooksToStage();
   } 
 
 //TO DO: Allow function to take a row number for insert.
 
-public void addBooksHorizontalFromBooklist(ArrayList<Book> myBookSet){
+public void nowrap_addProjectBooksHorizontal(ArrayList<Book> myBookSet){
   //not yet the project booklist? DO THAT.  get these books from project.
   int length = myBookSet.size();  // number of blocks
   System.out.println(length); //each of these numbered blocks is a string.
@@ -471,18 +499,20 @@ public void addBooksHorizontalFromBooklist(ArrayList<Book> myBookSet){
             //Stage/GUI parameters. TO DO: Separate Book data from the JavaFX aspects.
             thisBook.setHandlers(PressBox,DragBox); //in case not set
             setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
-            AddNewBookToStage(thisBook); //adds new book to myProject books (and stage) 
+            //AddNewBookToStage(thisBook); //adds new book to stage (adds to project only if needed) 
             colcount++;
           } //end while
      } //end if
+     myProject.setBooksOnShelf(myBookSet);
+     AddProjectBooksToStage();
   } 
 
-public void wrapBooksHorizontalFromBooklist(ArrayList<Book> myBookSet){
-  //not yet the project booklist? DO THAT.  get these books from project.
+public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
   int length = myBookSet.size();  // number of blocks
   System.out.println(length); //each of these numbered blocks is a string.
   int colcount=0;
   int rowcount=1;
+  int wrapcol=10;//column to wrap on
   if (length>0) {
     Iterator<Book> iter = myBookSet.iterator(); 
       while (iter.hasNext()) {
@@ -491,7 +521,7 @@ public void wrapBooksHorizontalFromBooklist(ArrayList<Book> myBookSet){
           if (thisBook!=null) {
             System.out.println("Starting iteration of block lines in MD");
             //set position as part of data model
-            thisBook.setRow(colcount); //default col is 0.
+            thisBook.setCol(colcount); //default col is 0.
             thisBook.setRow(rowcount);
             }
             else {
@@ -500,20 +530,26 @@ public void wrapBooksHorizontalFromBooklist(ArrayList<Book> myBookSet){
             //Stage/GUI parameters. TO DO: Separate Book data from the JavaFX aspects.
             thisBook.setHandlers(PressBox,DragBox); //in case not set
             setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
-            AddNewBookToStage(thisBook); //adds new book to myProject books (and stage) 
+            //AddNewBookToStage(thisBook); //adds new book to stage (adds to project only if needed) 
+            if (colcount>wrapcol) {
+              colcount=0;
+              rowcount=rowcount+1;
+            }
+            else {
+              colcount++;
+            }
           } //end while
-          colcount++;
-          if (colcount>10) {
-            colcount=0;
-            rowcount=rowcount+1;
-          }
+          
+          
      } //end if
+    myProject.setBooksOnShelf(myBookSet);
+    AddProjectBooksToStage();
   } 
 
 //Take a raw file, split into sections, and convert to Books...
 //TO DO: use a different function for docx
 //deprecated?
-
+/*
 public void addBooksFromBlocklist(ArrayList<String> blocklist){
       Parser myParser=new Parser();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
@@ -534,6 +570,7 @@ public void addBooksFromBlocklist(ArrayList<String> blocklist){
          } //end while
       } //end if
 }
+*/
 
 //Simple utility to return contents of file as String
 //This is used to read in styles for Word doc output.
@@ -591,7 +628,9 @@ public void openFileAsRow(Integer row) {
         File tryfile = currentFileChooser.showOpenDialog(myStage);
         if (tryfile != null) {
           file = tryfile;
-          unpackBooksAsRow(file); 
+          ArrayList<Book> myBooks = openFileGetBooklist(file);
+          myProject.addBooksToProject(myBooks);
+          unpackBooksAsRow(); 
         } 
         else {
             //DO SOMETHING
@@ -634,7 +673,22 @@ public File openNewFile() {
           file = tryfile;
           
           //if markdown activate process markdown directly
-          unpackBooksAsCol(file); //this will setFile(file) and get data
+          ArrayList<Book> myBooks = openFileGetBooklist(file);
+          myProject.addBooksToProject(myBooks);
+          Integer booknum=myBooks.size();
+
+          if (booknum>20){
+              wrapBooks();
+          }
+          //default is vertical? If > 50 books wrap
+          else if (booknum<6) {
+            unpackBooksAsCol(); //this will setFile(file) and get data
+          }
+          //if between 6 and 20
+          else {
+            unpackBooksAsRow();
+          }
+          
           //TO DO: Event so that double clicking on filename opens it?
           myFileList.add(file.getName()); //add string reference
           myObList.setAll(myFileList); //does a clear and refresh?
@@ -670,9 +724,34 @@ public void saveAs() {
     File file = currentFileChooser.showSaveDialog(myStage);
     if (file != null) {
         setFile(file); //sets name of file in myProject
+        System.out.println(myProject.getFilename());
         writeFileOut();
-        writeOutBooksToWord(); //This is just writing from notes for now (not the docx)
+        writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
         writeOutHTML();
+        } 
+        else {
+            //DO SOMETHING
+        }
+    }
+
+//for save as
+public void saveAsDocx() {
+    Stage myStage = new Stage();
+    myStage.setTitle("Save As ...");
+    //String fn=myProject.getFilepathNoExt();
+    String fn= myProject.getFilenameNoExt();
+    String filename=fn+".docx";
+    this.currentFileChooser.setTitle("Save Project/File As");
+    this.currentFileChooser.setInitialFileName(filename);  
+    this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
+    //System.exit(0);
+    File file = currentFileChooser.showSaveDialog(myStage);
+    if (file != null) {
+        setFile(file); //sets name of file in myProject
+        System.out.println(myProject.getFilename());
+        //writeFileOut();
+        writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
+        //writeOutHTML();
         } 
         else {
             //DO SOMETHING
@@ -716,55 +795,29 @@ public void writeOutHTML(){
 
 //for direct save - of 'Books'
 public void writeFileOut() {
-    ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();
-    writeOutBooks(mySaveBooks);  
+    //ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();
+    //writeOutBooks(mySaveBooks); 
+    myProject.writeMDFileOut(); 
 }
 
 //for direct Row save
 //Currently retains the grid position of this row. i.e. doesn't write new entries back to row '0' but it could.
 //To do: move to Project instance
 public void writeRowOut(Integer row) {
-    //using existing filename
-    ArrayList<Book> myBookSet = myProject.listBooksShelfOrder();//getBooksOnShelf();
-    ArrayList<Book> myBookRow = new ArrayList<Book>(); 
-    //filter these to just one row
-    Iterator<Book> myIterator = myBookSet.iterator();
-    while (myIterator.hasNext()) {
-      Book thisBook = myIterator.next();
-      Integer checkRow = thisBook.getRow();
-      //integer comparison.
-      if (checkRow.intValue()==row.intValue()) {
-        myBookRow.add(thisBook);
-      }
-    }
-    writeOutBooks(myBookRow);
+    myProject.writeRowOut(row);
 }
 
 //We can only arrive here from a Save As, not Save.  It saves word based on mdnotes, conversion to OOXML
 //So that's only a basic version of a Word docx (not based on an original Word doc)
 //TO DO (FUTURE): Write out a new docx using the docXML contents.
 public void writeOutBooksToWord() {    //
+    myProject.writeOutMDBooksToWord();
+    /*
     ArrayList<Book> mySaveBooks = myProject.listBooksShelfOrder();//getBooksOnShelf();
     String filepath=myProject.getFilename();
     docXMLmaker myDocSave = new docXMLmaker(); //we may be able to use the existing docXML in future.
     myDocSave.writeOutWordFromBooks(filepath,mySaveBooks);
-}
-
-public void writeOutBooks(ArrayList<Book> mySaveBooks) {    //
-    Iterator<Book> myIterator = mySaveBooks.iterator();
-    String myOutput="";
-    String filepath=myProject.getFilename();
-    System.out.println("Saving: "+filepath);
-         while (myIterator.hasNext()) {
-            Book myNode=myIterator.next();
-            //System.out.println(myNode.toString());
-            String myString=convertBookMetaToString(myNode);
-            myOutput=myOutput+myString;
-            myString="";
-             //option: prepare string here, then write once.
-        }
-        ZipUtil util = new ZipUtil();
-        util.basicFileWriter(myOutput,filepath);
+    */
 }
 
 //function to change way box labels are displayed
@@ -807,38 +860,26 @@ Integer ycount=0;
     myProject.setBooksOnShelf(myBooksonShelves); //change the pointer (if needed?)
 }
 
+
 public void singleSelection(Book thisBook){
-  System.out.println(selectedBooks.toString());
-  int numsel=selectedBooks.size();
-  if (numsel!=0) {
-    for (int x=0;x<numsel;x++){
-      selectedBooks.get(x).endAlert(); //option: remove objects from old array
-    }
-  }
-  else {
-      System.out.println("No selected books");
+  //handle no selection
+  for (Book item: this.selectedBooks) {
+     item.endAlert();
   }
   ArrayList<Book> newSelection= new ArrayList<Book>();
-
   newSelection.add(thisBook);
-  this.focusBook=thisBook;
-  
-  
+  this.focusBook=thisBook; 
   thisBook.doAlert(); //Change this so there is a general 'undo alert'
-  selectedBooks=newSelection;
-  int nums=selectedBooks.size();
-  //refresh selected books
-  //System.out.println(thisBook.getOOXMLtext()); 
-  refreshSelectedBooksColour();
+  this.selectedBooks=newSelection;
 }
 
-//no need for these to be sorted
+//no need for these to be sorted.  However, books in selection should be 
 public void refreshSelectedBooksColour() {
   ArrayList<Book> sorted= myProject.getBooksOnShelf(); //can this be stored, only updated when needed?
   Iterator <Book> myIterator = sorted.iterator();
   while(myIterator.hasNext()){
     Book item = myIterator.next();
-    if (selectedBooks.contains(item)) {
+    if (this.selectedBooks.contains(item)) {
       item.doAlert();
     }
     else {
@@ -911,93 +952,7 @@ public void shiftedSelection(Book thisBook) {
     } //end while
    }
 
-//Convert this book meta into a String of markdown.  Only write links if data is there.
-public String convertBookMetaToString(Book myBook) {
-    String myOutput="# "+trim(myBook.getLabel()); //check on EOL
-    String markdown=myBook.getMD();
-    String filteredMD=trim(markdown); //trims but inserts EOL
-    myOutput=myOutput+filteredMD; //check on EOL
-    if (myBook.getdocfilepath().length()>5) {
-        String tmp = myBook.getdocfilepath();
-        Integer len = tmp.length();
-        myOutput=myOutput+"[filepath]("+tmp+")"+System.getProperty("line.separator");
-    }
-    if (myBook.getdate().length()>6) {
-        myOutput=myOutput+"[date]("+myBook.getdate()+")"+System.getProperty("line.separator");
-    }
-    if (myBook.gettime().length()>4) {
-        myOutput=myOutput+"[time]("+myBook.gettime()+")"+System.getProperty("line.separator");
-    }
-    /*
-    if (myBook.getRow()>=0 && myBook.getCol()>=0) {
-        myOutput=myOutput+"[r,c]("+myBook.getRow()+","+myBook.getCol()+")"+System.getProperty("line.separator");
-    }
-    */
-    if (myBook.getRow()>=0 && myBook.getCol()>=0) {
-        myOutput=myOutput+"[r,c,l]("+myBook.getRow()+","+myBook.getCol()+","+myBook.getLayer()+")"+System.getProperty("line.separator");
-    }
-    if (myBook.getimagefilepath().length()>6) {
-        myOutput=myOutput+"[img]("+myBook.getimagefilepath()+")"+System.getProperty("line.separator");
-    }
-     if (myBook.geturlpath().length()>6) {
-        myOutput=myOutput+"[url]("+myBook.geturlpath()+")"+System.getProperty("line.separator");
-    }
-    /*
-    if (myBook.getX()>0 || myBook.getY()>0) {
-        myOutput=myOutput+"[x,y]("+myBook.getX()+","+myBook.getY()+")"+System.getProperty("line.separator");
-    }
-    */
-    if (myBook.getX()>0 || myBook.getY()>0) {
-        myOutput=myOutput+"[x,y,z]("+myBook.getX()+","+myBook.getY()+","+myBook.getZ()+")"+System.getProperty("line.separator");
-    }
-    if (myBook.getthisNotes().length()>0) {
-        String notes = myBook.getthisNotes();
-        String filteredNote=trim(notes);
-        myOutput=myOutput+"```"+System.getProperty("line.separator")+filteredNote+"```"+System.getProperty("line.separator");
-    }
-    return myOutput;
-}
 
-private String trim(String input){
-    Scanner scanner1 = new Scanner(input).useDelimiter(System.getProperty("line.separator"));
-    ArrayList<String> myList = new ArrayList<String>();
-    while (scanner1.hasNext()) {
-        String item=scanner1.next();
-        System.out.println(item+","+item.length());
-        myList.add(item);
-    }
-    Integer stop=0;
-    Integer trimcount=0;
-    Integer listlength=myList.size();
-    for (int i=listlength-1;i>0;i=i-1) {
-        int size = myList.get(i).length();
-        if (stop==0 && size==0) {
-            trimcount++;
-        }
-        else {
-            stop=1;
-        }
-    }
-    //System.out.println(trimcount);
-    //System.out.println(listlength-trimcount-1+","+myList.get(listlength-trimcount-1));
-    //System.out.println(listlength-trimcount+","+myList.get(listlength-trimcount));
-    StringBuffer newString = new StringBuffer();
-    int end = listlength-(trimcount-1);
-    if (end<0 || end>listlength-1) {
-        end=0; 
-        System.out.println("listlength: "+listlength+" trim: "+trimcount);
-        //System.exit(0);
-        end=listlength;
-    }
-    for (int i =0;i<end;i++) {
-        newString=newString.append(myList.get(i));
-        newString=newString.append(System.getProperty("line.separator"));
-    }
-    //System.out.println(newString);
-    //System.exit(0);
-    String output = newString.toString();
-    return output;
-}
 
 /*
 //will save this file (assumes it is text, html etc)
@@ -2102,6 +2057,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      //cf try
                      if (MainStage.this.clipboardBook!=null) {
                         Book myBook = MainStage.this.clipboardBook;
+                        //adjacent to clipboard (is this always active book? if so use adjacent function)
                         double xp=MainStage.this.clipboardBook.getX();
                         MainStage.this.clipboardBook.setX(xp+cellgap_x); //offset
                         System.out.println(MainStage.this.clipboardBook+", check: "+myBook);
@@ -2195,38 +2151,15 @@ public Book getActiveBook() {
     return this.focusBook;
 }
 
-//method to put new book on stage.  cf if you have an existing Book object. addBookToStage
+//method to put new book (that doesn't exist in Project) on stage.  
+//cf if you have an existing Book object. addBookToStage
 //This should also (in due course) take layer into account? i.e. Book's layer and Z properties.
 
 public void addNewBookToView () {
-    //Book b = makeBoxWithNode(myNode); //relies on Main, event handlers x
-    
     Book b = new Book(PressBox,DragBox,"untitled","","");
-    b.setLayer(this.currentLayer.getLayerNumber()); //give book a layer reference
-    //
-    Book lastBook=getActiveBook();
-    if (lastBook!=null) {
-        double xp=lastBook.getX();
-        double yp=lastBook.getY();
-        b.setX(xp+cellgap_x); //offset
-        b.setY(yp); //same
-    }
-    //adjusthorizontal
-    double xpos=b.getX();
-    double ypos=b.getY();
-    b.setTranslateX(xpos);
-    b.setTranslateY(ypos); 
-    //setActiveBook(b); //TO DO: as part of adding to stage?
-    //
-    if (b==null) {
-        System.out.println("Book null in addnodetoview");
-        System.exit(0);
-    }
+    b = getNewBookPositionAdjacent(b);
     myProject.addBookToProject(b); //data model
-    //addBookToStage(b); //view.  differs from Main 
-    
-    System.out.println("bookgroupNode in addnodetoview");
-    System.out.println(this.bookgroupNode);  
+    AddNewBookToStage(b); //view.  differs from Main  
 }
 
 public void removeBookFromStage(Book thisBook) {
@@ -2235,6 +2168,25 @@ public void removeBookFromStage(Book thisBook) {
     myProject.removeBook(thisBook);
     getStage().show(); //refresh GUI
     
+}
+
+public Book getNewBookPositionAdjacent(Book b){
+    
+    b.setLayer(this.currentLayer.getLayerNumber()); //give book a layer reference
+    //
+    Book lastBook=getActiveBook();
+    if (lastBook!=null) {
+        int row = lastBook.getRow();
+        int col = lastBook.getCol();
+        b.setCol(col+1);
+        b.setRow(row);
+        setXYfromRowCol(b);
+    }
+    if (b==null) {
+        System.out.println("Book null in addnodetoview");
+        System.exit(0);
+    }
+    return b;
 }
 
 public void setBooksOnShelf(ArrayList<Book> inputObject) {
