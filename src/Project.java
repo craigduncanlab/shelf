@@ -85,6 +85,12 @@ public String getFilepath() {
     return this.filepath;
 }
 
+public String getFilepathNoExt() {
+    String name = this.filepath;
+    String output = name.substring(0,name.lastIndexOf("."));
+    return output;
+}
+
 //this returns filename with extension included
 public String getFilename() {
 	return this.filename;
@@ -126,6 +132,12 @@ public String getHeader() {
 
 public void setBooksOnShelf(ArrayList<Book> inputObject) {
     this.booksOnShelf = inputObject;
+}
+
+public void addBooksToProject(ArrayList<Book> input) {
+    for (Book myItem: input){
+        addBookToProject(myItem);
+    }
 }
 
 //add a new Book but not before checking it is not duplicate
@@ -202,6 +214,161 @@ public ArrayList<Book> getBooksOnShelf() {
 
 public void clearAllBooks() {
     this.booksOnShelf.clear(); 
+}
+
+//
+public void writeOutMDBooksToWord() {    //
+    ArrayList<Book> mySaveBooks = listBooksShelfOrder();//getBooksOnShelf();
+    String filepath=getFilepath(); //use getFilepath not filename
+    docXMLmaker myDocSave = new docXMLmaker(); //we may be able to use the existing docXML in future.
+    myDocSave.writeOutWordFromBooks(filepath,mySaveBooks);
+}
+
+
+////for direct save - of 'Books'
+public void writeMDFileOut() {
+    writeOutBooks();  
+}
+
+public void writeOutBooks() {    
+    ArrayList<Book> mySaveBooks = listBooksShelfOrder();
+    writeOutCommon(mySaveBooks);
+}
+
+private void writeOutCommon(ArrayList<Book> mySaveBooks) {
+    Iterator<Book> myIterator = mySaveBooks.iterator();
+    String myOutput="";
+    //String filepath=getFilename(); //just name, no path
+    String fn=getFilepathNoExt();
+    String filepath="";
+    if (getExt().equals(".md")){
+        filepath=fn+".md";
+    }
+    if (getExt().equals(".rmd")){
+        filepath=fn+".rmd";
+    }
+    if (getExt().equals(".docx")){
+        fn=fn+"v2.docx";
+        File f = new File(fn);
+        setFile(f); //TO DO: set a different filename for saves from the stored original name/File
+        writeOutMDBooksToWord(); //divert
+    }
+    System.out.println("Saving: "+filepath); 
+         while (myIterator.hasNext()) {
+            Book myNode=myIterator.next();
+            //System.out.println(myNode.toString());
+            String myString=convertBookMetaToString(myNode);
+            myOutput=myOutput+myString;
+            myString="";
+             //option: prepare string here, then write once.
+        }
+        ZipUtil util = new ZipUtil();
+        util.basicFileWriter(myOutput,filepath);
+}
+
+public void writeRowOut(Integer row) {
+    //using existing filename
+    ArrayList<Book> myBookSet = listBooksShelfOrder();//getBooksOnShelf();
+    ArrayList<Book> myBookRow = new ArrayList<Book>(); 
+    //filter these to just one row
+    Iterator<Book> myIterator = myBookSet.iterator();
+    while (myIterator.hasNext()) {
+      Book thisBook = myIterator.next();
+      Integer checkRow = thisBook.getRow();
+      //integer comparison.
+      if (checkRow.intValue()==row.intValue()) {
+        myBookRow.add(thisBook);
+      }
+    }
+    writeOutCommon(myBookRow);
+}
+
+//Convert this book meta into a String of markdown.  Only write links if data is there.
+public String convertBookMetaToString(Book myBook) {
+    String myOutput="# "+trim(myBook.getLabel()); //check on EOL
+    String markdown=myBook.getMD();
+    String filteredMD=trim(markdown); //trims but inserts EOL
+    myOutput=myOutput+filteredMD; //check on EOL
+    if (myBook.getdocfilepath().length()>5) {
+        String tmp = myBook.getdocfilepath();
+        Integer len = tmp.length();
+        myOutput=myOutput+"[filepath]("+tmp+")"+System.getProperty("line.separator");
+    }
+    if (myBook.getdate().length()>6) {
+        myOutput=myOutput+"[date]("+myBook.getdate()+")"+System.getProperty("line.separator");
+    }
+    if (myBook.gettime().length()>4) {
+        myOutput=myOutput+"[time]("+myBook.gettime()+")"+System.getProperty("line.separator");
+    }
+    /*
+    if (myBook.getRow()>=0 && myBook.getCol()>=0) {
+        myOutput=myOutput+"[r,c]("+myBook.getRow()+","+myBook.getCol()+")"+System.getProperty("line.separator");
+    }
+    */
+    if (myBook.getRow()>=0 && myBook.getCol()>=0) {
+        myOutput=myOutput+"[r,c,l]("+myBook.getRow()+","+myBook.getCol()+","+myBook.getLayer()+")"+System.getProperty("line.separator");
+    }
+    if (myBook.getimagefilepath().length()>6) {
+        myOutput=myOutput+"[img]("+myBook.getimagefilepath()+")"+System.getProperty("line.separator");
+    }
+     if (myBook.geturlpath().length()>6) {
+        myOutput=myOutput+"[url]("+myBook.geturlpath()+")"+System.getProperty("line.separator");
+    }
+    /*
+    if (myBook.getX()>0 || myBook.getY()>0) {
+        myOutput=myOutput+"[x,y]("+myBook.getX()+","+myBook.getY()+")"+System.getProperty("line.separator");
+    }
+    */
+    if (myBook.getX()>0 || myBook.getY()>0) {
+        myOutput=myOutput+"[x,y,z]("+myBook.getX()+","+myBook.getY()+","+myBook.getZ()+")"+System.getProperty("line.separator");
+    }
+    if (myBook.getthisNotes().length()>0) {
+        String notes = myBook.getthisNotes();
+        String filteredNote=trim(notes);
+        myOutput=myOutput+"```"+System.getProperty("line.separator")+filteredNote+"```"+System.getProperty("line.separator");
+    }
+    return myOutput;
+}
+
+private String trim(String input){
+    Scanner scanner1 = new Scanner(input).useDelimiter(System.getProperty("line.separator"));
+    ArrayList<String> myList = new ArrayList<String>();
+    while (scanner1.hasNext()) {
+        String item=scanner1.next();
+        System.out.println(item+","+item.length());
+        myList.add(item);
+    }
+    Integer stop=0;
+    Integer trimcount=0;
+    Integer listlength=myList.size();
+    for (int i=listlength-1;i>0;i=i-1) {
+        int size = myList.get(i).length();
+        if (stop==0 && size==0) {
+            trimcount++;
+        }
+        else {
+            stop=1;
+        }
+    }
+    //System.out.println(trimcount);
+    //System.out.println(listlength-trimcount-1+","+myList.get(listlength-trimcount-1));
+    //System.out.println(listlength-trimcount+","+myList.get(listlength-trimcount));
+    StringBuffer newString = new StringBuffer();
+    int end = listlength-(trimcount-1);
+    if (end<0 || end>listlength-1) {
+        end=0; 
+        System.out.println("listlength: "+listlength+" trim: "+trimcount);
+        //System.exit(0);
+        end=listlength;
+    }
+    for (int i =0;i<end;i++) {
+        newString=newString.append(myList.get(i));
+        newString=newString.append(System.getProperty("line.separator"));
+    }
+    //System.out.println(newString);
+    //System.exit(0);
+    String output = newString.toString();
+    return output;
 }
 
 
