@@ -56,8 +56,8 @@ public void makeBlockText(){
 				setHeaderText(hline); //set block header based on the 0 coded line
 				text=hline; //maybe do text="";?
 			}
-			//For now, header line is still included here:
-			output=output+text+System.getProperty("line.separator");
+			//If we want to add header line to markdown text uncomment this:
+			//output=output+text+System.getProperty("line.separator");
 		}
 		if (code==1) {
 			String hline = myItem.getLineText();

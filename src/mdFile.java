@@ -181,7 +181,12 @@ public void makeBlocklistRMD() {
 	myLines=codeMDLinesForNotes(myLines); //updates contents of line objects (codes)
 	Parser myParser=new Parser();
 	ArrayList<mdBlock> newblocks = packageBlocksFromLineObjects(myLines);
+  
 	setBlocklist(newblocks);
+  /*
+  System.out.println(newblocks.toString());
+  System.exit(0);
+  */
 }
 
 
@@ -261,16 +266,18 @@ public ArrayList<mdLineObject> codeMDLinesForNotes(ArrayList<mdLineObject> myLin
 	int ntest=0;
 	
 	int linecount=0;
-	int blocktype=0;
+	int blocktype=1;
 
 	//fileindex=codeMDLines(myLines); //simple 0 for headings, otherwise 1. (some will be inside notes) 
 
 	for (mdLineObject lineItem : myLines) {
+    //blocktype=1;
+    //lineItem.setLineCode(blocktype);
 		String linePrefix="";
 		String lineSuffix="";
 		String thisRow = lineItem.getLineText();
 		//classify as 0 or 1 based on 'heading', for 'split'
-		int bcode = lineItem.getLineCode();
+		blocktype = lineItem.getLineCode(); //Sets linecode. default is 1 unless '# '
 		//System.out.println(linecount+")"+thisRow+"["+bcode+"]");  
 		//distinguish notes sections first, then check on the # outside this
         String codetest="```";
@@ -284,11 +291,12 @@ public ArrayList<mdLineObject> codeMDLinesForNotes(ArrayList<mdLineObject> myLin
 			}
 		} 
 		else {linePrefix=thisRow;lineSuffix="";}
+    //Overrule basic block codes (0,1) if there is a notes section
 		//System.out.println("pre:"+linePrefix+", suf:"+lineSuffix);
         ntest = getRMDblockstate(rowlength,linePrefix,lineSuffix,ntest,codetest,codetest);  
         switch (ntest) {
         	case 0:
-        		blocktype=0; //just reset.  No action.
+        		//blocktype=0; //just reset.  No action.
         		break; //default . no change to blockcodes from MD
         	case 1:
         		blocktype=3; //don't capture (later: capture after the prefix on firstline).
@@ -359,6 +367,10 @@ it works with case statements only if you have hardcoded test cases.
 public void makeBooksFromBlocklist(){
       ArrayList<Book> myBookList = new ArrayList<Book>();
       ArrayList<mdBlock> blocks = getBlocklist();
+      /*
+      System.out.println(blocks.toString());
+      System.exit(0);
+      */
       int length = blocks.size();  // number of blocks
       Parser myParser=new Parser();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
@@ -370,9 +382,10 @@ public void makeBooksFromBlocklist(){
           	//default String in constructor sets markdown, ooxml text
           	mdBlock myBlock = iter.next();
      
-     		//transfer relevant information to the 'Block' object
+     		   //transfer relevant information to the 'Block' object
           	String maintext = myBlock.getBlockText();
           	String notestext=myBlock.getNotesText();
+            //TO DO: Code
           	String label = myBlock.getHeaderText();
             Book newBook =new Book(maintext); //TO DO:add Event Handlers separately
             newBook.setNotes(notestext);
@@ -386,18 +399,20 @@ public void makeBooksFromBlocklist(){
         System.out.println("Nothing returned from parser");
       }
     setBooklist(myBookList);
+    //System.out.println("Make books done with content");
+    //System.exit(0);
     }
 
 public ArrayList<mdBlock>packageBlocksFromLineObjects(ArrayList<mdLineObject> myLines) {
 	ArrayList<mdBlock> output = new ArrayList<mdBlock>();
 	mdBlock currentblock = new mdBlock();
-	
+	//System.out.println(myLines.getLineCode()+") "+my)
 	String headertext="";
 	int cl=0;
 	for (mdLineObject lineItem: myLines) {
 		int linecode=lineItem.getLineCode();
 		//if this row is a heading
-		//System.out.println(cl+") ["+fileindex.get(cl)+"] "+thisLine);
+		System.out.println(cl+") ["+linecode+"] "+lineItem.getLineText());
 
 		//SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
 		if (linecode==0) { //if we encounter start of next block (#)
@@ -427,7 +442,7 @@ public ArrayList<mdBlock>packageBlocksFromLineObjects(ArrayList<mdLineObject> my
 	if (headertext.length()>0) {
 		//projectCopy.setHeader(headertext); //store for later;
 	}
-	
+	//System.exit(0);
 	return output;
 }
 }
