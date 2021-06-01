@@ -200,6 +200,7 @@ private MenuBar makeMenuBar() {
         MenuItem OpenTempl = new MenuItem("Open (CMD-O)");
         MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
         MenuItem SaveAsMenuItem = new MenuItem("Save As (CMD-SHIFT-S)");
+        MenuItem SaveAsDocxMenuItem = new MenuItem("Save As Docx");
         MenuItem saveRowAsMenuItem = new MenuItem("Save Row As");
         MenuItem ClearBookshelfMenuItem = new MenuItem("Close (CMD-W)");
         MenuItem importAsRowBelow = new MenuItem("Import as Row Below");
@@ -216,9 +217,10 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
+        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,SaveAsDocxMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
         SaveShelf.setOnAction(SaveHandler);
         SaveAsMenuItem.setOnAction(SaveAsHandler); //docname
+        SaveAsDocxMenuItem.setOnAction(SaveAsDocxEvent);
         saveRowAsMenuItem.setOnAction(saveRowAsHandler);
         OpenTempl.setOnAction(openTemplate);
         ClearBookshelfMenuItem.setOnAction(clearBookShelf);
@@ -493,6 +495,11 @@ The myProject settings should be used by default.
         this.Stage_WS.saveAs();
     }
 
+     public void saveAsDocx() {
+        //this.Stage_WS.setFile(this.currentOpenFile);
+        this.Stage_WS.saveAsDocx();
+    }
+
     public void saveRowAsFileSaver() {
         this.Stage_WS.setFile(this.currentOpenFile);
         Book myBook = Main.this.getActiveBook();
@@ -656,12 +663,21 @@ The myProject settings should be used by default.
                 }
             }; 
 
-        //save As template
+        //save As Markdown template
         EventHandler<ActionEvent> SaveAsHandler = 
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
             Main.this.saveAsFileSaver();
+                }
+            }; 
+
+        //save As Docx template
+        EventHandler<ActionEvent> SaveAsDocxEvent = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Main.this.saveAsDocx();
                 }
             }; 
 
