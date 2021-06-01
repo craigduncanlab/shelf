@@ -18,6 +18,7 @@ public class xmlPara {
 	String numId="";
 	int outLineLevel=99; //TO DO: maybe store here if the style indicates the outline level?
 	String plainText="";
+	String styleXML="";
 
 //constructor
 public xmlPara(){
@@ -91,6 +92,14 @@ public int getOutlineLevel(){
 //usually done by comparing it to the relevant style parameter, at document level.
 public void setOutlineLevel(int input){
 	this.outLineLevel=input;
+}
+
+public String getStyleXML(){
+	return this.styleXML;
+}
+
+public void setStyleXML(String input){
+	this.styleXML=input;
 }
 
 // --- 
