@@ -386,6 +386,7 @@ public void openFileGetBooklist(File file) {
         myDoc.openDocx(file);
         //myBookSet=myDoc.getBooklist(); //could just use myProject later.
         myProject.setOpenDocx(myDoc); //books added to project if created upon opening
+
         setDocxForView(myDoc); 
     }
     unpackBooksToView(); //all books now set up in myProject object.
@@ -712,20 +713,23 @@ public void addNewStyleTheme(String input){
      XMLStyleThemeMaker themeTool = new XMLStyleThemeMaker();
      xmlStyles current = myProject.getOpenDocx().getStylesObject(); //this is the full styles.xml string
      themeTool.setCurrentStylesXML(current);
-     System.out.println(current.getStylesXML());
-     System.out.println("Just printed styles that are in the open docx in project");
      themeTool.addMDStyles();
-     /*
-     String newstyles = themeTool.getUpdatedStylesXML().getStylesXML();
-     System.out.println(newstyles);
-     System.exit(0); 
-     */
      //the new styles object in docx already has summary information updated
      docXML currentDoc = myProject.getOpenDocx();
      currentDoc.setStylesObject(themeTool.getUpdatedStylesXML());
-     currentDoc.getStylesObject().logging();
-     setDocxForView(currentDoc);
-     //TO DO: replace currenstyles with the new one.  
+     //currentDoc.getStylesObject().logging();
+     setDocxForView(currentDoc); //update visible stylesXML information.
+  }
+  if (input.equals("Letter")){
+     XMLStyleThemeMaker themeTool = new XMLStyleThemeMaker();
+     xmlStyles current = myProject.getOpenDocx().getStylesObject(); //this is the full styles.xml string
+     themeTool.setCurrentStylesXML(current);
+     themeTool.addLetterStyles();
+     //the new styles object in docx already has summary information updated
+     docXML currentDoc = myProject.getOpenDocx();
+     currentDoc.setStylesObject(themeTool.getUpdatedStylesXML());
+     //currentDoc.getStylesObject().logging();
+     setDocxForView(currentDoc); //update visible stylesXML information.
   }
 }
 
@@ -791,7 +795,36 @@ public void saveAsDocx() {
         }
     }
 
-
+//saveAsDocxStyles
+public void saveAsDocxStyles() {
+    Stage myStage = new Stage();
+    myStage.setTitle("UpdateDocx with New Styles Only");
+    //String fn=myProject.getFilepathNoExt();
+    if (!myProject.getExt().equals("docx")) {
+      //do nothing.  Future: dialogue box.
+      return;
+    }
+    String fn= myProject.getFilenameNoExt();
+    String filename=fn+".docx";
+    this.currentFileChooser.setTitle("Save Project/File As");
+    this.currentFileChooser.setInitialFileName(filename);  
+    this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
+    //System.exit(0);
+    File file = currentFileChooser.showSaveDialog(myStage);
+    if (file != null) {
+        setFileForView(file); //sets name of file in myProject
+        myProject.setFile(file);
+        System.out.println(myProject.getFilename());
+        System.out.println(myProject.getFilepath());
+        //writeFileOut();
+         //writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
+        //writeOutHTML();
+        myProject.writeDocxNewStyles();
+        } 
+        else {
+            //DO SOMETHING
+        }
+    }
 
 //for save Row as
 public void saveRowAs(Integer row) {
@@ -1042,9 +1075,12 @@ public void setFileForView(File myFile){
 
 //update view parameters that are based on a newly opened docx
 public void setDocxForView(docXML input){
-  xmlStyles currentStyle = input.getStylesObject();
-  styleTextArea.setText(currentStyle.getStylesXML()); //to display in tabB
-  styleSummaryTextArea.setText(currentStyle.getSummaryStylesString()); //to display in tabC
+  docXML myPDoc = myProject.getOpenDocx();
+  String test = myPDoc.getStylesObject().getStylesXML();
+  System.out.println("Test updated stylesXML: \n"+test);
+  //xmlStyles currentStyle = input.getStylesObject();
+  styleTextArea.setText(test); //to display in tabB
+  styleSummaryTextArea.setText(myPDoc.getStylesObject().getSummaryStylesString()); //to display in tabC
 }
 
 /*
@@ -1303,6 +1339,9 @@ public void clearAllBooks() {
     setFilename(title); //to do - clear all File object in Project?
     //To do - reconcile data here with Main class and Project class.  Or is just GUI?
     this.parentClass.resetFileNames(title); //to update general file name etc
+    //clean up workspace
+    styleTextArea.setText(""); //to display in tabB
+    styleSummaryTextArea.setText("");
 }
 
 /*
