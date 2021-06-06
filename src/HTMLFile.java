@@ -176,14 +176,11 @@ public String getHTMLfromContents(Book myBook) {
 
     //date and time
     String dtstring=myBook.getdate();
-    String timestring=myBook.gettime();
-    if(timestring.length()>0 && dtstring.length()>0) {
-        dtstring=dtstring+","+timestring;
+    String styleIdString=myBook.getStyleId(); //unused
+    if(dtstring.length()>0) { //timestring.length()>0 && 
+        dtstring=dtstring;// +","+timestring;
     }
-    else if (timestring.length()>0 && dtstring.length()==0) {
-        dtstring=timestring;
-    }
-     if (dtstring.length()>1) {
+    else if (dtstring.length()>1) {
          /*String dtprefix="<p><span style=\"font-family: "+fontfamily+";\">";
          String dtsuffix="</span></p>";
          String dtfile = dtprefix+dtstring+dtsuffix;
