@@ -531,7 +531,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		String filepathString="";
 		String imagepathString="";
 		String dateString="";
-		String timeString="";
+		String styleIdString="";
 		double x=0.0;
 		double y=0.0;
 		double z=0.0;
@@ -702,14 +702,14 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 				//time line
 				if (fileindex.get(nl)==12) {
 				  String suffix=thisLine.substring(7,thisLine.length()); 
-		          timeString=suffix.replace(")","");
-		          System.out.println(timeString);
+		          styleIdString=suffix.replace(")","");
+		          System.out.println(styleIdString);
 				}
 				//layer line {REDUNDANT NOW THERE IS R,C,L coordinates}
 				if (fileindex.get(nl)==13) {
 				  String suffix=thisLine.substring(8,thisLine.length()); 
 		          suffix=suffix.replace(")","");
-		          //System.out.println(timeString);
+		          //System.out.println(styleIdString);
 		          layer = (int)Double.parseDouble(suffix);
 				  System.out.println(row+","+col);
 				  if (layer<0) {
@@ -750,7 +750,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		newNode.setdocfilepath(filepathString);//filepath,urlpath,
 		newNode.setimagefilepath(imagepathString);
 		newNode.setdate(dateString);
-		newNode.settime(timeString);
+		newNode.setStyleId(styleIdString);
 		newNode.setRow(row);
 		newNode.setCol(col);
 		newNode.setLayer(layer);
