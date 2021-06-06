@@ -135,11 +135,11 @@ TabPane mdTabPane = new TabPane();
 TextArea bookLabelTextArea = new TextArea();
 TextArea codeNotesTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
-TextArea dateLabelTextArea = new TextArea();
-TextArea timeLabelTextArea = new TextArea();
+TextArea outlineLevelTextArea = new TextArea();
+TextArea styleIdTextArea = new TextArea();
 Integer textFocus=0;
-Text dateText;
-Text timeText;
+Text outlineLevelText;
+Text styleIdText;
 Text filepathText;
 Text imagepathText;
 Text bookLabelText;
@@ -352,12 +352,12 @@ EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
         if (BookMetaStage.this.localScene.focusOwnerProperty().get() instanceof TextArea) {
                 TextArea focusedTextArea = (TextArea)BookMetaStage.this.localScene.focusOwnerProperty().get();
             if (focusedTextArea==bookLabelTextArea){
-                dateLabelTextArea.requestFocus();
+                outlineLevelTextArea.requestFocus();
             }
-             else if (focusedTextArea==dateLabelTextArea){
-                timeLabelTextArea.requestFocus();
+             else if (focusedTextArea==outlineLevelTextArea){
+                styleIdTextArea.requestFocus();
             }
-             else if (focusedTextArea==timeLabelTextArea) {
+             else if (focusedTextArea==styleIdTextArea) {
                 mdTextTabA.requestFocus();
             }
             else if (focusedTextArea==mdTextTabA) {
@@ -632,8 +632,8 @@ private void updateCurrentBookMetaView() {
     filepathText.setText(pathText);
     imagepathText.setText("Featured image path:");
     urlText.setText("Linked URL path:");
-    dateText.setText("Date (DD/MM/YYYY)");
-    timeText.setText("Time (HH.MM am/pm");
+    outlineLevelText.setText("Outline level");
+    styleIdText.setText("StyleId");
     bookLabelText.setText("Main heading/title:");
     multiLineNotesText.setText("Multi-line notes:");
     visibleBlockText.setText("Visibility:");
@@ -655,8 +655,9 @@ public void restoreBookMeta() {
         imagepathTextArea.setText(updateNode.getimagefilepath());
         urlTextArea.setText(updateNode.geturlpath());
         bookLabelTextArea.setText(updateNode.getLabel());
-        dateLabelTextArea.setText(updateNode.getdate());
-        timeLabelTextArea.setText(updateNode.gettime());
+        outlineLevelTextArea.setText(updateNode.getdate());
+
+        styleIdTextArea.setText(updateNode.getStyleId());
         mdTextTabA.setText(updateNode.getMD()); //update the markdown text
         /*
         mdTextTabB.setText(updateNode.getHTML()); 
@@ -691,7 +692,15 @@ public void updateBookMeta() {
         Book thisBook=getActiveBook();
         System.out.println("This book box : "+thisBook.toString());
         //System.exit(0);
-        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(),bookLabelTextArea.getText(),dateLabelTextArea.getText(),timeLabelTextArea.getText(),mdTextTabA.getText(),mdTextTabD.getText(),codeNotesTextArea.getText());
+        int myOutlineLevel=Integer.parseInt(outlineLevelTextArea.getText());
+        String myFilepath=filepathTextArea.getText();
+        String myURL=urlTextArea.getText();
+        String myImage=imagepathTextArea.getText();
+        String myLabel=bookLabelTextArea.getText();
+        String myStyle=styleIdTextArea.getText();
+        String myMarkdown=mdTextTabA.getText();
+        String myCode=codeNotesTextArea.getText();
+        thisBook.updateEditedText(myFilepath,myURL,myImage,myLabel,myStyle,myOutlineLevel,myMarkdown,mdTextTabD.getText(),myCode);
         thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
         updateHTMLpreview(thisBook); //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
@@ -710,11 +719,11 @@ public void fillSelectionDate() {
         Book item = myIterator.next();
 
         //just do date and time for now
-        String dt = dateLabelTextArea.getText();
-        String tl=timeLabelTextArea.getText();
+        int outline = Integer.parseInt(outlineLevelTextArea.getText());
+        String tl=styleIdTextArea.getText();
 
-        if (dt.length()>0) {
-            item.setdate(dt);
+        if (outline>=0) {
+            item.setOutlineLevel(outline);
         }
         item.updateDisplay();
         /* just do dates
@@ -724,7 +733,7 @@ public void fillSelectionDate() {
         */
     } //end while
         /*
-        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(),bookLabelTextArea.getText(),dateLabelTextArea.getText(),timeLabelTextArea.getText(),mdTextTabA.getText(),codeNotesTextArea.getText());
+        thisBook.updateEditedText(filepathTextArea.getText(),urlTextArea.getText(),imagepathTextArea.getText(),bookLabelTextArea.getText(),outlineLevelTextArea.getText(),styleIdTextArea.getText(),mdTextTabA.getText(),codeNotesTextArea.getText());
         thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
         updateHTMLpreview(thisBook); //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
@@ -848,10 +857,10 @@ private void makeSceneForBookMetaView() {
         String terminalStyle="-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #ffffff; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; ";
         bookLabelTextArea.setPrefRowCount(1);
         bookLabelTextArea.setStyle(terminalStyle);
-        dateLabelTextArea.setPrefRowCount(1);
-        dateLabelTextArea.setStyle(terminalStyle);
-        timeLabelTextArea.setPrefRowCount(1);
-        timeLabelTextArea.setStyle(terminalStyle);
+        outlineLevelTextArea.setPrefRowCount(1);
+        outlineLevelTextArea.setStyle(terminalStyle);
+        styleIdTextArea.setPrefRowCount(1);
+        styleIdTextArea.setStyle(terminalStyle);
         mdTextTabA.setPrefRowCount(20); //for markdown.  Add to boxPane
         mdTextTabA.setWrapText(true);
         mdTextTabA.setStyle(terminalStyle);
@@ -904,8 +913,8 @@ private void makeSceneForBookMetaView() {
         filepathText = new Text();
         imagepathText = new Text();
         bookLabelText = new Text();
-        dateText = new Text();
-        timeText = new Text();
+        outlineLevelText = new Text();
+        styleIdText = new Text();
         multiLineNotesText = new Text();
         visibleBlockText = new Text();
         mdHeadingText = new Text();
@@ -928,7 +937,7 @@ private void makeSceneForBookMetaView() {
         HBox imagepathBox = new HBox(0,imagepathTextArea,btnBrowseImagepath);
         HBox urlpathBox = new HBox(0,urlTextArea,btnOpenURL);
         HBox widebox = new HBox(0,htmlEditor); //default - can change as below
-        HBox datetimeBox = new HBox(0,dateText,dateLabelTextArea,timeText,timeLabelTextArea);
+        HBox styleOutlineBox = new HBox(0,styleIdText,styleIdTextArea,outlineLevelText,outlineLevelTextArea);
         BorderPane borderPane = new BorderPane();
 
           //Create Tabs for Tab Pane, which will sit inside editor
@@ -961,7 +970,7 @@ private void makeSceneForBookMetaView() {
         }
         //compare states and update view
         if (getActiveBook().getUserView().equals("metaedit")) {
-            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,datetimeBox,mdHeadingText,mdTextTabA,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,styleOutlineBox,mdHeadingText,mdTextTabA,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             vertFrame.setPrefSize(winWidth,winHeight);
             setTitle(getTitleText(" - Meta Edit View"));
             widebox = new HBox(0,vertFrame);
@@ -970,7 +979,7 @@ private void makeSceneForBookMetaView() {
         }
         //Full View is the Default
         else if (getActiveBook().getUserView().equals("metaedithtml")) {
-            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,datetimeBox,mdHeadingText,mdTabPane,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
+            vertFrame = new VBox(0,visiblebox,bookLabelText,bookLabelTextArea,styleOutlineBox,mdHeadingText,mdTabPane,filepathText,filepathBox,imagepathText,imagepathBox,urlText,urlpathBox,multiLineNotesText,codeNotesTextArea,hboxButtons);
             setTitle(getTitleText(" - Full View"));
             //htmlEditor.setPrefSize(winWidth,winHeight);  //use BorderPanes for better resizing.
             vertFrame.setPrefSize(winWidth,winHeight);//both, with equal width to HTML
