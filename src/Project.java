@@ -259,6 +259,11 @@ public void writeOutMDBooksToWord() {    //
     myDocSave.writeOutWordFromBooks(filepath,mySaveBooks);
 }
 
+public void writeDocxNewStyles(){
+    docXML myDoc = getOpenDocx();
+    myDoc.saveDocxWithNewStylesOnly(getFilepath()); //uses current project name and path after chooser
+}
+
 
 ////for direct save - of 'Books' - main MD file saver.
 public void writeMDFileOut() {
