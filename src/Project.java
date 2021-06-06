@@ -11,18 +11,46 @@ public class Project {
 ArrayList<Book> booksOnShelf = new ArrayList<Book>();
 
 File file;
+File rowfile; //to hold separate file details
 String filepath = "";
+String rowfilepath="";
 String parentpath = "";
+String rowparentpath="";
 String filename = "";
 String shortfilename=""; //current filename for saving this project's contents
 String extension="";
 String Rmd_header="";
 ArrayList<String> docxStyles;
-
+docXML openDocx = new docXML();
+mdFile openMD = new mdFile();
+mdFile openRMD = new mdFile();
 
 //constructor
 public Project() {
-    docxStyles = new ArrayList<String>();
+    //docxStyles = new ArrayList<String>();
+}
+
+public void setOpenDocx(docXML input) {
+    this.openDocx=input;
+    addBooksToProject(input.getBooklist());
+}
+
+public docXML getOpenDocx() {
+    return this.openDocx;
+}
+
+public void setOpenMD(mdFile input){
+    this.openMD = input;
+    addBooksToProject(input.getBooklist());
+}
+
+public void setOpenRMD(mdFile input){
+    this.openRMD = input;
+    addBooksToProject(input.getBooklist());
+}
+
+public mdFile getOpenMD() {
+    return this.openMD;
 }
 
 // --- FILE OPERATIONS (BASED ON IO.FILE FOR NOW)
@@ -33,6 +61,14 @@ public void setFile(File myFile) {
     //This will return full path to folder where myFile is located)
     setParentpath(this.file.getParent());
     setFilename(myFile);
+}
+
+public void setRowFile(File myFile) {
+    this.rowfile = myFile;
+    setRowFilepath(this.rowfile.getPath());
+    //This will return full path to folder where myFile is located)
+    setRowParentpath(this.rowfile.getParent());
+    //setFilename(myFile);
 }
 
 //this is the entire file path as String with name included
@@ -55,8 +91,16 @@ public void setFilepath(String myPath) {
     this.filepath = myPath;
 }
 
+public void setRowFilepath(String myPath) {
+    this.rowfilepath = myPath;
+}
+
 public void setParentpath(String myParent) {
     this.parentpath = myParent;
+}
+
+public void setRowParentpath(String myParent) {
+    this.rowparentpath = myParent;
 }
 
 //This will return full path (to where project file was loaded from)
@@ -106,15 +150,6 @@ public String getNameNoExt(String name){
 }
 
 // -- METADATA FOR DOCX PROJECTS
-
-public void setdocxStyles(ArrayList<String> input){
-    this.docxStyles=input;
-}
-
-
-public ArrayList<String> getdocxStyles(){
-    return this.docxStyles;
-}
 
 // --- PRESERVE METADATA FOR R MARKDOWN and/or Markdown
 // TO DO - process further (title, author, date, output)
