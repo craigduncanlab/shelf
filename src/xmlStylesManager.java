@@ -72,7 +72,7 @@ public xmlStyles getActiveStyle(){
 //load as reference?
 public xmlStyles loadNewStyleObject(String filename){
   xmlStyles newStyle = new xmlStyles();
-  newStyle.loadNewStylesDB(filename);
+  loadNewStylesDB(filename);
   //setActiveStyle(newStyle);
   return newStyle;
 }
@@ -94,4 +94,33 @@ public ArrayList <xstyle> addInReferenceStyles(ArrayList<xmlStyles> input) {
     return myNewStyleList;
 }
 */
+
+
+//For loading external list of styles (if needed)
+//input file must have .xml extension
+//This loads from the dbstyles folder (may need a File Chooser program)
+//This should work with an XMLStyles Object, so make it external.
+
+//TO DO: this should update a new xmlStyles object
+
+public ArrayList<xstyle>loadNewStylesDB(String inputstyle){
+  //External list of styles
+  String filename = "dbstyles/"+inputstyle;; //file with a list of xml coded styles
+  File myFile = new File(filename);
+  ZipUtil myTool = new ZipUtil();
+  String stylestext=myTool.getFileText(myFile);
+  
+  xmlTool myTag = new xmlTool();
+  String start = "<w:style ";
+  String end = "</w:style>";
+  ArrayList<String> myStylesStrings = myTag.getTagAttribInclusive(stylestext,start,end);
+  ArrayList<xstyle> myStyleObjects = new ArrayList<xstyle>();
+  for (String item : myStylesStrings) {
+    xstyle myNewItem = new xstyle();
+    myNewItem.setStyleXML(item); //this will extract and set relevant name, id inside object automatically.
+    myStyleObjects.add(myNewItem); 
+  }
+  return myStyleObjects; //return, do not specify use
+}
+
 }
