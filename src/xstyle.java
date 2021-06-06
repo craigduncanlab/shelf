@@ -18,10 +18,6 @@ public class xstyle {
 	int size=22;//default is 11;
 	String lang="en-GB";
 
-	/*
-	"<w:style w:type=\"paragraph\" w:styleId=\"NormalReally\"><w:name w:val=\"NormalReally\"/><w:basedOn w:val=\"Normal\"/><w:uiPriority w:val=\"0\"/><w:qFormat/><w:pPr><w:jc w:val=\"both\"/><w:outlineLvl w:val=\"4\"/></w:pPr><w:rPr><w:rFonts w:ascii=\"Times New Roman\" w:eastAsia=\"Times New Roman\" w:hAnsi=\"Times New Roman\" w:cs=\"Times New Roman\"/><w:sz w:val=\"22\"/><w:lang w:bidi=\"ar-SA\"/></w:rPr></w:style>";
-	*/
-
 //subclass shade
 public class Shade{
 	String val="clear";
@@ -39,9 +35,15 @@ public String getXML(){
 
 }
 
+
+/*
+	"<w:style w:type=\"paragraph\" w:styleId=\"NormalReally\"><w:name w:val=\"NormalReally\"/><w:basedOn w:val=\"Normal\"/><w:uiPriority w:val=\"0\"/><w:qFormat/><w:pPr><w:jc w:val=\"both\"/><w:outlineLvl w:val=\"4\"/></w:pPr><w:rPr><w:rFonts w:ascii=\"Times New Roman\" w:eastAsia=\"Times New Roman\" w:hAnsi=\"Times New Roman\" w:cs=\"Times New Roman\"/><w:sz w:val=\"22\"/><w:lang w:bidi=\"ar-SA\"/></w:rPr></w:style>";
+	*/
+
+
 private String updateXMLString(){
 	//general properties
-	String output = "<w:style w:type=\""+this.Id+"\">";
+	String output = "<w:style w:type=\""+this.type+"\" w:customStyle=\""+this.customStyle+"\" w:styleId=\""+this.Id+"\">";
 	output=output+"<w:name w:val=\""+this.name+"\">";
 	output=output+"<w:basedOn w:val=\""+this.basedOn+"\">";
 	output=output+"<w:uiPriority w:val=\""+this.uiPriority+"\"/>";
@@ -51,9 +53,9 @@ private String updateXMLString(){
 	output=output+shade; //default is no shading
 	output=output+"</w:pPr>"; //end para parameters
 	output=output+"<w:rPr>"; //start run parameters
-	output=output+"<w:rFonts w:ascii=\""+this.Fonts+"\" w:eastAsia w:ascii=\""+this.Fonts+"\" w:hAnsi=\""+this.Fonts+"/>"; 
+	output=output+"<w:rFonts w:ascii=\""+this.Fonts+"\" w:eastAsia=\""+this.Fonts+"\" w:hAnsi=\""+this.Fonts+"\" w:cs=\""+this.Fonts+"\"/>"; 
 	output=output+"<w:sz w:val=\""+this.size+"\"/>";
-	output=output+"<w:lang w:eastAsia=\""+this.lang+"/>"; //w:bidi=
+	output=output+"<w:lang w:eastAsia=\""+this.lang+"\"/>"; //w:bidi=
 	output=output+"</w:rPr>"; //end para parameters
 	output=output+"</w:style>"; //end XML style 
 	setStyleXMLNoExtract(output);
