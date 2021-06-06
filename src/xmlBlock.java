@@ -15,8 +15,9 @@ public class xmlBlock {
 	String blockText="";
 	String notesText="";
 	String headerText="";
-	int OutlineLevel=0; //a way to classify blocks for display etc.
+	int outlineLevel=0; //a way to classify blocks for display etc.
 	String StyleXML="";
+	String styleId=""; //corresponds to the style id in the paragraph that forms the header etc
 
 //constructor
 public xmlBlock(){
@@ -31,6 +32,7 @@ public String getHeaderText(){
 	return this.headerText;
 }
 
+//fule text of style object, not the id
 public void setStyleXML(String input){
 	this.StyleXML=input;
 }
@@ -39,10 +41,27 @@ public String getStyleXML(){
 	return this.StyleXML;
 }
 
+public void setStyleId(String input){
+	this.styleId=input;
+}
+
+public String getStyleId(){
+	return this.styleId;
+}
+
 public void importblockParas(ArrayList<xmlPara> myParas){
 	for (xmlPara myItem: myParas) {
 		blockParas.add(myItem);
 	}
+}
+
+public void setOutlineLevel(int input){
+	this.outlineLevel=input;
+}
+
+//outline level for the para that forms the first block after dividing text
+public int getOutlineLevel(){
+	return this.outlineLevel;
 }
 
 //Does not update the blocktext each time a new xmlPara object is added to the block
@@ -58,17 +77,21 @@ public int getStoredLines(){
 public void makeBlockText(){
 	String output="";
 	int numLevels=1;
+	int referenceLevel=0;
 	for (xmlPara myItem: this.blockParas) {
 		int code = myItem.getLineCode(); //alternatively, get outline level
 		int level = myItem.getOutlineLevel();
 		//The range of outline levels that will be included as headings/new blocks, starting at 0
-		if (level<numLevels) { 
+		//if (level<numLevels) { 
+		if (level==referenceLevel) { 
 			myItem.setOutlineLevel(myItem.getOutlineLevel());
+			setOutlineLevel(referenceLevel);
 			String text = myItem.getParaString();
 			String plain = myItem.getplainText(); //removed from <w:t>
 			output=output+text+System.getProperty("line.separator");
 			setHeaderText(plain);
 			setStyleXML(myItem.getStyleXML());
+			setStyleId(myItem.getpStyle()); //styleId
 			}
 		//code 99 for paragraphs that are included in the blocks as general text/notes etc
 		else  {
