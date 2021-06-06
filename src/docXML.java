@@ -17,6 +17,7 @@ ArrayList<String> headingTextList;
 ArrayList<xmlBlock> blocklist;
 ArrayList<Book>  booklist;	
 xmlStyles myStyles = new xmlStyles();
+ZipUtil originalZip = new ZipUtil();
 
 //constructor
 public docXML() {
@@ -35,14 +36,13 @@ It is best to store them in-memory to work on them later
 //nb: this Zip object holds the original docx information, whilst it persists.
 
 public void openDocx(File file){
-      ZipUtil myZip = new ZipUtil();
-      myZip.OpenDocX(file);
-      setDocString(myZip.getDocument());
-      myStyles.setStylesXML(myZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
+      originalZip.OpenDocX(file);
+      setDocString(this.originalZip.getDocument());
+      myStyles.setStylesXML(this.originalZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
       setStylesString(myStyles.getStylesXML()); //update the document version of styles.xml
       setSummaryStylesString(myStyles.getSummaryStylesString()); //just for display
       //System.exit(0);
-      setDocNumberingString(myZip.getNumbering());
+      setDocNumberingString(this.originalZip.getNumbering());
       //populate blocklist for future use
       setInitialParalist();
       setInitialBlocklist();
@@ -384,5 +384,10 @@ public void makeBooksFromBlocklist(){
       } //end if
     setBooklist(myBookList);
     }
+
+public void saveDocxWithNewStylesOnly(String newfilename){
+    String myStyles = getStylesObject().getStylesXML();
+    originalZip.readAndReplaceStyles(myStyles,newfilename);
+}
 
 }
