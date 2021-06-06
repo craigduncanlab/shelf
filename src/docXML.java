@@ -39,7 +39,7 @@ public void openDocx(File file){
       myZip.OpenDocX(file);
       setDocString(myZip.getDocument());
       myStyles.setStylesXML(myZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
-      setStylesString(myStyles.getStylesString()); //update the document version of styles.xml
+      setStylesString(myStyles.getStylesXML()); //update the document version of styles.xml
       setSummaryStylesString(myStyles.getSummaryStylesString()); //just for display
       //System.exit(0);
       setDocNumberingString(myZip.getNumbering());
@@ -152,6 +152,7 @@ public xmlPara setmyParaOutlineCode(xmlPara thisPara) {
 
 // -- METADATA FOR DOCX PROJECTS
 
+/*
 public void setdocxStyles(ArrayList<String> input){
     this.docxStyles=input;
 }
@@ -159,6 +160,18 @@ public void setdocxStyles(ArrayList<String> input){
 public ArrayList<String> getdocxStyles(){
     return this.docxStyles;
 }
+*/
+
+/*
+private void setdocxStyles(xmlStyles input){
+    this.myOpenXMLStyle=input;
+}
+
+
+public xmlStyles getdocxStyles(){
+    return this.myOpenXMLStyle;
+}
+*/
 
 /* Add another heading to the heading text list */
 
@@ -180,24 +193,28 @@ public String getDocString() {
 	return docString;
 }
 
-public void setStylesString(String input) {
+private void setStylesString(String input) {
     this.docStylesString=input;;
 }
 
-public String getStylesString() {
+private String getStylesString() {
 	return this.docStylesString;
 }
 
-public void setSummaryStylesString(String input) {
-    this.summaryStylesString=input;;
+private void setSummaryStylesString(String input) {
+    this.summaryStylesString=input;
 }
 
-public String getSummaryStylesString() {
+private String getSummaryStylesString() {
     return this.summaryStylesString;
 }
 
 public xmlStyles getStylesObject(){
     return this.myStyles;
+}
+
+public void setStylesObject(xmlStyles input){
+    this.myStyles=input;
 }
 
 public void setDocNumberingString(String input) {
@@ -367,7 +384,5 @@ public void makeBooksFromBlocklist(){
       } //end if
     setBooklist(myBookList);
     }
-
-
 
 }
