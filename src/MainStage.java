@@ -349,39 +349,48 @@ This does not internally process the blocks to distinguish notes and other text,
 
 */
 
-public ArrayList<Book> openFileGetBooklist(File file) {
+public void openFileGetBooklist(File file) {
     System.out.println("processing docx/markdown file...");
     System.out.println(file.toString()); // this is full path
     String thefilename=file.getName();
     Boolean isOK = checkExtensions(file); //also sets extensions in myProject
-    ArrayList<Book> myBookSet = new ArrayList<Book>();
+    
     Parser myParser=new Parser();
     //File splitting, depending on file type
 
     if (isOK==true && myProject.getExt().equals("md")) {
-        setFile(file);
+        setFileForView(file);
+        myProject.setFile(file);
         mdFile myMD = new mdFile();
         myMD.openMD(file);
-        myBookSet=myMD.getBooklist();
+        //myBookSet=myMD.getBooklist(); //could just use myProject later.
+        myProject.setOpenMD(myMD); //books added to project if created upon opening
+        setMDForView(myMD);
     } 
     //should return file split into blocks per #
     if (isOK==true && myProject.getExt().equals("rmd")) {
-        setFile(file);
+        setFileForView(file);
+        myProject.setFile(file);
         System.out.println("Processing RMD file.");
         mdFile myRMD = new mdFile();
         myRMD.openMD(file);
-        myBookSet=myRMD.getBooklist();
+        //myBookSet=myRMD.getBooklist(); //could just use myProject later.
+        myProject.setOpenRMD(myRMD); //books added to project if created upon opening
+        setMDForView(myRMD);
     }
     if (isOK==true && myProject.getExt().equals("docx")) {
         //integrate filename information into docx object?
-        setFile(file);
+        setFileForView(file);
+        myProject.setFile(file);
         docXML myDoc = new docXML();
-        myDoc.openDocx(file); 
-        myBookSet=myDoc.getBooklist(); //Change to non JavaFX dependency
-        styleTextArea.setText(myDoc.getStylesString()); //to display in tabB
-        styleSummaryTextArea.setText(myDoc.getSummaryStylesString()); //to display in tabC
+        myDoc.openDocx(file);
+        //myBookSet=myDoc.getBooklist(); //could just use myProject later.
+        myProject.setOpenDocx(myDoc); //books added to project if created upon opening
+        setDocxForView(myDoc); 
     }
-    return myBookSet;
+    unpackBooksToView(); //all books now set up in myProject object.
+    //return myBookSet;
+
     }
 
 public void unpackBooksAsCol() {
@@ -639,8 +648,8 @@ public void openFileAsRow(Integer row) {
         File tryfile = currentFileChooser.showOpenDialog(myStage);
         if (tryfile != null) {
           file = tryfile;
-          ArrayList<Book> myBooks = openFileGetBooklist(file);
-          myProject.addBooksToProject(myBooks);
+          openFileGetBooklist(file); //add books to project
+          //myProject.addBooksToProject(myBooks);
           unpackBooksAsRow(); 
         } 
         else {
@@ -684,28 +693,8 @@ public File openNewFile() {
           file = tryfile;
           
           //if markdown activate process markdown directly
-          ArrayList<Book> myBooks = openFileGetBooklist(file);
-          myProject.addBooksToProject(myBooks);
-          Integer booknum=myBooks.size();
-
-          if (booknum>20){
-              wrapBooks();
-          }
-          //default is vertical? If > 50 books wrap
-          else if (booknum<6) {
-            unpackBooksAsCol(); //this will setFile(file) and get data
-          }
-          //if between 6 and 20
-          else {
-            unpackBooksAsRow();
-          }
-          
-          //TO DO: Event so that double clicking on filename opens it?
-          myFileList.add(file.getName()); //add string reference
-          myObList.setAll(myFileList); //does a clear and refresh?
-          System.out.println(myFileList.size()+","+file.getName());
-          //setFile(file);
-        } 
+          openFileGetBooklist(file);
+        }
         else {
             //DO SOMETHING
         }
@@ -714,6 +703,31 @@ public File openNewFile() {
 }
 
 
+//
+public void addNewStyleTheme(String input){
+  if (input.equals("Evidence")){
+    XMLStyleThemeMaker themeTool = new XMLStyleThemeMaker();
+  }
+  if (input.equals("MD")){
+     XMLStyleThemeMaker themeTool = new XMLStyleThemeMaker();
+     xmlStyles current = myProject.getOpenDocx().getStylesObject(); //this is the full styles.xml string
+     themeTool.setCurrentStylesXML(current);
+     System.out.println(current.getStylesXML());
+     System.out.println("Just printed styles that are in the open docx in project");
+     themeTool.addMDStyles();
+     /*
+     String newstyles = themeTool.getUpdatedStylesXML().getStylesXML();
+     System.out.println(newstyles);
+     System.exit(0); 
+     */
+     //the new styles object in docx already has summary information updated
+     docXML currentDoc = myProject.getOpenDocx();
+     currentDoc.setStylesObject(themeTool.getUpdatedStylesXML());
+     currentDoc.getStylesObject().logging();
+     setDocxForView(currentDoc);
+     //TO DO: replace currenstyles with the new one.  
+  }
+}
 
 //for save as
 public void saveAs() {
@@ -734,7 +748,8 @@ public void saveAs() {
     //System.exit(0);
     File file = currentFileChooser.showSaveDialog(myStage);
     if (file != null) {
-        setFile(file); //sets name of file in myProject
+        setFileForView(file); //sets name of file in myProject
+        myProject.setFile(file);
         System.out.println(myProject.getFilename());
         System.out.println("SaveAsCalled");
         //System.exit(0);
@@ -750,8 +765,12 @@ public void saveAs() {
 //for save as
 public void saveAsDocx() {
     Stage myStage = new Stage();
-    myStage.setTitle("Save As ...");
+    myStage.setTitle("Resave docx As ...");
     //String fn=myProject.getFilepathNoExt();
+    if (!myProject.getExt().equals("docx")) {
+      //do nothing.  Future: dialogue box.
+      return;
+    }
     String fn= myProject.getFilenameNoExt();
     String filename=fn+".docx";
     this.currentFileChooser.setTitle("Save Project/File As");
@@ -760,7 +779,8 @@ public void saveAsDocx() {
     //System.exit(0);
     File file = currentFileChooser.showSaveDialog(myStage);
     if (file != null) {
-        setFile(file); //sets name of file in myProject
+        setFileForView(file); //sets name of file in myProject
+        myProject.setFile(file);
         System.out.println(myProject.getFilename());
         //writeFileOut();
         writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
@@ -785,7 +805,12 @@ public void saveRowAs(Integer row) {
     //System.exit(0);
     File file = currentFileChooser.showSaveDialog(myStage);
     if (file != null) {
-        setFile(file);
+        //do we want to do anything here?
+        /*
+        setFileForView(file);
+        */
+        myProject.setRowFile(file);
+        
         writeRowOut(row);
         } 
         else {
@@ -1007,11 +1032,48 @@ public String getFilename() {
 */
 
 //This can be called locally, or from 'Main' class which will setFile initially
-public void setFile(File myFile){
-  myProject.setFile(myFile);
+public void setFileForView(File myFile){
   this.shelfFileName.setText(myProject.getFilename());
   this.setTitle(myProject.getFilename()); //update title on window
+  myFileList.add(myFile.getName()); //add string reference
+  myObList.setAll(myFileList); //does a clear and refresh?
+  System.out.println(myFileList.size()+","+myFile.getName());
 }
+
+//update view parameters that are based on a newly opened docx
+public void setDocxForView(docXML input){
+  xmlStyles currentStyle = input.getStylesObject();
+  styleTextArea.setText(currentStyle.getStylesXML()); //to display in tabB
+  styleSummaryTextArea.setText(currentStyle.getSummaryStylesString()); //to display in tabC
+}
+
+/*
+myBookSet=myRMD.getBooklist();
+        myProject.addBooksToProject(myBooks);
+        */
+
+public void setMDForView(mdFile input) {
+          //Nothing special for now?
+}
+
+public void unpackBooksToView() {
+          //TO DO: set books in Project
+          ArrayList<Book> myBooks = myProject.getBooksOnShelf(); //checks that myProject is updated
+          //myProject.addBooksToProject(myBooks);
+          Integer booknum=myBooks.size();
+
+          if (booknum>20){
+              wrapBooks();
+          }
+          //default is vertical? If > 50 books wrap
+          else if (booknum<6) {
+            unpackBooksAsCol(); //this will setFile(file) and get data
+          }
+          //if between 6 and 20
+          else {
+            unpackBooksAsRow();
+          }
+        } 
 
 //set filename to currently open file.
 //add filename to current list view (TO DO: remove once closed)
