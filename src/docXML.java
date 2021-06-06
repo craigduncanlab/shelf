@@ -7,6 +7,7 @@ import java.util.*; //scanner, HashMap etc
 public class docXML {
 String docString;
 String docStylesString;
+String summaryStylesString;
 String docNumberingString;
 ArrayList<String> docxStyles;
 ArrayList<xmlPara> paraList;
@@ -37,8 +38,10 @@ public void openDocx(File file){
       ZipUtil myZip = new ZipUtil();
       myZip.OpenDocX(file);
       setDocString(myZip.getDocument());
-      myStyles.setStylesString(myZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
+      myStyles.setStylesXML(myZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
       setStylesString(myStyles.getStylesString()); //update the document version of styles.xml
+      setSummaryStylesString(myStyles.getSummaryStylesString()); //just for display
+      //System.exit(0);
       setDocNumberingString(myZip.getNumbering());
       //populate blocklist for future use
       setInitialParalist();
@@ -124,7 +127,7 @@ Output: If  a match, returns 0 (as if H1 or # in markdown). Otherwise returns 1.
 public xmlPara setmyParaOutlineCode(xmlPara thisPara) {
         int code=99;
         //System.out.println("Row:"+thisRow);
-        String paraStyle = thisPara.getpStyle(); 
+        String paraStyle = thisPara.getpStyle(); //the styleId in para
         //no style found to check against
         if (paraStyle.length()==0) {
             //return code;
@@ -135,13 +138,13 @@ public xmlPara setmyParaOutlineCode(xmlPara thisPara) {
         ArrayList<xstyle> stylesList=stylesObject.getOutlineStyles(); //all the Outline styles
         for (xstyle item : stylesList ) {
             thisPara.setLineCode(code); //for custom block definition
-            String styleId=item.getId();
+            String styleId=item.getId(); //this is styleid in the xstyle
             //match on the style with this paragraph
             if (paraStyle.equals(styleId)) {
                 //thisPara.setLineCode(0);
                 thisPara.setOutlineLevel(item.getOutlineLevel()); //para stores same outline level as its style
                 thisPara.setLineCode(item.getOutlineLevel()); //TO DO: can be an indepenent category
-                thisPara.setStyleXML(item.getStyle());
+                thisPara.setStyleXML(item.getStyleXML()); //this is full xml
         }
     }
     return thisPara; //need to do this to update the object 
@@ -183,6 +186,14 @@ public void setStylesString(String input) {
 
 public String getStylesString() {
 	return this.docStylesString;
+}
+
+public void setSummaryStylesString(String input) {
+    this.summaryStylesString=input;;
+}
+
+public String getSummaryStylesString() {
+    return this.summaryStylesString;
 }
 
 public xmlStyles getStylesObject(){
