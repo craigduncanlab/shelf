@@ -200,6 +200,7 @@ private MenuBar makeMenuBar() {
         MenuItem OpenTempl = new MenuItem("Open (CMD-O)");
         MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
         MenuItem SaveAsMenuItem = new MenuItem("Save As (CMD-SHIFT-S)");
+        MenuItem SaveDocxStylesMenuItem = new MenuItem("Save Docx New Styles");
         MenuItem SaveAsDocxMenuItem = new MenuItem("Save As Docx");
         MenuItem saveRowAsMenuItem = new MenuItem("Save Row As");
         MenuItem ClearBookshelfMenuItem = new MenuItem("Close (CMD-W)");
@@ -217,10 +218,11 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,SaveAsDocxMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
+        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,SaveAsDocxMenuItem,SaveDocxStylesMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
         SaveShelf.setOnAction(SaveHandler);
         SaveAsMenuItem.setOnAction(SaveAsHandler); //docname
         SaveAsDocxMenuItem.setOnAction(SaveAsDocxEvent);
+        SaveDocxStylesMenuItem.setOnAction(SaveDocxStylesEvent);
         saveRowAsMenuItem.setOnAction(saveRowAsHandler);
         OpenTempl.setOnAction(openTemplate);
         ClearBookshelfMenuItem.setOnAction(clearBookShelf);
@@ -263,12 +265,14 @@ private MenuBar makeMenuBar() {
         menuEdit.getItems().addAll(addNewBook,bookDeleteMenuItem);
 
         // --- STYLEDB MENU ---
-        Menu menuTSDB = new Menu("StyleXML");
+        Menu menuTSDB = new Menu("StyleFields");
         //setFileMenu(menuFile);
         MenuItem addMDStyle = new MenuItem("Add MD styles");
         MenuItem addEvidenceStyle = new MenuItem("Add Evid styles");
-        menuTSDB.getItems().addAll(addMDStyle,addEvidenceStyle);
+        MenuItem addLetterStyle = new MenuItem("Add Letter styles");
+        menuTSDB.getItems().addAll(addMDStyle,addLetterStyle,addEvidenceStyle);
         addMDStyle.setOnAction(addMDStyleXML);
+        addLetterStyle.setOnAction(addLetterStyleXML);
         addEvidenceStyle.setOnAction(addEvidenceStyleXML);
         
          // --- TEXT MENU ---
@@ -300,6 +304,10 @@ public void setMDStyleXML(){
 
 public void setEvidenceStyleXML(){
     Stage_WS.addNewStyleTheme("Evidence");
+}
+
+public void setLetterStyleXML(){
+    Stage_WS.addNewStyleTheme("Letter");
 }
 
 //
@@ -520,6 +528,12 @@ The myProject settings should be used by default.
         this.Stage_WS.saveAsDocx();
     }
 
+    //saveAsDocxStyles
+     public void saveAsDocxStyles() {
+        //this.Stage_WS.setFile(this.currentOpenFile);
+        this.Stage_WS.saveAsDocxStyles();
+    }
+
     public void saveRowAsFileSaver() {
         //this.Stage_WS.setFile(this.currentOpenFile); //not needed?
         Book myBook = Main.this.getActiveBook();
@@ -552,6 +566,14 @@ The myProject settings should be used by default.
     @Override 
     public void handle(ActionEvent event) {
         Main.this.setEvidenceStyleXML();
+        }
+    };
+
+    EventHandler<ActionEvent> addLetterStyleXML = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Main.this.setLetterStyleXML();
         }
     };
 
@@ -715,6 +737,15 @@ The myProject settings should be used by default.
         @Override 
         public void handle(ActionEvent event) {
             Main.this.saveAsDocx();
+                }
+            }; 
+
+        //SaveDocxStylesEvent
+        EventHandler<ActionEvent> SaveDocxStylesEvent = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            Main.this.saveAsDocxStyles();
                 }
             }; 
 
