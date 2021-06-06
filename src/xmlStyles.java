@@ -31,6 +31,7 @@ private void updateSummaryStylesString() {
 //called externally by docXML when new Styles.xml is obtained
 public void setStylesXML(String input){
 	this.stylesString=input;
+  extractPreStyles();
   convertStylesXMLtoObjects();
   updateSummaryStylesString();
 }
@@ -111,7 +112,7 @@ public void convertStylesXMLtoObjects(){
     	 currentStyle.setStyleXML(item);
     	 addStyle(currentStyle);
     }
-    //extractPreStyles(); //for each new Styles XML save the preparatory section
+    //for each new Styles XML save the preparatory section
     //System.out.println("Extracted pre styles");
   }
 
