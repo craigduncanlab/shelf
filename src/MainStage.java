@@ -45,7 +45,8 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.cell.ChoiceBoxListCell;
-
+import javafx.scene.control.TabPane;
+import javafx.scene.control.Tab;
 //Scene - general appearance & layout of Background Fills, Stages, nodes
 import javafx.scene.layout.Region;
 import javafx.scene.layout.Background;
@@ -149,6 +150,14 @@ String category="";
 //Displayed Book (i.e. Node).  Will be updated through GUI.
 //Book displayNode = new Book();
 int doccount=0; //document counter for this stage
+
+//TABS FOR RHS
+TabPane myTabsGroup = new TabPane();
+Tab tabA = new Tab();
+Tab tabB = new Tab();
+Tab tabC = new Tab();
+TextArea styleTextArea = new TextArea();
+TextArea styleSummaryTextArea = new TextArea();
 
 //NODE'S TEXT CONTENT
 //For storing main text output area for this Stage (if any)
@@ -369,6 +378,8 @@ public ArrayList<Book> openFileGetBooklist(File file) {
         docXML myDoc = new docXML();
         myDoc.openDocx(file); 
         myBookSet=myDoc.getBooklist(); //Change to non JavaFX dependency
+        styleTextArea.setText(myDoc.getStylesString()); //to display in tabB
+        styleSummaryTextArea.setText(myDoc.getSummaryStylesString()); //to display in tabC
     }
     return myBookSet;
     }
@@ -725,6 +736,8 @@ public void saveAs() {
     if (file != null) {
         setFile(file); //sets name of file in myProject
         System.out.println(myProject.getFilename());
+        System.out.println("SaveAsCalled");
+        //System.exit(0);
         writeFileOut();
         writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
         writeOutHTML();
@@ -1655,7 +1668,10 @@ This method does not update content of the Sprite-display GUI node.
 
 myGroup_root--->
 myBP(top)-->menuBarGroup-->myMenu
+Tabs here?
+TabA:
 myBP(center)-->myScrollPane-->filename+workspacePane (Pane) -->displayAreaGroup (for BookIcons etc to be added)+ RowLines (Line) + ColLines (Line)
+Tab B:
 
 TO DO: the Pane should only display a 'Window' of content and then shift content, so that it is an infinite size and does not need to be defined.
 We might need at least 30 rows for some outline views of Word docs etc.
@@ -1750,6 +1766,8 @@ private Group makeWorkspaceTree() {
            */ //end of the override
         
         //<---end customised cells section ---> 
+        //Add some Tabs so we can easily shift between gridview and viewing Styles.xml or similar.
+
         //choiceboxlistcell
         ScrollPane myLayerScroller = new ScrollPane(layerListView);
 
@@ -1790,8 +1808,16 @@ private Group makeWorkspaceTree() {
         //myScrollPane.getChildren().addAll(displayAreaGroup);
         //VBox centrelayout = new VBox(this.shelfFileName,workspacePane);
 
+        //TABS in CENTRE PANE. FOR SCROLLPANE
+         //Create Tabs for Tab Pane, which will sit inside editor
+        //Tab tabA = new Tab();
+        tabA.setText("Visual");
+        
+
        // --- IF USING A SCROLLPANE HERE, ADD THAT TO THE BP
         ScrollPane myScrollPane = new ScrollPane(workspacePane); //content is the workspacePane
+
+
         myScrollPane.setPrefViewportWidth(this.scrollSceneWidth);
         myScrollPane.setPrefViewportHeight(this.scrollSceneHeight);
         myScrollPane.pannableProperty().set(false);  //to prevent panning by mouse
@@ -1829,7 +1855,18 @@ private Group makeWorkspaceTree() {
         myBP.setTop(menubarGroup); //this includes the top menu.  Do not set anywhere else
         //myBP.setMargin(workspacePane, new Insets(50,50,50,50)); //i.e. Y=-50='translateX=0'
         myBP.setMargin(myScrollPane, new Insets(0,0,0,0));
-        myBP.setCenter(myScrollPane);
+        myTabsGroup.getTabs().add(tabA);
+        myBP.setCenter(myTabsGroup);
+        tabA.setContent(myScrollPane);
+        tabB.setText("StyleXML");
+        tabB.setContent(styleTextArea);
+        styleTextArea.setWrapText(true);
+        myTabsGroup.getTabs().add(tabB);
+        tabC.setText("StyleSummary");
+        tabC.setContent(styleSummaryTextArea);
+        styleSummaryTextArea.setWrapText(true);
+        myTabsGroup.getTabs().add(tabC);
+        //myBP.setCenter(myScrollPane);
         //myBP.setCenter(myScrollPane);
         //workspacePane.setPadding(new Insets(150,150,150,150));
         //
