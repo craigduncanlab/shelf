@@ -62,7 +62,8 @@ String booklabel=""; //the title (heading 1) for this entry
 String displaylabel="";  //this may be booklabel by default, but can add other details like date etc
 String heading="";
 String date="";
-String time="";
+String styleId="";
+int outlineLevel=1; //default
 String output="";
 String htmlString="";
 String mdString="";
@@ -117,12 +118,15 @@ public Book(String ooxml) {
 	setMD(ooxml);   
 }
 
+//preferred constructor now: builds book from XML block data
 public Book(xmlBlock input) {
 	setOOXMLtext(input.getBlockText());
 	setNotes(input.getNotesText());
 	setMD(input.getBlockText()); //check this is ok? 
 	setLabel(input.getHeaderText());
-	setStyleXML(input.getStyleXML());
+	setStyleXML(input.getStyleXML()); //full text
+	setStyleId(input.getStyleId()); //the styleId
+	setOutlineLevel(input.getOutlineLevel());
 }
 
 //Function to set GUI event handlers separate to main data
@@ -141,18 +145,19 @@ public void updateMDText(String label, String text, String note) {
 }
 
 //general update text function
-public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String datetext,String timetext,String mdtext, String tabnote, String note) {
+public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String styleIdtext, int outlineLeveltext, String mdtext, String tabnote, String note) {
 	//setDocName(name);
 	setdocfilepath(filepath);
 	setimagefilepath(imagepath);
 	seturlpath(urlpath);
-	setdate(datetext);
-	settime(timetext); //check for trailing
+	//setdate(datetext);
+	setStyleId(styleIdtext); //check for trailing
+	setOutlineLevel(outlineLeveltext);
 	System.out.println("Checks on updated edits:");
-	System.out.println("date input:"+datetext);
-	System.out.println("time input:"+timetext);
+	//System.out.println("date input:"+datetext);
+	System.out.println("styleId input:"+styleIdtext);
 	System.out.println("stored date:"+this.getdate());
-	System.out.println("stored time:"+this.gettime());
+	System.out.println("stored styleId:"+this.getStyleId());
 	//System.exit(0);
 	setLabel(label);
 	updateDisplay();
@@ -268,11 +273,11 @@ public void setLabel(String myString) {
 
 public void updateDisplay(){
 	if (this.displayMode==2) {
-		String update = getdate()+" "+gettime()+" "+getLabel();
+		String update = getOutlineLevel()+" "+getStyleId()+" "+getLabel();
         setVisibleNodeText(update);
 	}
 	else if (this.displayMode==3) {
-		String update = getdate()+" "+gettime();
+		String update = getOutlineLevel()+" "+getStyleId();
         setVisibleNodeText(update);
 	}
 	else if (this.displayMode==1) {
@@ -463,12 +468,20 @@ public String getdate () {
 	return this.date;
 }
 
-public void settime (String myString) {
-	this.time = myString;
+public String getStyleId () {
+	return this.styleId;
 }
 
-public String gettime () {
-	return this.time;
+public void setStyleId(String input){
+	this.styleId=input;
+}
+
+public int getOutlineLevel(){
+	return this.outlineLevel;
+}
+
+public void setOutlineLevel(int input){
+	this.outlineLevel=input;
 }
 
 public void setdocauthor (String myString) {
@@ -548,7 +561,8 @@ public Book cloneBook() {
 	clone.setShortname(this.shortname);
 	clone.setHeading(this.heading);
 	clone.setdate(this.date);
-	clone.settime(this.time);
+	clone.setStyleId(this.styleId);
+	clone.setOutlineLevel(this.outlineLevel);
 	clone.setOutputText(this.output);
 	clone.setHTML(this.htmlString);
 	clone.setVisible(this.visible);
