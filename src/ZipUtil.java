@@ -136,7 +136,8 @@ public ArrayList<ZipEntry> readAndReplaceZip(docXML tempDoc, String templateDocx
 	String maindoc="word/document.xml";
 	String styledoc="word/styles.xml";
 	String docxml = tempDoc.getDocString();
-	String stylexml = tempDoc.getStylesString();
+	xmlStyles myStyle = tempDoc.getStylesObject();
+	String stylexml = myStyle.getStylesXML();
 	try  {
 		FileInputStream myFileStream = new FileInputStream(templateDocx); //reads in all parts of templateDocx
 		FileOutputStream myOutputStream = new FileOutputStream(f);
