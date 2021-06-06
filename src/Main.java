@@ -261,13 +261,22 @@ private MenuBar makeMenuBar() {
         MenuItem bookDeleteMenuItem = new MenuItem("Delete Selected");
         bookDeleteMenuItem.setOnAction(deleteSelectedBook);
         menuEdit.getItems().addAll(addNewBook,bookDeleteMenuItem);
+
+        // --- STYLEDB MENU ---
+        Menu menuTSDB = new Menu("StyleXML");
+        //setFileMenu(menuFile);
+        MenuItem addMDStyle = new MenuItem("Add MD styles");
+        MenuItem addEvidenceStyle = new MenuItem("Add Evid styles");
+        menuTSDB.getItems().addAll(addMDStyle,addEvidenceStyle);
+        addMDStyle.setOnAction(addMDStyleXML);
+        addEvidenceStyle.setOnAction(addEvidenceStyleXML);
         
          // --- TEXT MENU ---
         //MenuItem FileOpen = new MenuItem("FileOpen");
         
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile,menuEdit,layoutMenu,displayMenu);     
+        menuBar.getMenus().addAll(menuFile,menuEdit,layoutMenu,displayMenu,menuTSDB);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
@@ -280,6 +289,17 @@ private MenuBar makeMenuBar() {
         });
 
         return menuBar;
+}
+
+
+//StylesXML
+
+public void setMDStyleXML(){
+    Stage_WS.addNewStyleTheme("MD");
+}
+
+public void setEvidenceStyleXML(){
+    Stage_WS.addNewStyleTheme("Evidence");
 }
 
 //
@@ -501,7 +521,7 @@ The myProject settings should be used by default.
     }
 
     public void saveRowAsFileSaver() {
-        this.Stage_WS.setFile(this.currentOpenFile);
+        //this.Stage_WS.setFile(this.currentOpenFile); //not needed?
         Book myBook = Main.this.getActiveBook();
         Integer myRow = myBook.getRow();
         this.Stage_WS.saveRowAs(myRow);
@@ -518,6 +538,23 @@ The myProject settings should be used by default.
             Stage_WS.wrapBoxes(); 
             }
         };
+
+    EventHandler<ActionEvent> addMDStyleXML = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Main.this.setMDStyleXML();
+        }
+    };
+
+    EventHandler<ActionEvent> addEvidenceStyleXML = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Main.this.setEvidenceStyleXML();
+        }
+    };
+
 
     //display
     EventHandler<ActionEvent> setDisplayTitles = 
