@@ -7,15 +7,19 @@ public class xstyle {
 	String Id="NewStyle"; //default
 	String name="NewStyle";
 	String basedOn="Normal"; //default
+	String nextPara=""; //default
 	int uiPriority=0; //priority for display of styles in Word
 	String customStyle="1"; // this is '1' for user defined?
 	//para props
 	int outlineLevel=99;
 	Shade shadeObject= new Shade();
 	String shade="";
+	int afterSpace=0; //default for 6pt is 120
 	//run props
-	String Fonts="Times New Roman"; //default. To do.  create Font object and XML parser inside it.
-	int size=22;//default is 11;
+	String Fonts=""; //No default. To do.  Times New Roman.  create Font object and XML parser inside it.
+	String FontColorXML="";
+	String formatXML="";
+	int size=1;//default for 11 is '22';
 	String lang="en-GB";
 
 //subclass shade
@@ -28,8 +32,32 @@ public Shade(){
 
 }
 
+//E2EFD9" w:themeFill="accent6" w:themeFillTint="33"/>
+public void setNoteFill(){
+	this.fill="E2EFD9";
+}
+
 public String getXML(){
 	String output="<w:shd w:val=\""+this.val+"\" w:color=\""+this.color+"\" w:fill=\""+this.fill+"\"/>";
+	return output;
+}
+
+}
+
+public class Tint{
+	String blue="2F5496";
+
+//<w:color w:val="2F5496" />
+public Tint(){
+
+}
+
+public String getBlue(){
+	return getXML(this.blue);
+}
+
+public String getXML(String input){
+	String output="<w:color w:val=\""+input+"\"/>";
 	return output;
 }
 
@@ -41,21 +69,43 @@ public String getXML(){
 	*/
 
 
+/*
+ w:style w:type="paragraph" w:customStyle="1" w:styleId="Code"><w:name w:val="Code"/><w:aliases w:val="RCode,PythonCode"/><w:basedOn w:val="Normal"/><w:autoRedefine/><w:qFormat/><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="F8F8F8"/></w:pPr><w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/></w:rPr></w:style></w:styles>
+ */
+
+//<w:shd w:val="clear" w:color="auto" w:fill="F8F8F8"/>
+
 private String updateXMLString(){
 	//general properties
 	String output = "<w:style w:type=\""+this.type+"\" w:customStyle=\""+this.customStyle+"\" w:styleId=\""+this.Id+"\">";
-	output=output+"<w:name w:val=\""+this.name+"\">";
-	output=output+"<w:basedOn w:val=\""+this.basedOn+"\">";
-	output=output+"<w:uiPriority w:val=\""+this.uiPriority+"\"/>";
+
+	output=output+"<w:name w:val=\""+this.name+"\"/>";
+	output=output+"<w:basedOn w:val=\""+this.basedOn+"\"/>";
+	if (this.nextPara.length()>0){
+		output=output+"<w:next w:val=\""+this.nextPara+"\"/>";
+	}
+	output=output+"<w:autoRedefine/><w:qFormat/>"; //Word UI: automatically update; add to QuickStyles.
+	//output=output+"<w:uiPriority w:val=\""+this.uiPriority+"\"/>";
 	//start paragraph properties
 	output=output+"<w:pPr>";
-	output=output+"<w:outlineLvl w:val=\""+this.outlineLevel+"\">";
-	output=output+shade; //default is no shading
+	if (this.outlineLevel!=99) {
+		output=output+"<w:outlineLvl w:val=\""+this.outlineLevel+"\"/>";
+	}
+	if (this.afterSpace>0){
+		output=output+"<w:spacing w:after=\""+this.afterSpace+"\"/>"; //120 equals 6 pt after?
+	}
+	output=output+shade; //default is no shading  
 	output=output+"</w:pPr>"; //end para parameters
 	output=output+"<w:rPr>"; //start run parameters
-	output=output+"<w:rFonts w:ascii=\""+this.Fonts+"\" w:eastAsia=\""+this.Fonts+"\" w:hAnsi=\""+this.Fonts+"\" w:cs=\""+this.Fonts+"\"/>"; 
-	output=output+"<w:sz w:val=\""+this.size+"\"/>";
-	output=output+"<w:lang w:eastAsia=\""+this.lang+"\"/>"; //w:bidi=
+	if (getFont().length()>0) {
+		output=output+"<w:rFonts w:ascii=\""+this.Fonts+"\" w:hAnsi=\""+this.Fonts+"\"/>"; 
+	}
+	output=output+this.FontColorXML;
+	output=output+this.formatXML;
+	if (getSize()>1){
+		output=output+"<w:sz w:val=\""+this.size+"\"/>";
+	}
+	//output=output+"<w:lang w:eastAsia=\""+this.lang+"\"/>"; //w:bidi=
 	output=output+"</w:rPr>"; //end para parameters
 	output=output+"</w:style>"; //end XML style 
 	setStyleXMLNoExtract(output);
@@ -84,11 +134,38 @@ public void setStyleXML(String input){
 
 //For external setting of style parameters id, outline,font,size
 //Require them to be done as a set
-public void setStyleAttrib(String id, int outline, String font, int size, String shade) { 
+//If too complicated, split up and set according to paragraphs and spacing, fill and other criteria
+public void setStyleAttrib(String id, String basedOn, String nextp, int outline, String font, int size, String shade, int after, String color, String format) { 
   setId(id); //must match the test otherwise circular
   setOutlineLevel(outline);
-  setFont(font);
-  setSize(size); //tiny
+  if (font.length()>0) {
+	  setFont(font); 
+  }
+  setBasedOn(basedOn);
+  if (size>1) {
+	  setSize(size);   	
+  }
+  setNextPara(nextp);
+
+  if (shade.equals("shade")){
+  	Shade aShader = new Shade();
+  	setShade(aShader.getXML());
+  }
+  if (shade.equals("note")){
+  	Shade noteShade = new Shade();
+  	noteShade.setNoteFill();
+  	setShade(noteShade.getXML());
+  }
+  if (after>0) {
+  	this.afterSpace=after; //alternatively, ask user in 6pt, 12pt and adjust here.
+  }
+  if (color.equals("blue")) {
+  	Tint colTint=new Tint();
+  	setFontColor(colTint.getBlue());
+  }
+  if (format.length()>0){
+  	setFormat(format);
+  }
   //setShade(shade);
   updateXMLString(); //do this for external updates
 }
@@ -114,8 +191,29 @@ public String getFont() {
 	return this.Fonts;
 }
 
+public void setFontColor(String input) {
+	this.FontColorXML=input;
+}
+
+public void setFormat(String input){
+	if (input.equals("bold")) {
+		this.formatXML="<w:b/>";
+	}
+	if (input.equals("italic")) {
+		this.formatXML="<w:i/>";
+	}
+}
+
+public String getFontColor() {
+	return this.FontColorXML;
+}
+
 public void setBasedOn(String input) {
 	this.basedOn=input;
+}
+
+public void setNextPara(String input) {
+	this.nextPara=input;
 }
 
 public String getBasedOn() {
@@ -156,6 +254,13 @@ public void setName(String input){
 	this.name=input;
 }
 
+public String setShade(){
+	return this.shade;
+}
+
+public void setShade(String input){
+	this.shade=input;
+}
 
 
 /* 
