@@ -275,10 +275,16 @@ private MenuBar makeMenuBar() {
         MenuItem addMDStyle = new MenuItem("Add MD styles");
         MenuItem addEvidenceStyle = new MenuItem("Add Evid styles");
         MenuItem addLetterStyle = new MenuItem("Add Letter styles");
-        menuFields.getItems().addAll(addMDStyle,addLetterStyle,addEvidenceStyle);
+        Menu legalFields = new Menu("Legal");
         addMDStyle.setOnAction(addMDStyleXML);
         addLetterStyle.setOnAction(addLetterStyleXML);
         addEvidenceStyle.setOnAction(addEvidenceStyleXML);
+        menuFields.getItems().addAll(addMDStyle,addLetterStyle,legalFields);
+        //Legal Sub Menu
+        Menu contractMenu = new Menu("Contracts");
+        MenuItem leaseMenuItem = new MenuItem("Add Lease Fields");
+        contractMenu.getItems().addAll(leaseMenuItem);
+        legalFields.getItems().addAll(contractMenu,addEvidenceStyle);
         
          // --- TEXT MENU ---
         //MenuItem FileOpen = new MenuItem("FileOpen");
@@ -479,7 +485,7 @@ public void deleteSpriteGUI(Book myBook) {
         MenuBar myMenu = makeMenuBar();
        
         //The main Stage for Workspace.  
-        Stage_WS = new MainStage("LayerText Editor (c) Craig Duncan 2021", myMenu,Main.this,primaryStage);  //sets up GUI for view
+        Stage_WS = new MainStage("Literate Database (c) Craig Duncan 2021", myMenu,Main.this,primaryStage);  //sets up GUI for view
         
         if (this.Stage_WS==null) {
             System.out.println("Stage_WS is null start application");
