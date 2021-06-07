@@ -78,7 +78,7 @@ Boolean isAlert=false;
 Color defaultColour=Color.WHITE;
 Color userColour=Color.WHITE;//Color.LIGHTBLUE;
 Color alertColour=Color.PINK; //RED
-BookIcon myBookIcon;
+BookIcon myBookIcon = new BookIcon();
 String userMetaView; //how to display metadata
 Integer rowNumber=0;
 Integer columnNumber=0;
@@ -273,11 +273,15 @@ public void setLabel(String myString) {
 
 public void updateDisplay(){
 	if (this.displayMode==2) {
-		String update = getOutlineLevel()+" "+getStyleId()+" "+getLabel();
+		String update = getOutlineLevel()+" "+getStyleId();// +" "+getLabel();
         setVisibleNodeText(update);
 	}
 	else if (this.displayMode==3) {
-		String update = getOutlineLevel()+" "+getStyleId();
+		String update = getStyleId();//getOutlineLevel()+" "+getStyleId();
+        setVisibleNodeText(update);
+	}
+	else if (this.displayMode==4) {
+		String update = getdate();//getOutlineLevel()+" "+getStyleId();
         setVisibleNodeText(update);
 	}
 	else if (this.displayMode==1) {
@@ -586,7 +590,7 @@ Position can also be set externally by the calling class */
 
 //Initial GUI setup
 public void FXsetup() {
-    this.myBookIcon = new BookIcon();   //Uses defaults.  Essentially, it's a 'Rectangle'
+    // this.myBookIcon is essentially a 'Rectangle'
 
     //we add text to the Rectangle
 
@@ -651,7 +655,7 @@ public void setAlert(Boolean alertState){
 }
 
 private void updateAppearance() {
-    
+    try {
     if (this.isAlert==true) {
        this.myBookIcon.setColour(this.alertColour);
     }
@@ -659,6 +663,13 @@ private void updateAppearance() {
     	this.myBookIcon.setColour(userColour);
     }
     }
+    catch (Throwable t)
+        {
+            t.printStackTrace();
+            return;
+        }
+}
+
 
 public void SetColour(Color myColour) {
     this.myBookIcon.setColour(myColour);
