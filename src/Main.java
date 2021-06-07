@@ -230,31 +230,36 @@ private MenuBar makeMenuBar() {
 
         //GENERAL LAYOUT/WRAP OPTIONS
         Menu layoutMenu = new Menu("Layout");
-        MenuItem layoutWrap = new MenuItem("Wrap (10 boxes)");
+        MenuItem layoutWrap = new MenuItem("Wrap(10)");
+        MenuItem rowLayout = new MenuItem("By Row");
+        MenuItem colLayout = new MenuItem("By Col");
         //layoutMenu.getItems().addAll(layoutWrap);
         //MENU GRID : BOX MOVEMENTS
-        //Menu menuGrid = new Menu("Move me!");
+        Menu moveMenu = new Menu("Move");
         MenuItem insertRowAfterItem = new MenuItem("Insert Row (After)");
         MenuItem insertRowBeforeItem = new MenuItem("Insert Row (Before)");
         MenuItem insertCellShiftRightItem = new MenuItem("Nudge (Shift Right)");
         MenuItem nudgeCellShiftLeftItem = new MenuItem("Nudge (Shift Left)");
         layoutWrap.setOnAction(performBoxWrap);
+        rowLayout.setOnAction(performRowWrap);
+        colLayout.setOnAction(performColWrap);
         insertRowBeforeItem.setOnAction(insertRowBeforeHandler);
         insertRowAfterItem.setOnAction(insertRowAfterHandler);
         insertCellShiftRightItem.setOnAction(insertCellShiftRightHandler);
         nudgeCellShiftLeftItem.setOnAction(nudgeCellShiftLeftHandler);
-        layoutMenu.getItems().addAll(layoutWrap,insertRowBeforeItem,insertRowAfterItem,nudgeCellShiftLeftItem,insertCellShiftRightItem);
+        moveMenu.getItems().addAll(insertRowBeforeItem,insertRowAfterItem,nudgeCellShiftLeftItem,insertCellShiftRightItem);
+        layoutMenu.getItems().addAll(layoutWrap,rowLayout,colLayout);
         
 
         //DISPLAY OPTIONS
         Menu displayMenu = new Menu("Display");
         MenuItem displayTitles = new MenuItem("Titles");
-        MenuItem displayWithDate = new MenuItem("Titles With Date/Time");
-        MenuItem displayDateOnly = new MenuItem("Date/Time");
-        displayMenu.getItems().addAll(displayTitles,displayWithDate,displayDateOnly);
+        MenuItem displayWithDate = new MenuItem("With Date");
+        MenuItem displayFieldStyle = new MenuItem("Field/Style");
+        displayMenu.getItems().addAll(displayTitles,displayWithDate,displayFieldStyle);
         displayTitles.setOnAction(setDisplayTitles);
         displayWithDate.setOnAction(setDisplayTitleWithDate);
-        displayDateOnly.setOnAction(setDisplayDateTime);
+        displayFieldStyle.setOnAction(setDisplayFieldStyle);
 
         //--- MENU CONCEPTS
         Menu menuEdit = new Menu("Edit");
@@ -265,12 +270,12 @@ private MenuBar makeMenuBar() {
         menuEdit.getItems().addAll(addNewBook,bookDeleteMenuItem);
 
         // --- STYLEDB MENU ---
-        Menu menuTSDB = new Menu("StyleFields");
+        Menu menuFields = new Menu("StyleFields");
         //setFileMenu(menuFile);
         MenuItem addMDStyle = new MenuItem("Add MD styles");
         MenuItem addEvidenceStyle = new MenuItem("Add Evid styles");
         MenuItem addLetterStyle = new MenuItem("Add Letter styles");
-        menuTSDB.getItems().addAll(addMDStyle,addLetterStyle,addEvidenceStyle);
+        menuFields.getItems().addAll(addMDStyle,addLetterStyle,addEvidenceStyle);
         addMDStyle.setOnAction(addMDStyleXML);
         addLetterStyle.setOnAction(addLetterStyleXML);
         addEvidenceStyle.setOnAction(addEvidenceStyleXML);
@@ -280,7 +285,7 @@ private MenuBar makeMenuBar() {
         
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile,menuEdit,layoutMenu,displayMenu,menuTSDB);     
+        menuBar.getMenus().addAll(menuFile,menuEdit,moveMenu,layoutMenu,displayMenu,menuFields);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
@@ -319,13 +324,13 @@ public void setDisplayModeTitles() {
 }
 
 public void setDisplayModeTitleWithDate() {
-    if (this.displayMode!=2){
-        this.displayMode=2;
+    if (this.displayMode!=4){
+        this.displayMode=4;
         Stage_WS.setDisplayModeTitles(this.displayMode);
     }
 }
 
-public void setDisplayModeDateTime() {
+public void setDisplayModeFieldStyle() {
     if (this.displayMode!=3){
         this.displayMode=3;
         Stage_WS.setDisplayModeTitles(this.displayMode);
@@ -549,7 +554,25 @@ The myProject settings should be used by default.
         @Override 
         public void handle(ActionEvent event) {
             //Main.this.performBoxWrapFunction();
-            Stage_WS.wrapBoxes(); 
+            Stage_WS.wrapBooks();
+            }
+        };
+
+    EventHandler<ActionEvent> performRowWrap = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            //Main.this.performBoxWrapFunction();
+            Stage_WS.unpackBooksAsRow();
+            }
+        };
+
+    EventHandler<ActionEvent> performColWrap = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            //Main.this.performBoxWrapFunction();
+            Stage_WS.unpackBooksAsCol();
             }
         };
 
@@ -596,11 +619,11 @@ The myProject settings should be used by default.
     };
 
 
-    EventHandler<ActionEvent> setDisplayDateTime = 
+    EventHandler<ActionEvent> setDisplayFieldStyle = 
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Main.this.setDisplayModeDateTime();
+        Main.this.setDisplayModeFieldStyle();
         }
     };
 
