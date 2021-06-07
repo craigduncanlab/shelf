@@ -941,14 +941,13 @@ public void unpackBooksWrapped() {
 }
 */
 public void singleSelection(Book thisBook){
-  //handle no selection
-  System.out.println("Start Single Selection");
+  
   if (this.selectedBooks.size()>0) {
       for (Book item: this.selectedBooks) {
          item.endAlert();
       }
   }
-  System.out.println("Finished End Alert");
+  
   try {
       ArrayList<Book> newSelection= new ArrayList<Book>();
       newSelection.add(thisBook);
@@ -961,13 +960,6 @@ public void singleSelection(Book thisBook){
             t.printStackTrace();
             return;
         }
-  /*
-  catch (NullPointerException e) {
-                        //do nothing
-                    }
-                    */
-
-  System.out.println("Finished Single Selection");
 }
 
 //no need for these to be sorted.  However, books in selection should be 
@@ -1019,8 +1011,6 @@ public void shiftedSelection(Book thisBook) {
       Book item = myIterator.next();
       item.endAlert(); //reset
 
-
-      
       //find start of selection
       if (item==firstBook && !this.selectedBooks.contains(thisBook)){
             selection=true;
@@ -1109,11 +1099,6 @@ public void setDocxForView(docXML input){
   styleSummaryTextArea.setText(myPDoc.getStylesObject().getSummaryStylesString()); //to display in tabC
 }
 
-/*
-myBookSet=myRMD.getBooklist();
-        myProject.addBooksToProject(myBooks);
-        */
-
 public void setMDForView(mdFile input) {
           //Nothing special for now?
 }
@@ -1156,21 +1141,6 @@ public void setFilename(String myFile) {
     this.shelfFileName.setText(fn);
     this.setTitle(fn); //update title on window
 }
-
-/*
-public void setShortFilename(String myFile) {
-    //this.shortfilename = myFile;
-    myProject.setShortFilename(myFile);
-    //this.shelfFileName.setText(this.filename);
-}
-*/
-
-/*
-public String getShortFilename() {
-  return myProject.getShortFilename();
-    //return this.shortfilename;
-}
-*/
 
 public int getDocCount() {
     return this.doccount;
