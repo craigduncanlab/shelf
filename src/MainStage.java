@@ -408,19 +408,13 @@ public void wrapBooks() {
 
 //Adds the book passed here (already in the Project list) to the stage.  AddNewBookToView
 public void AddNewBookToStage(Book newBook) throws NullPointerException {
-    //update Data Model and check if myBook is valid.
-    if (myProject.getBooksOnShelf().contains(newBook)) {
-      //do nothing.  Check JavaFX objects too?
-    }
-    else {
-      //this should already have been done, but may not have been done for a 'paste'
-      newBook = getNewBookPositionAdjacent(newBook);
-      myProject.addBookToProject(newBook); //data model
-    }
-    //Book newBook=myProject.addBookToProject(newBook);
     try {
         setActiveBook(newBook);
         //setXYfromRowCol(newBook); X and Y are already set
+        if (this.bookgroupNode.getChildren().contains(newBook)) {
+            System.out.println("Detected book already on stage");
+            System.exit(0);
+        }
         this.bookgroupNode.getChildren().add(newBook); //<----JAVAFX ADDS OBJECT. CAN'T DO TWICE (ERROR)
         System.out.println("finished adding new book to project.  R,C:"+newBook.getRow()+","+newBook.getCol());
         //System.exit(0);
@@ -435,10 +429,18 @@ public void AddNewBookToStage(Book newBook) throws NullPointerException {
 }
 
 //Adds books in project to stage.  TO DO: check not a duplicate?
+//This is the logical place to ensure that event handlers and FX setup is completed.
+//This must be done BEFORE calling 'setActiveBook'
 public void AddProjectBooksToStage() throws NullPointerException {
+    System.out.println("Adding project books to stage");
+   
     ArrayList<Book> myBookList = myProject.getBooksOnShelf();
+    System.out.println("Project books:"+myBookList.size());
+    
     for (Book item: myBookList) {
     try {
+        //This if for FX purposes, but must be done as part of creation of new books ASAP, before setActive.
+        item.setHandlers(PressBox,DragBox);
         setActiveBook(item);
         this.bookgroupNode.getChildren().add(item); //<----JAVAFX ADDS OBJECT. CAN'T DO TWICE (ERROR)
         setXYfromRowCol(item);
@@ -481,7 +483,8 @@ public void nowrap_addProjectBooksVertical(ArrayList<Book> myBookSet){
             //set position as part of data model
             thisBook.setRow(rowcount); //default col is 0.
             thisBook.setCol(0);
-            thisBook.setHandlers(PressBox,DragBox);
+            //This if for FX purposes, but must be done as part of creation of new books ASAP.
+            //thisBook.setHandlers(PressBox,DragBox);
             setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
             }
             else {
@@ -490,10 +493,12 @@ public void nowrap_addProjectBooksVertical(ArrayList<Book> myBookSet){
             rowcount++;
           } //end while
      } //end if
+     //---ABOVE JUST CHANGES POSITIONS, ASSUMING ALREADY IN PROJECT/STAGE
+
     //STEP 2: UPDATE PROJECT BOOKS AND THEN ADD ALL TO STAGE
     //for now, set/update project books as this new set
-    myProject.setBooksOnShelf(myBookSet);
-    AddProjectBooksToStage();
+    //myProject.setBooksOnShelf(myBookSet);
+    //AddProjectBooksToStage();
   } 
 
 //TO DO: Allow function to take a row number for insert.
@@ -517,15 +522,17 @@ public void nowrap_addProjectBooksHorizontal(ArrayList<Book> myBookSet){
             else {
               System.out.println("No book to add");
             }
-            //Stage/GUI parameters. TO DO: Separate Book data from the JavaFX aspects.
-            thisBook.setHandlers(PressBox,DragBox); //in case not set
+            //This if for FX purposes, but must be done as part of creation of new books ASAP.
+            //thisBook.setHandlers(PressBox,DragBox);
             setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
             //AddNewBookToStage(thisBook); //adds new book to stage (adds to project only if needed) 
             colcount++;
           } //end while
      } //end if
-     myProject.setBooksOnShelf(myBookSet);
-     AddProjectBooksToStage();
+     //Books should only need to be added to the project and Stage once.  After that, it's just changing position etc
+      //---ABOVE JUST CHANGES POSITIONS, ASSUMING ALREADY IN PROJECT/STAGE
+     //myProject.setBooksOnShelf(myBookSet);
+     //AddProjectBooksToStage();
   } 
 
 public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
@@ -537,6 +544,7 @@ public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
   if (length>0) {
     Iterator<Book> iter = myBookSet.iterator(); 
       while (iter.hasNext()) {
+        //if books do not appear change the pointer to iter.next() directly
           Book thisBook =iter.next(); 
           //
           if (thisBook!=null) {
@@ -548,8 +556,8 @@ public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
             else {
               System.out.println("No book to add");
             }
-            //Stage/GUI parameters. TO DO: Separate Book data from the JavaFX aspects.
-            thisBook.setHandlers(PressBox,DragBox); //in case not set
+            //This if for FX purposes, but must be done as part of creation of new books ASAP.
+            //thisBook.setHandlers(PressBox,DragBox);
             setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
             //AddNewBookToStage(thisBook); //adds new book to stage (adds to project only if needed) 
             if (colcount>wrapcol) {
@@ -563,8 +571,6 @@ public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
           
           
      } //end if
-    myProject.setBooksOnShelf(myBookSet);
-    AddProjectBooksToStage();
   } 
 
 //Take a raw file, split into sections, and convert to Books...
@@ -651,6 +657,8 @@ public void openFileAsRow(Integer row) {
           file = tryfile;
           openFileGetBooklist(file); //add books to project
           //myProject.addBooksToProject(myBooks);
+          //myProject.setBooksOnShelf(myBookSet);
+          AddProjectBooksToStage();
           unpackBooksAsRow(); 
         } 
         else {
@@ -756,7 +764,6 @@ public void saveAs() {
         myProject.setFile(file);
         System.out.println(myProject.getFilename());
         System.out.println("SaveAsCalled");
-        //System.exit(0);
         writeFileOut();
         writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
         writeOutHTML();
@@ -908,14 +915,17 @@ public void setDisplayModeTitles(Integer input){
 
 
 //wrap layout of books to 10 books wide (default)
+//Is this redundant now there is 'wrapBooks'?
+/*
 //This sets both row,col and X,Y.  TO DO:  set only Row, Col attributes in main API and let layout manager position cell.
-public void wrapBoxes() {
-//until reloaded the item order in memory isn't same as GUI
-//ArrayList<Book> myBooksonShelves = getBooksOnShelf(); 
-ArrayList<Book> myBooksonShelves = myProject.listBooksShelfOrder(); 
-Integer booknum=myBooksonShelves.size();
-Integer xcount=0;
-Integer ycount=0;
+public void unpackBooksWrapped() {
+    //until reloaded the item order in memory isn't same as GUI
+    //ArrayList<Book> myBooksonShelves = getBooksOnShelf(); 
+    //'booksOnShelf' is the global arraylist holding books
+    ArrayList<Book> myBooksonShelves = myProject.listBooksShelfOrder(); 
+    Integer booknum=myBooksonShelves.size();
+    Integer xcount=0;
+    Integer ycount=0;
     for (int x=0;x<booknum;x++) {
         Book item = myBooksonShelves.get(x);
         if (xcount<9) {
@@ -926,22 +936,38 @@ Integer ycount=0;
           ycount=ycount+1;
         }
         setXYfromNewRowCol(item,ycount,xcount);
-    }
-    //'booksOnShelf' is the global arraylist holding books
+    }   
     myProject.setBooksOnShelf(myBooksonShelves); //change the pointer (if needed?)
 }
-
-
+*/
 public void singleSelection(Book thisBook){
   //handle no selection
-  for (Book item: this.selectedBooks) {
-     item.endAlert();
+  System.out.println("Start Single Selection");
+  if (this.selectedBooks.size()>0) {
+      for (Book item: this.selectedBooks) {
+         item.endAlert();
+      }
   }
-  ArrayList<Book> newSelection= new ArrayList<Book>();
-  newSelection.add(thisBook);
-  this.focusBook=thisBook; 
-  thisBook.doAlert(); //Change this so there is a general 'undo alert'
-  this.selectedBooks=newSelection;
+  System.out.println("Finished End Alert");
+  try {
+      ArrayList<Book> newSelection= new ArrayList<Book>();
+      newSelection.add(thisBook);
+      this.focusBook=thisBook; 
+      thisBook.doAlert(); //Change this so there is a general 'undo alert'
+      this.selectedBooks=newSelection;
+  }
+  catch (Throwable t) //for greater detail for debugging
+        {
+            t.printStackTrace();
+            return;
+        }
+  /*
+  catch (NullPointerException e) {
+                        //do nothing
+                    }
+                    */
+
+  System.out.println("Finished Single Selection");
 }
 
 //no need for these to be sorted.  However, books in selection should be 
@@ -981,10 +1007,10 @@ public void toggleExtraSelection(Book thisBook){
 }
 
 public void shiftedSelection(Book thisBook) {
-      Book firstBook = selectedBooks.get(0);
+      Book firstBook = this.selectedBooks.get(0);
       ArrayList<Book> newList = new ArrayList<Book>();
       //newList.add(firstBook); //start selection again with only origin book
-      selectedBooks = newList;
+      this.selectedBooks = newList;
       ArrayList<Book> sorted= myProject.listBooksShelfOrder(); //can this be stored, only updated when needed?
       Iterator <Book> myIterator = sorted.iterator();
       Boolean selection=false;
@@ -996,28 +1022,28 @@ public void shiftedSelection(Book thisBook) {
 
       
       //find start of selection
-      if (item==firstBook && !selectedBooks.contains(thisBook)){
+      if (item==firstBook && !this.selectedBooks.contains(thisBook)){
             selection=true;
       }
-      if (item==thisBook && !selectedBooks.contains(firstBook)){
+      if (item==thisBook && !this.selectedBooks.contains(firstBook)){
             selection=true;
       }
       //find end of selection
-      if (item==firstBook && selectedBooks.contains(thisBook)){
+      if (item==firstBook && this.selectedBooks.contains(thisBook)){
             stop=true;
             selection=false;
-            selectedBooks.add(item);
+            this.selectedBooks.add(item);
             item.doAlert();
       }
-      if (item==thisBook && selectedBooks.contains(firstBook)){
+      if (item==thisBook && this.selectedBooks.contains(firstBook)){
             stop=true;
             selection=false;
-            selectedBooks.add(item);
+            this.selectedBooks.add(item);
             item.doAlert();
       }
       //if still in mid range selection
-      if (selection==true && !selectedBooks.contains(item)) {
-            selectedBooks.add(item); 
+      if (selection==true && !this.selectedBooks.contains(item)) {
+            this.selectedBooks.add(item); 
             item.doAlert();     
       }
     } //end while
@@ -1092,10 +1118,21 @@ public void setMDForView(mdFile input) {
           //Nothing special for now?
 }
 
+/* 
+Prior to calling this function, open file functions create a set of books in the myProject Object.
+This function:
+1. Adds all books to Stage node (FX).  
+2. Calls one of the methods that changes the position of books (X,Y parameters that work with FX)
+TO DO: pick a default layout according to last selected 'Layout' option?
+*/
 public void unpackBooksToView() {
-          //TO DO: set books in Project
           ArrayList<Book> myBooks = myProject.getBooksOnShelf(); //checks that myProject is updated
-          //myProject.addBooksToProject(myBooks);
+          if (myBooks.size()<1){
+            System.out.println("No books in project to unpack");
+            System.exit(0);
+          }
+          //DO THIS ONCE PER OPEN FILE
+          AddProjectBooksToStage();
           Integer booknum=myBooks.size();
 
           if (booknum>20){
@@ -1506,7 +1543,7 @@ EventHandler<MouseEvent> DragBox =
             System.out.println("Event");
             System.out.println(TYPE.toString());
             // && MainStage.this.metaMode==false && MainStage.this.shiftMode==false
-            if (currentBook!=null && selectedBooks.size()==1) {
+            if (currentBook!=null && MainStage.this.selectedBooks.size()==1) {
                 MainStage.this.setActiveBook(currentBook); //clicked sprite
                 double offsetX = t.getSceneX() - orgSceneX;
                 double offsetY = t.getSceneY() - orgSceneY;
