@@ -176,18 +176,28 @@ public void addBooksToProject(ArrayList<Book> input) {
 }
 
 //add a new Book but not before checking it is not duplicate
+//Even though this is for data only purposes, because a 'Book' is also (for now) a JavaFX object
+//We need to ensure that it's basic FX setup is complete, including adding event handlers
+//by the time it is added to stage.
 public Book addBookToProject(Book myBook){
     if (myBook==null) {
         System.out.println("Project. addBookToStage.  No Book to add");
         System.exit(0);
     }
     Book newBook = myBook;
-    //if trying to paste into scene twice...FX error  OK but need to deal with it.
-    //use intermediate array 'booksOnShelf' to reason about books as a whole.
     if (this.booksOnShelf.contains(myBook)) {
       newBook = myBook.cloneBook(); //make a new object to add to avoid object duplication.
     } 
-    //add to the collection of books in app (to DO: layer specific)
+    int numbooks = this.booksOnShelf.size();
+    //if more than one book adopt a default position before layouts
+    if (numbooks>0) {
+        Book lastBook = this.booksOnShelf.get(numbooks-1);
+        int row = lastBook.getRow();
+        int col = lastBook.getCol();
+        newBook.setCol(col+1);
+        newBook.setRow(row);
+     }
+    //add to the collection of books in app 
     this.booksOnShelf.add(newBook);  //add to metadata collection TO DO: cater for deletions.
     return newBook;
     }
