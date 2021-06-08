@@ -1,44 +1,34 @@
-# Shelf (2021 beta)
+# LitDB (2021 beta)
 
 (c) Craig Duncan 2017-2021.  
 
-History: PowerDock--> M-Press--> Shelf
+History: PowerDock--> M-Press--> Shelf --> LitDB
 
 Make a request if you wish to use, demonstrate or assist with this project.
 
 # Project folder structure
 
-The *Shelf* app uses these folders (create if not included)
-
-src: contains Java source files
+The app uses these folders for the compiled verson (create if not included)
 
 fxlib : contains the JavaFX library
 
 classes : contains compiled JVM bytecode
 
-content : contains markdown files for input/output
-
-buildnotes: contains notes on Design, Classes.
-
 # Make sure you have JavaFX library available
 
-To use JavaFX you need to invoke it as a module when you compile and run.  It is no longer included with the Java SDK.
+This application is built with JDK16 and with the support of the JavaFX modules (version JavaFX16, 2020).
 
-So first you need to download the JavaFX library.
+The JavaFX is no longer included with the Java SDK by default, so for development I needed to download the JavaFX library.  I rename the /lib folder in the javafx-sdk-16 (or similar) to fxlib and include it in the root folder of my project.
 
-see https://openjfx.io and https://gluonhq.com/products/javafx/
+see 
+JDK16: 		https://jdk.java.net/16/release-notes
+JavaFX16: 	https://openjfx.io and https://gluonhq.com/products/javafx/
 
 The openJDK download is specific for each OS.  The SDK library file when unzipped will be closer to 95MB.
 
-When you have downloaded the JavaFX SDK package, locate the folder javafx-sdk-11.0.2 (or similar).
-
-Inside the downloaded javafx package, find the lib folder with the javafx .jar files in it.  There are also dylib files, which are needed too, but they are too large to store here.
-
-Rename the 'lib' folder to fxlib and put it into the root folder of the Shelf project.
-
 # Compiling and running from source
 
-The next step is to set up the environment variables and make it easier to compile and run the program.  This requires some terminal (bash) commands to be executed, in order.
+With JavaSE 16 installed, the command line (shell) commands to execute to run the program include commands to make sure JavaFX modules are identified.   
 
 In the parent folder (the root folder for the local copy of the github repository files):
 
@@ -59,7 +49,7 @@ and this to run:
 runprog
 ```
 
-# Start
+# Application specific help 
 
 To begin, press CMD-N for new box/book and then do File-->Save As (CMD-SHIFT-S).
 
