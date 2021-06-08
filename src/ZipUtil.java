@@ -1,6 +1,6 @@
 import java.util.zip.*;
 import java.util.zip.ZipInputStream;
-import java.io.*;  //Buffered Reader, File Reader, IOException, FileNoteFoundException etc
+import java.io.*;  //Buffered Reader, File Reader, IOException, FileNoteFoundException, FileInputStream etc
 import java.util.*; //scanner, HashMap, ArrayList etc, Zip...
 import java.nio.charset.StandardCharsets; 
 
@@ -46,22 +46,23 @@ public void setNumbering(String input) {
 //--- main I/O
 
 //input is a File or String?
-public ArrayList<ZipEntry> readZip(String fileZip){
+public ArrayList<ZipEntry> readZip(File file){
 	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
 	try  {
-		FileInputStream myFileStream = new FileInputStream(fileZip);
+		FileInputStream myFileStream = new FileInputStream(file);
 		ZipInputStream zis = new ZipInputStream(myFileStream);
 	    ZipEntry zipItem = zis.getNextEntry();
 	    while (zipItem != null) {
 	    		zipItem = zis.getNextEntry();
 	    		if (zipItem!=null) {
 	    			String name =zipItem.getName();
+	    			myItemList.add(zipItem);
 	    			System.out.println(name);
 	    		}
 	    }
 	}
 	catch (FileNotFoundException fnf) {
-		System.out.println("Exception");
+		System.out.println("File not found Exception");
 	}
 	catch (IOException e) {
 		System.out.println("Exception");
@@ -245,39 +246,31 @@ Output: string contents of the document.xml in the .docx file
 
 //read in the document.xml from file
 public void OpenDocX(File file) {
-	this.firstfile=file;
-	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
+	ArrayList<ZipEntry> myTestList = readZip(file);
+	if (myTestList.size()==0) {
+		System.out.println("Damaged docx file");
+		return; //this will be damaged gile
+	}
 	String mainfile="word/document.xml";
 	String numfile="word/numbering.xml";
 	String stylesfile="word/styles.xml";
 	String myText=""; //the variable to hold data and return as output
 	String myNum="";
 	String myStyles="";
+	this.firstfile=file;
+	// The following repeats the readZip() function but with a goal of extraction.
+	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
 	try  {
-		//String fileZip = file.getName();
-		String fileZip = file.getPath(); //or use myProject?
-		//file-level streams
-		FileInputStream myFileStream = new FileInputStream(fileZip);
+		FileInputStream myFileStream = new FileInputStream(file); //you can use FIle object or string
 		ZipInputStream zis = new ZipInputStream(myFileStream);
-
-		//Setup 2 zip streams (these are relative to the input/output files)
-		/*
-		String outFile = "docOpentest.docx"; //unused
-		File f = new File(outFile); //outputfile
-		FileOutputStream myOutputStream = new FileOutputStream(f);
-		*/
-		//ByteArrayOutputStream
-		//ZipOutputStream out = new ZipOutputStream(myOutputStream,java.nio.charset.StandardCharsets.UTF_8); //utf 8 for docx;
-		
-
 	    ZipEntry zipItem = zis.getNextEntry();
+	    System.out.println(zipItem.toString());
 	    int count=0;
 	    while (zipItem!= null) {
 	    		 //a ZipEntry is used in the Zip file system.  automatically closes last entry
 	    	count++;
 	    		
 	    	String name = zipItem.getName();
-	    	System.out.println(name);
 	    	//unzip the target file to a String
 	    	if (name.equals(mainfile)) {
 				//we need to buffer the byte reads because we don't know byte size
@@ -294,15 +287,12 @@ public void OpenDocX(File file) {
 				//Obtain the String from the byte buffer
 				myText = new String(byteArray, StandardCharsets.UTF_8);
 				setDocument(myText);
-				//System.out.println(myText);
-				//out.closeEntry(); //close our output buffer
 			} //end of target loop.  
 			if (name.equals(numfile)) {
 				//we need to buffer the byte reads because we don't know byte size
 				ByteArrayOutputStream buffer2 = new ByteArrayOutputStream();
 				int rdlength;
-				byte[] data = new byte[1024]; //size for the maximum bytes read at any time
-		    				
+				byte[] data = new byte[1024]; //size for the maximum bytes read at any time		
 		    	//write the zipped file, as read, to a buffer (i.e. now it is uncompressed)
 				while ((rdlength = zis.read(data,0,data.length)) != -1) {
 						buffer2.write(data,0, rdlength); //add our latest bytes to the buffer
@@ -312,8 +302,6 @@ public void OpenDocX(File file) {
 				//Obtain the String from the byte buffer
 				myNum = new String(byteArray, StandardCharsets.UTF_8);
 				setNumbering(myNum);
-				//System.out.println(myNum);
-				//out.closeEntry(); //close our output buffer
 			} //end of target loop.  Otherwise, do nothing in this loop
 			if (name.equals(stylesfile)) {
 				//we need to buffer the byte reads because we don't know byte size
@@ -321,7 +309,7 @@ public void OpenDocX(File file) {
 				int rdlength;
 				byte[] data = new byte[1024]; //size for the maximum bytes read at any time
 		    				
-		    	//write the zipped file, as read, to a buffer (i.e. now it is uncompressed)
+		    	//write the zipped file, as read, but only to an in-memory buffer (i.e. now it is uncompressed)
 				while ((rdlength = zis.read(data,0,data.length)) != -1) {
 						buffer2.write(data,0, rdlength); //add our latest bytes to the buffer
 				}
@@ -330,9 +318,6 @@ public void OpenDocX(File file) {
 				//Obtain the String from the byte buffer
 				myStyles = new String(byteArray, StandardCharsets.UTF_8);
 				setStyles(myStyles);
-				//System.out.println(myStyles);
-				//out.closeEntry(); //close our output buffer
-				//System.exit(0);
 			}
 			zipItem = zis.getNextEntry();
 	    } //end while
@@ -347,7 +332,6 @@ public void OpenDocX(File file) {
 		System.out.println("IO Exception");
 		e.printStackTrace();
 	}
-	//return myXML;
 }
 
 //need to check compression format...
