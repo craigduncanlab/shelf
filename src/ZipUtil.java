@@ -43,6 +43,14 @@ public void setNumbering(String input) {
 	this.myNumbering=input;
 }
 
+private void setFirstFile(File input){
+	this.firstfile=input;
+}
+
+private File getFirstFile(){
+	return this.firstfile;
+}
+
 //--- main I/O
 
 //input is a File or String?
@@ -162,9 +170,9 @@ public ArrayList<ZipEntry> readAndReplaceZip(docXML tempDoc, String templateDocx
 				out.putNextEntry(newItem);
 				byte[] data = docxml.getBytes();  //turn String into bytes since thats what ZipFileOutputStream wants
    				newItem.setSize(data.length); //set size
-				System.out.println(docxml);
-				System.out.println(data.length);
-				System.out.println("About to write");
+				//System.out.println(docxml);
+				//System.out.println(data.length);
+				//System.out.println("About to write");
 				out.write(data);
 				out.closeEntry();
 			}
@@ -174,9 +182,9 @@ public ArrayList<ZipEntry> readAndReplaceZip(docXML tempDoc, String templateDocx
 				out.putNextEntry(newItem);
 				byte[] data = stylexml.getBytes();  //turn String into bytes since thats what ZipFileOutputStream wants
    				newItem.setSize(data.length); //set size
-				System.out.println(stylexml);
-				System.out.println(data.length);
-				System.out.println("About to write");
+				//System.out.println(stylexml);
+				//System.out.println(data.length);
+				//System.out.println("About to write");
 				out.write(data);
 				out.closeEntry();
 			}
@@ -193,7 +201,7 @@ public ArrayList<ZipEntry> readAndReplaceZip(docXML tempDoc, String templateDocx
     				buffer.flush(); //finish buffering
 					byte[] byteArray = buffer.toByteArray(); //convert buffer back to byte array of actual length
 					String mystring = new String(byteArray, StandardCharsets.UTF_8);
-    				System.out.println(mystring);
+    				//System.out.println(mystring);
 					//decode with utf8 if string files
 					if (name.indexOf("xml") != -1 || name.indexOf("rels") != -1) {
         				System.out.println("This is a string not binary file: "+name);
@@ -257,9 +265,9 @@ public void OpenDocX(File file) {
 	String myText=""; //the variable to hold data and return as output
 	String myNum="";
 	String myStyles="";
-	this.firstfile=file;
+	setFirstFile(file);
 	// The following repeats the readZip() function but with a goal of extraction.
-	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
+	
 	try  {
 		FileInputStream myFileStream = new FileInputStream(file); //you can use FIle object or string
 		ZipInputStream zis = new ZipInputStream(myFileStream);
@@ -323,6 +331,7 @@ public void OpenDocX(File file) {
 	    } //end while
 	    //out.close(); //close the output stream and file.  close zis?
 	    zis.close();
+	    myFileStream.close(); // close the file stream, release resources
 	}
 	catch (FileNotFoundException fnf) {
 		System.out.println("FNF Exception");
@@ -394,23 +403,20 @@ public ArrayList<ZipEntry> readAndWriteZip(String fileZip){
 	return myItemList;
 }
 
-public ArrayList<ZipEntry> readAndReplaceStyles(String stylexml,  String outFile) {
-	String oldfile = this.firstfile.getPath(); //get first file's information
-	ArrayList<ZipEntry> myItemList = new ArrayList<ZipEntry>();
-	File f = new File(outFile); //outputfile. Needs a full path.
-	//String maindoc="word/document.xml";
+/*
+Rewrite everything in original docx file without change except the styles.xml is updated.
+*/
+public void readAndReplaceStyles(String stylexml, File outFile) {
+	
 	String styledoc="word/styles.xml";
-	//String docxml = tempDoc.getDocString();
-	//xmlStyles myStyle = tempDoc.getStylesObject();
-	//String stylexml = myStyle.getStylesXML();
 	try  {
-		FileInputStream myFileStream = new FileInputStream(oldfile); //reads in all parts of templateDocx
-		FileOutputStream myOutputStream = new FileOutputStream(f);
-		//Setup 2 streams
+		FileInputStream myFileStream = new FileInputStream(getFirstFile()); //reads in all parts of templateDocx
+		FileOutputStream myOutputStream = new FileOutputStream(outFile); //will start writing to this file
+		//Setup 2 zip streams
 		ZipInputStream zis = new ZipInputStream(myFileStream);
-		ZipOutputStream out = new ZipOutputStream(myOutputStream,java.nio.charset.StandardCharsets.UTF_8); //utf 8 for docx;
-		out.setLevel(6); //setcompression level for deflated entries.  Should be =6 for docx
-		out.setMethod(ZipEntry.DEFLATED);
+		ZipOutputStream outStream = new ZipOutputStream(myOutputStream,java.nio.charset.StandardCharsets.UTF_8); //utf 8 for docx;
+		outStream.setLevel(6); //setcompression level for deflated entries.  Should be =6 for docx
+		outStream.setMethod(ZipEntry.DEFLATED);
 	    ZipEntry zipItem = zis.getNextEntry();
 	    int count=0;
 	    while (zipItem!= null) {
@@ -418,31 +424,13 @@ public ArrayList<ZipEntry> readAndReplaceStyles(String stylexml,  String outFile
 	    	count++;
 	    		
 	    	String name =zipItem.getName();
-	    	/*
-	    	if (name.equals(maindoc)) {
-				System.out.println(name);
-				ZipEntry newItem = new ZipEntry(maindoc);
-				out.putNextEntry(newItem);
-				byte[] data = docxml.getBytes();  //turn String into bytes since thats what ZipFileOutputStream wants
-   				newItem.setSize(data.length); //set size
-				System.out.println(docxml);
-				System.out.println(data.length);
-				System.out.println("About to write");
-				out.write(data);
-				out.closeEntry();
-			}
-			*/
 			if (name.equals(styledoc)) {
-				System.out.println(name);
 				ZipEntry newItem = new ZipEntry(styledoc);
-				out.putNextEntry(newItem);
+				outStream.putNextEntry(newItem);
 				byte[] data = stylexml.getBytes();  //turn String into bytes since thats what ZipFileOutputStream wants
    				newItem.setSize(data.length); //set size
-				System.out.println(stylexml);
-				System.out.println(data.length);
-				System.out.println("About to write");
-				out.write(data);
-				out.closeEntry();
+				outStream.write(data);
+				outStream.closeEntry();
 			}
 			//otherwise, we're going to write the ZipEntry file data back into the new file
 			else {
@@ -456,25 +444,16 @@ public ArrayList<ZipEntry> readAndReplaceStyles(String stylexml,  String outFile
     				}
     				buffer.flush(); //finish buffering
 					byte[] byteArray = buffer.toByteArray(); //convert buffer back to byte array of actual length
-					String mystring = new String(byteArray, StandardCharsets.UTF_8);
-    				System.out.println(mystring);
-					//decode with utf8 if string files
-					if (name.indexOf("xml") != -1 || name.indexOf("rels") != -1) {
-        				System.out.println("This is a string not binary file: "+name);
-   					}
-   					//images etc
-   					if (name.indexOf("xml") == -1 && name.indexOf("rels") == -1) {
-        				System.out.println("This is a binary file: "+name);
-   					}
-   					ZipEntry zipOutItem = new ZipEntry(name);
-   					zipOutItem.setSize(byteArray.length); //set size
-    				out.putNextEntry(zipOutItem); //
-					out.write(byteArray);
-    				out.closeEntry();  //optional if you use 'get next entry'
+   					
+    				outStream.putNextEntry(zipItem); //retain item from original file
+					outStream.write(byteArray);
+    				outStream.closeEntry();  //optional if you use 'get next entry'
 	    		}	
 	    		zipItem = zis.getNextEntry();
 	    }
-	    out.close(); //close the output stream and file.  zis?
+	    outStream.close(); //close the output stream and file.  zis?
+	    myFileStream.close();
+	    myOutputStream.close();
 	}
 	catch (FileNotFoundException fnf) {
 		System.out.println("FNF Exception");
@@ -484,7 +463,6 @@ public ArrayList<ZipEntry> readAndReplaceStyles(String stylexml,  String outFile
 		System.out.println("IO Exception");
 		e.printStackTrace();
 	}
-	return myItemList;
 }
 
 }

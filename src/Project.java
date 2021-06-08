@@ -10,7 +10,7 @@ public class Project {
 	
 ArrayList<Book> booksOnShelf = new ArrayList<Book>();
 
-File file;
+File docFile;
 File rowfile; //to hold separate file details
 String filepath = "";
 String rowfilepath="";
@@ -53,22 +53,25 @@ public mdFile getOpenMD() {
     return this.openMD;
 }
 
+private void setDocFile(File input){
+    this.docFile=input;
+}
+
+public File getDocFile(){
+    return this.docFile;
+}
+
 // --- FILE OPERATIONS (BASED ON IO.FILE FOR NOW)
 
 public void setFile(File myFile) {
-    this.file = myFile;
-    setFilepath(this.file.getPath());
-    //This will return full path to folder where myFile is located)
-    setParentpath(this.file.getParent());
+    setDocFile(myFile);
+    setFilepath(myFile.getPath());
+    setParentpath(myFile.getParent());
     setFilename(myFile);
 }
 
 public void setRowFile(File myFile) {
-    this.rowfile = myFile;
-    setRowFilepath(this.rowfile.getPath());
-    //This will return full path to folder where myFile is located)
-    setRowParentpath(this.rowfile.getParent());
-    //setFilename(myFile);
+    setFile(myFile);
 }
 
 //this is the entire file path as String with name included
@@ -77,7 +80,7 @@ public void setFilenameFromString(String myFile) {
 }
 
 //takes File object as input
-public void setFilename(File myFile) {
+private void setFilename(File myFile) {
 String myName = myFile.getName();
 	if (myName.length()>0){
 		setFilenameFromString(myName);
@@ -91,7 +94,7 @@ public void setFilepath(String myPath) {
     this.filepath = myPath;
 }
 
-public void setRowFilepath(String myPath) {
+private void setRowFilepath(String myPath) {
     this.rowfilepath = myPath;
 }
 
@@ -119,10 +122,6 @@ public void setShortFilename(String myFile) {
 
 public String getExt() {
     return this.extension;
-}
-
-public File getFile() {
-    return this.file;
 }
 
 public String getFilepath() {
@@ -271,7 +270,7 @@ public void writeOutMDBooksToWord() {    //
 
 public void writeDocxNewStyles(){
     docXML myDoc = getOpenDocx();
-    myDoc.saveDocxWithNewStylesOnly(getFilepath()); //uses current project name and path after chooser
+    myDoc.saveDocxWithNewStylesOnly(getDocFile()); //uses current file after chooser
 }
 
 

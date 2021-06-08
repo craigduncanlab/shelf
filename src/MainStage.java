@@ -385,11 +385,11 @@ public void openFileGetBooklist(File file) {
         setFileForView(file);
         myProject.setFile(file);
         docXML myDoc = new docXML();
-        myDoc.openDocx(file);
-        //myBookSet=myDoc.getBooklist(); //could just use myProject later.
-        myProject.setOpenDocx(myDoc); //books added to project if created upon opening
-
-        setDocxForView(myDoc); 
+        int outcome=myDoc.openDocx(file);
+        if (outcome==0) {
+            myProject.setOpenDocx(myDoc); //books added to project if created upon opening
+            setDocxForView(myDoc);
+        } 
     }
     unpackBooksToView(); //all books now set up in myProject object.
     //return myBookSet;
@@ -516,7 +516,6 @@ public void nowrap_addProjectBooksHorizontal(ArrayList<Book> myBookSet){
           Book thisBook =iter.next(); 
           //
           if (thisBook!=null) {
-            System.out.println("Starting iteration of block lines in MD");
             //set position as part of data model
             thisBook.setCol(colcount); //default col is 0.
             thisBook.setRow(1);
@@ -550,7 +549,6 @@ public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
           Book thisBook =iter.next(); 
           //
           if (thisBook!=null) {
-            System.out.println("Starting iteration of block lines in MD");
             //set position as part of data model
             thisBook.setCol(colcount); //default col is 0.
             thisBook.setRow(rowcount);
@@ -574,32 +572,6 @@ public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
           
      } //end if
   } 
-
-//Take a raw file, split into sections, and convert to Books...
-//TO DO: use a different function for docx
-//deprecated?
-/*
-public void addBooksFromBlocklist(ArrayList<String> blocklist){
-      Parser myParser=new Parser();
-      //starting with the blocklist, get blocks and put each one inside a 'Book' object
-      int length = blocklist.size();  // number of blocks
-      System.out.println(length); //each of these numbered blocks is a string.
-      if (length>0) {
-        Iterator<String> iter = blocklist.iterator(); 
-          while (iter.hasNext()) {
-              Book newBook=myParser.parseMDfile(MainStage.this,PressBox,DragBox,iter.next());
-              if (newBook!=null) {
-                System.out.println("Starting iteration of block lines in MD");
-                //To DO: Do not add to stage until complete
-                AddNewBookToStage(newBook); //adds new book to myProject books
-              }
-              else {
-                System.out.println("Nothing returned from parser");
-              }
-         } //end while
-      } //end if
-}
-*/
 
 //Simple utility to return contents of file as String
 //This is used to read in styles for Word doc output.
@@ -823,11 +795,6 @@ public void saveAsDocxStyles() {
     if (file != null) {
         setFileForView(file); //sets name of file in myProject
         myProject.setFile(file);
-        System.out.println(myProject.getFilename());
-        System.out.println(myProject.getFilepath());
-        //writeFileOut();
-         //writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
-        //writeOutHTML();
         myProject.writeDocxNewStyles();
         } 
         else {
@@ -1117,7 +1084,7 @@ public void unpackBooksToView() {
           ArrayList<Book> myBooks = myProject.getBooksOnShelf(); //checks that myProject is updated
           if (myBooks.size()<1){
             System.out.println("No books in project to unpack");
-            System.exit(0);
+            return;
           }
           //DO THIS ONCE PER OPEN FILE
           AddProjectBooksToStage();

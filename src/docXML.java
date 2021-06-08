@@ -392,9 +392,9 @@ public void makeBooksFromBlocklist(){
     setBooklist(myBookList);
     }
 
-public void saveDocxWithNewStylesOnly(String newfilename){
+public void saveDocxWithNewStylesOnly(File inputFile){
     String myStyles = getStylesObject().getStylesXML();
-    originalZip.readAndReplaceStyles(myStyles,newfilename);
+    originalZip.readAndReplaceStyles(myStyles,inputFile);
 }
 
 }
