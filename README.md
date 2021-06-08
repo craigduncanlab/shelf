@@ -2,11 +2,81 @@
 
 (c) Craig Duncan 2017-2021.  
 
-History: PowerDock--> M-Press--> Shelf --> LitDB
+The Project Names have progressed through several beta versions (flavours) so far, including PowerDock, M-Press, Shelf and now LitDB.  I am predominantly developing on a mac, but it will be suitable for cross-platform distribution.
 
-Make a request if you wish to use, demonstrate or assist with this project.
+What does it do?  It provides a visual medium for examining the structure of your text documents, and to align similar information across different documents.   I am writing a more academic paper on its design and potential uses, available in due course.
 
-# Project folder structure
+The consistent goal is to provide an integrated environment to allow text editing, presentation, and database functions.  It is intended to be interoperable across different text formats or text annotations, including markdown, HTML and OOXML (docx, odf).
+
+# Application specific help 
+
+This is still a beta project and full documentation and instructions are yet to be published here.
+
+In general, the workflow is:
+1. Application will open docx, md and rmd formats.  
+2. It will display these according to their high-level structure. [Visual Tab]
+3. The visual tab will allow users to change the position, order or display of the boxed content of the original file.
+4. Editing or inspecting content is achieved by selecting a box, then pressing enter.
+5. Pressing spacebar when a box is selected will show an HTML preview of the content of that box. Notes are in different style.
+6. Some edits made in the program can be saved to a new file, or to a different format.  This is in development (see below).
+
+Markdown input files:
+a) Markdown files are broken up according to level 1 hash (#).  Use 'Display' menu to change appearance in Viewer.
+b) Notes/code can be inspected inside blocks by pressing Enter after selecting block in main viewer. 
+c) Markdown can be edited and re-saved.  At present, this retains the GUI layout as additional coding in the file.
+d) It is possible to export markdown content into a structure set of web pages.  This function has been developed, it will be added to GUI menus in near future.
+e) Select one of the boxes in the visual display, then press enter to inspect.  Markdown can be edited here.  
+f) Save file when in main app view to capture any changes to the markdown file.
+
+OOXML/docx files:
+a) Docx files are broken up visually according to outline level 1.  Use 'Display' menu to change appearance in Viewer.
+b) In the application, the database concept of Fields is used, and is intended to work with outline level 1.  
+c) Files are visualised in the first tab on the RHS.
+d) A summary of the style and field information appears on the second to fourth RHS tabs.
+e) To add fields to docx, use fields menu.  This is specific to context.  This is in progress.
+These are not retained in the original docx file unless the Update Docx menu item, from the File Menu, is used.  A new filename can be used at that stage.
+f) Select one of the boxes in the visual display, then press enter to inspect. THE OOXML text imported on a docx open is currently being stored in both OOXML and markdown slots but this will be reviewed in next update.
+g) Save, Save As functions are not yet in place, but will eventually allow some docx changes to be saved into original document, or document with new name.
+
+## Interchangable formats
+
+'Save as docx' will create a docx from the markdown text (currently it does not recycle a docx file opened in the application).
+
+# General keyboard commands
+
+THe GUI now has several new features but this is a guide as to functions that will work.  You can also select multiple cells using SHIFT and mouse clock, or COMMAND and mouse click.
+
+| KeyCode | Action | 
+| :------------- | :---------- | 
+| CMD-O |Open a new bookshelf file (.md)|
+| CMD-N |Put a new book/icon on workspace |
+| CMD-C | Copy selected Book to clipboard |
+| DELETE | Delete box with focus |
+| CMD-V | Paste clipboard as New Book |
+| CMD-S | Save bookshelf data (to current file)|
+|       | This saves all book positions on shelf, and text file is written in shelved order|
+| CMD-W | Clear the current document from memory (Close).
+| CMD-E | Nudge focus box left |
+| CMD-R | Nudge focus box right |
+| LEFT | Move focus to previous box |
+| RIGHT | Move focus to next box |
+| **Views** |
+| CMD-I | Edit/Inspect a book's metadata |
+| SPACE | Open HTML text preview (press SPACE again to close it) |
+
+# In the Editor/Inspector
+
+| KeyCode | Action | 
+| :------------- | :---------- | 
+| CMD-S | General save |
+| CMD-W | Close inspector |
+| CMD-Z | Toggle grid/inspector/preview |
+
+# Install from packages/executable
+
+--- COMING SOON ---
+
+# Install from source
 
 The app uses these folders for the compiled verson (create if not included)
 
@@ -14,7 +84,7 @@ fxlib : contains the JavaFX library
 
 classes : contains compiled JVM bytecode
 
-# Make sure you have JavaFX library available
+## Make sure you have JavaFX library available
 
 This application is built with JDK16 and with the support of the JavaFX modules (version JavaFX16, 2020).
 
@@ -26,7 +96,7 @@ JavaFX16: 	https://openjfx.io and https://gluonhq.com/products/javafx/
 
 The openJDK download is specific for each OS.  The SDK library file when unzipped will be closer to 95MB.
 
-# Compiling and running from source
+## Compiling and running from source
 
 With JavaSE 16 installed, the command line (shell) commands to execute to run the program include commands to make sure JavaFX modules are identified.   
 
@@ -49,66 +119,5 @@ and this to run:
 runprog
 ```
 
-# Application specific help 
-
-To begin, press CMD-N for new box/book and then do File-->Save As (CMD-SHIFT-S).
-
-You can drag books/boxes to different locations in the grid workspace.
-
-You can also CMD-C and CMD-V to copy and paste existing boxes.
-
-Press DEL on box/book with focus to delete.
-
-CMD-W to close the workspace (will not save).  To save first, CMD-S.
-
-Markdown file will save in same order as boxes (reading across rows left to right).
-
-# Open a markdown, R markdown or docx file
-
-Alternatively, to work with an existing markdown document:
-
-File --> Open MD Document.
-
-It will detect # divisions in a text/markdown file and interpret those as book divisions.
-
-If file has previously been saved with this app, it will re-open the box positions as saved.
-
-# Save As Docx
-
-Save as docx will create a docx from the markdown text (currently it does not recycle a docx file opened in the application).
-
-# Importing
-
-File-->Import as new Row.
-
-Loads a markdown document as a row.  Alternative to File-->Open which will keep the positions previously saved.
-
-# General commands
-
-| KeyCode | Action | 
-| :------------- | :---------- | 
-| CMD-O |Open a new bookshelf file (.md)|
-| CMD-N |Put a new book on bookshelf |
-| CMD-C | Copy selected Book to clipboard |
-| DELETE | Delete box with focus |
-| CMD-V | Paste clipboard as New Book |
-| CMD-S | Save bookshelf data (to current file)|
-|       | This saves all book positions on shelf, and text file is written in shelved order|
-| CMD-W | Clear the bookshelf from memory (Close).
-| CMD-E | Nudge focus box left |
-| CMD-R | Nudge focus box right |
-| LEFT | Move focus to previous box |
-| RIGHT | Move focus to next box |
-| **Views** |
-| CMD-I | Edit/Inspect a book's metadata |
-| SPACE | Open HTML text preview (press SPACE again to close it) |
-
-# In the Editor/Inspector
-
-| KeyCode | Action | 
-| :------------- | :---------- | 
-| CMD-S | General save |
-| CMD-W | Close inspector |
-| CMD-Z | Toggle grid/inspector/preview |
 
 
