@@ -1983,22 +1983,7 @@ private Group makeWorkspaceTree() {
         fieldsTextArea.setWrapText(true);
         // Add tabs in order
         myTabsGroup.getTabs().addAll(tab_Visual,tab_Fields_docx,tab_Styles_docx,tab_StyleXML);
-        /*
-        myTabsGroup.getTabs().add(tab_StyleXML);
-        myTabsGroup.getTabs().add(tab_Fields_docx);
-        myTabsGroup.getTabs().add(tab_Styles_docx);
-        */
-        //myBP.setCenter(myScrollPane);
-        //myBP.setCenter(myScrollPane);
-        //workspacePane.setPadding(new Insets(150,150,150,150));
-        //
-        //Make horizontal lines for grid, and add to FX root node for this Stage
-        /*
-        this.shelfFileName.setY(this.filenameoffset_y);
-        this.shelfFileName.setX(this.filenameoffset_x); 
-        myGroup_root.getChildren().add(this.shelfFileName);
-        */
-
+        
         //Make horizontal lines for grid, and add to FX root node for this Stage
        
         ArrayList<Line> myRowLines=new ArrayList<Line>();
