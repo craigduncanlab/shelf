@@ -200,12 +200,15 @@ private MenuBar makeMenuBar() {
         MenuItem OpenTempl = new MenuItem("Open (CMD-O)");
         MenuItem SaveShelf = new MenuItem("Save (CMD-S)");
         MenuItem SaveAsMenuItem = new MenuItem("Save As (CMD-SHIFT-S)");
-        MenuItem SaveDocxStylesMenuItem = new MenuItem("Save Docx New Styles");
+        Menu UpdateDocxMenuItem = new Menu("UpdateDocx");
+        Menu ExportMenuItem = new Menu("Export");
+        MenuItem SaveDocxStylesMenuItem = new MenuItem("Save Styles");
+        UpdateDocxMenuItem.getItems().addAll(SaveDocxStylesMenuItem);
         MenuItem SaveAsDocxMenuItem = new MenuItem("Save As Docx");
         MenuItem saveRowAsMenuItem = new MenuItem("Save Row As");
         MenuItem ClearBookshelfMenuItem = new MenuItem("Close (CMD-W)");
         MenuItem importAsRowBelow = new MenuItem("Import as Row Below");
-        MenuItem OutputWork = new MenuItem("Output as Text");
+        //MenuItem exportTextMenuItem = new MenuItem("Output as Text");
         MenuItem PrintTree = new MenuItem("Print as HTML");
         //PrintTree.setOnAction(writeHTML);
         
@@ -218,7 +221,7 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,SaveAsDocxMenuItem,SaveDocxStylesMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
+        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,SaveAsDocxMenuItem,UpdateDocxMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
         SaveShelf.setOnAction(SaveHandler);
         SaveAsMenuItem.setOnAction(SaveAsHandler); //docname
         SaveAsDocxMenuItem.setOnAction(SaveAsDocxEvent);
@@ -230,7 +233,7 @@ private MenuBar makeMenuBar() {
 
         //GENERAL LAYOUT/WRAP OPTIONS
         Menu layoutMenu = new Menu("Layout");
-        MenuItem layoutWrap = new MenuItem("Wrap(10)");
+        MenuItem layoutWrap = new MenuItem("Wrap");
         MenuItem rowLayout = new MenuItem("By Row");
         MenuItem colLayout = new MenuItem("By Col");
         //layoutMenu.getItems().addAll(layoutWrap);
@@ -270,7 +273,8 @@ private MenuBar makeMenuBar() {
         menuEdit.getItems().addAll(addNewBook,bookDeleteMenuItem);
 
         // --- STYLEDB MENU ---
-        Menu menuFields = new Menu("StyleFields");
+        Menu menuFields = new Menu("Fields");
+        Menu menuOffice = new Menu("Office");
         //setFileMenu(menuFile);
         MenuItem addMDStyle = new MenuItem("Add MD styles");
         MenuItem addEvidenceStyle = new MenuItem("Add Evid styles");
@@ -279,7 +283,8 @@ private MenuBar makeMenuBar() {
         addMDStyle.setOnAction(addMDStyleXML);
         addLetterStyle.setOnAction(addLetterStyleXML);
         addEvidenceStyle.setOnAction(addEvidenceStyleXML);
-        menuFields.getItems().addAll(addMDStyle,addLetterStyle,legalFields);
+        menuFields.getItems().addAll(menuOffice,legalFields);
+        menuOffice.getItems().addAll(addMDStyle,addLetterStyle);
         //Legal Sub Menu
         Menu contractMenu = new Menu("Contracts");
         MenuItem leaseMenuItem = new MenuItem("Add Lease Fields");

@@ -153,11 +153,13 @@ int doccount=0; //document counter for this stage
 
 //TABS FOR RHS
 TabPane myTabsGroup = new TabPane();
-Tab tabA = new Tab();
-Tab tabB = new Tab();
-Tab tabC = new Tab();
+Tab tab_Visual = new Tab();
+Tab tab_StyleXML = new Tab();
+Tab tab_Styles_docx = new Tab();
+Tab tab_Fields_docx = new Tab();
 TextArea styleTextArea = new TextArea();
 TextArea styleSummaryTextArea = new TextArea();
+TextArea fieldsTextArea = new TextArea();
 
 //NODE'S TEXT CONTENT
 //For storing main text output area for this Stage (if any)
@@ -1095,8 +1097,9 @@ public void setDocxForView(docXML input){
   String test = myPDoc.getStylesObject().getStylesXML();
   System.out.println("Test updated stylesXML: \n"+test);
   //xmlStyles currentStyle = input.getStylesObject();
-  styleTextArea.setText(test); //to display in tabB
-  styleSummaryTextArea.setText(myPDoc.getStylesObject().getSummaryStylesString()); //to display in tabC
+  styleTextArea.setText(test); //to display in tab_StyleXML
+  styleSummaryTextArea.setText(myPDoc.getStylesObject().getSummaryStylesString()); //to display in tab_Styles_docx
+  fieldsTextArea.setText(myPDoc.getStylesObject().getFieldsAsString()); //to display in tab_Fields_docx
 }
 
 public void setMDForView(mdFile input) {
@@ -1347,8 +1350,9 @@ public void clearAllBooks() {
     //To do - reconcile data here with Main class and Project class.  Or is just GUI?
     this.parentClass.resetFileNames(title); //to update general file name etc
     //clean up workspace
-    styleTextArea.setText(""); //to display in tabB
+    styleTextArea.setText(""); //to display in tab_StyleXML
     styleSummaryTextArea.setText("");
+    fieldsTextArea.setText("");
 }
 
 /*
@@ -1777,7 +1781,7 @@ This method does not update content of the Sprite-display GUI node.
 myGroup_root--->
 myBP(top)-->menuBarGroup-->myMenu
 Tabs here?
-TabA:
+tab_Visual:
 myBP(center)-->myScrollPane-->filename+workspacePane (Pane) -->displayAreaGroup (for BookIcons etc to be added)+ RowLines (Line) + ColLines (Line)
 Tab B:
 
@@ -1918,8 +1922,8 @@ private Group makeWorkspaceTree() {
 
         //TABS in CENTRE PANE. FOR SCROLLPANE
          //Create Tabs for Tab Pane, which will sit inside editor
-        //Tab tabA = new Tab();
-        tabA.setText("Visual");
+        //Tab tab_Visual = new Tab();
+        tab_Visual.setText("Visual");
         
 
        // --- IF USING A SCROLLPANE HERE, ADD THAT TO THE BP
@@ -1963,17 +1967,27 @@ private Group makeWorkspaceTree() {
         myBP.setTop(menubarGroup); //this includes the top menu.  Do not set anywhere else
         //myBP.setMargin(workspacePane, new Insets(50,50,50,50)); //i.e. Y=-50='translateX=0'
         myBP.setMargin(myScrollPane, new Insets(0,0,0,0));
-        myTabsGroup.getTabs().add(tabA);
+        
         myBP.setCenter(myTabsGroup);
-        tabA.setContent(myScrollPane);
-        tabB.setText("StyleXML");
-        tabB.setContent(styleTextArea);
+        tab_Visual.setContent(myScrollPane);
+        tab_StyleXML.setText("StyleXML");
+        tab_StyleXML.setContent(styleTextArea);
         styleTextArea.setWrapText(true);
-        myTabsGroup.getTabs().add(tabB);
-        tabC.setText("StyleSummary");
-        tabC.setContent(styleSummaryTextArea);
+        
+        tab_Styles_docx.setText("Styles(docx)");
+        tab_Styles_docx.setContent(styleSummaryTextArea);
         styleSummaryTextArea.setWrapText(true);
-        myTabsGroup.getTabs().add(tabC);
+        
+        tab_Fields_docx.setText("Fields(docx)");
+        tab_Fields_docx.setContent(fieldsTextArea);
+        fieldsTextArea.setWrapText(true);
+        // Add tabs in order
+        myTabsGroup.getTabs().addAll(tab_Visual,tab_Fields_docx,tab_Styles_docx,tab_StyleXML);
+        /*
+        myTabsGroup.getTabs().add(tab_StyleXML);
+        myTabsGroup.getTabs().add(tab_Fields_docx);
+        myTabsGroup.getTabs().add(tab_Styles_docx);
+        */
         //myBP.setCenter(myScrollPane);
         //myBP.setCenter(myScrollPane);
         //workspacePane.setPadding(new Insets(150,150,150,150));

@@ -79,8 +79,16 @@ public void setOutline0Styles(ArrayList<xstyle> input){
     this.outline0Styles=input;
 }
 
-public ArrayList<xstyle> getOutline0Styles(){
+public ArrayList<xstyle> getFields(){
     return this.outline0Styles;
+}
+
+public String getFieldsAsString(){
+  String output="";
+  for (xstyle item: outline0Styles){
+    output=output+item.getId()+" ["+item.getOutlineLevel()+"]"+System.getProperty("line.separator");
+  }
+  return output;
 }
 
 //return a subset of styles that satisfy outline level 1
