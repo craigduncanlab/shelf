@@ -8,7 +8,7 @@ import java.util.*; //scanner, HashMap etc
 
 public class mdFile {
 	String docString; //main text
-	ArrayList<mdLineObject> myLineData = new ArrayList<mdLineObject>();
+	ArrayList<mdLineObject> fileLineData = new ArrayList<mdLineObject>();
 	ArrayList<mdBlock> blocklist = new ArrayList<mdBlock>();
 	ArrayList<Book> booklist = new ArrayList<Book>();
 	String fileExt;
@@ -96,6 +96,14 @@ public String getFileText(File myFile) {
   return myText.toString();
 }
 
+//File line information (part of the DOM)
+private void setFileLineData(ArrayList<mdLineObject>input){
+  this.fileLineData=input;
+}
+public ArrayList<mdLineObject>getFileLineData(){
+  return this.fileLineData;
+}
+
 // -- Unzipped Strings
 
 public void setDocString(String input) {
@@ -155,10 +163,10 @@ public void makeBlocklist() {
 */
 
 public void makeBlocklist() {
-	ArrayList<mdLineObject>myLines = getFileLines(getDocString());
-	myLines=codeMDLinesForNotes(myLines); //updates contents of line objects (codes)?
+	this.fileLineData = getFileLines(getDocString());
+	this.fileLineData = codeMDLinesForNotes(this.fileLineData); //updates contents of line objects (codes)?
 	Parser myParser=new Parser();
-	ArrayList<mdBlock> newblocks = packageBlocksFromLineObjects(myLines);
+	ArrayList<mdBlock> newblocks = packageBlocksFromLineObjects();
 	setBlocklist(newblocks);
 }
 
@@ -177,16 +185,11 @@ old method name:splitRMDfile
 */
 
 public void makeBlocklistRMD() {
-	ArrayList<mdLineObject>myLines = getFileLines(getDocString());
-	myLines=codeMDLinesForNotes(myLines); //updates contents of line objects (codes)
-	Parser myParser=new Parser();
-	ArrayList<mdBlock> newblocks = packageBlocksFromLineObjects(myLines);
-  
-	setBlocklist(newblocks);
-  /*
-  System.out.println(newblocks.toString());
-  System.exit(0);
-  */
+	 this.fileLineData = getFileLines(getDocString());
+  this.fileLineData = codeMDLinesForNotes(this.fileLineData); //updates contents of line objects (codes)?
+  Parser myParser=new Parser();
+  ArrayList<mdBlock> newblocks = packageBlocksFromLineObjects();
+  setBlocklist(newblocks);
 }
 
 
@@ -319,15 +322,14 @@ public ArrayList<mdLineObject> codeMDLinesForNotes(ArrayList<mdLineObject> myLin
         	//fileindex.set(linecount,blocktype);
         	//System.out.println(linecount+")"+thisRow+"["+blocktype+"]");  
         }
-        //
-        System.out.println(linecount+")"+thisRow+"["+lineItem.getLineIndex()+"] ntest:"+ntest+" blocktype:"+blocktype);  
+        //linecount should equal lineItem.getLineIndex()
+        System.out.println(lineItem.getLineIndex()+")"+thisRow+" ntest:"+ntest+" blocktype:"+blocktype);  
 		
        
 		linecount++;
 	}
 	//TO DO: Extend this idea to headers, with the '---' as the search code, and case 2 : blocktype = 4
-	//System.exit(0);
-	//return fileindex;
+	
 	return myLines;
 }
 
@@ -381,15 +383,8 @@ public void makeBooksFromBlocklist(){
           	 //simple book creation
           	//default String in constructor sets markdown, ooxml text
           	mdBlock myBlock = iter.next();
-     
-     		   //transfer relevant information to the 'Block' object
-          	String maintext = myBlock.getBlockText();
-          	String notestext=myBlock.getNotesText();
-            //TO DO: Code
-          	String label = myBlock.getHeaderText();
-            Book newBook =new Book(maintext); //TO DO:add Event Handlers separately
-            newBook.setNotes(notestext);
-            newBook.setLabel(label);
+            Book newBook =new Book(myBlock); //TO DO:add Event Handlers separately
+            
             //add book to list
       		myBookList.add(newBook);
       		rowcount++;
@@ -403,15 +398,18 @@ public void makeBooksFromBlocklist(){
     //System.exit(0);
     }
 
-public ArrayList<mdBlock>packageBlocksFromLineObjects(ArrayList<mdLineObject> myLines) {
+public ArrayList<mdBlock>packageBlocksFromLineObjects() {
 	ArrayList<mdBlock> output = new ArrayList<mdBlock>();
 	mdBlock currentblock = new mdBlock();
+ // in any case start a new block, or start first
+  currentblock.setHeaderText("First Page");
 	//System.out.println(myLines.getLineCode()+") "+my)
 	String headertext="";
 	int cl=0;
-	for (mdLineObject lineItem: myLines) {
+	for (mdLineObject lineItem: this.fileLineData) {
 		int linecode=lineItem.getLineCode();
-		//if this row is a heading
+    int testnum=0;
+		//if this row is a heading it will have [0] next to it
 		System.out.println(cl+") ["+linecode+"] "+lineItem.getLineText());
 
 		//SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
@@ -420,8 +418,15 @@ public ArrayList<mdBlock>packageBlocksFromLineObjects(ArrayList<mdLineObject> my
 				if (currentblock.getStoredLines()>0) {
 					output.add(currentblock); //add the current block to newBlocks array
 					currentblock = new mdBlock(); //start again with a new block
+          currentblock.addLineObject(lineItem); // in any case start a new block, or start first
+          currentblock.setHeaderText(lineItem.getHeaderText());
 				}
-				currentblock.addLineObject(lineItem); // in any case start a new block, or start first
+        else {
+          currentblock.addLineObject(lineItem); // in any case start a new block, or start first
+          currentblock.setHeaderText(lineItem.getHeaderText());
+        }
+				
+        testnum++;
 		}
 		//for linecode > 0, add it (could ignore lines with other codes, or pre-process, but don't do it for now)
 		if (linecode>0) { 
