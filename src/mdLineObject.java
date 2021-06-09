@@ -12,6 +12,7 @@ public class mdLineObject {
 	String lineText="";
 	int lineIndex=0;
 	int blocktype=1; //default.  in substance this is the 'fileindex' code for this line
+	String headerText="";
 
 //constructor
 public mdLineObject(){
@@ -29,6 +30,8 @@ public void setMDLineCode() {
 		if (thisRow.length()>=2) {
 			if (thisRow.substring(0,2).equals("# ")) {
 				setLineCode(0);
+				String hline = thisRow.substring(2,thisRow.length());
+				setHeaderText(hline);
 			}
 		}
      //return blocktype;
@@ -56,6 +59,14 @@ public void setLineIndex(int input){
 
 public int getLineIndex(){
 	return this.lineIndex;
+}
+
+private void setHeaderText(String input){
+	this.headerText=input;
+}
+
+public String getHeaderText(){
+	return this.headerText;
 }
 
 }
