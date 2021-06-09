@@ -935,7 +935,7 @@ private void makeSceneForBookMetaView() {
 
           //Create Tabs for Tab Pane, which will sit inside editor
           Tab tabA = new Tab();
-          tabA.setText("Markdown");
+          tabA.setText("Plain/MD");
           tabA.setContent(mdTextTabA); //can we put a text area inside a tab?
           mdTabPane.getTabs().add(tabA);
           Tab tabB = new Tab();
