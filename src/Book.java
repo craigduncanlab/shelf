@@ -69,6 +69,8 @@ String htmlString="";
 String mdString="";
 String OOXMLtext="";
 String styleXML="";
+String bookmarkName="";
+String bookmarkString="";
 Boolean visible = true;
 Text bookspinetext = new Text ("new book");//Default label text for every Book
 double myXpos = 100; //default for shelves. not needed?
@@ -112,21 +114,31 @@ public Book(EventHandler PressBox, EventHandler DragBox, String label, String te
     FXsetup();
 }
 
-//constructor for OOXML (docx) files
-public Book(String ooxml) {
-	setOOXMLtext(ooxml);
-	setMD(ooxml);   
+//constructor for mdFile files
+
+public Book(mdBlock input) {
+	setOOXMLtext("");
+    setNotes(input.getNotesText());
+    setLabel(input.getHeaderText());
+    setOutlineLevel(1);
+    setMD(input.getBlockText());
 }
 
 //preferred constructor now: builds book from XML block data
 public Book(xmlBlock input) {
-	setOOXMLtext(input.getBlockText());
+	setOOXMLtext(input.getBlockXMLText());
 	setNotes(input.getNotesText());
-	setMD(input.getBlockText()); //check this is ok? 
+	setMD(input.getPlainText()); 
 	setLabel(input.getHeaderText());
 	setStyleXML(input.getStyleXML()); //full text
 	setStyleId(input.getStyleId()); //the styleId
 	setOutlineLevel(input.getOutlineLevel());
+	setBookmark(input.getBookmark()); //retrieves bookmark if it coincides with para of ref level heading
+	setBookmarkString(input.getBookmarkListAsString());
+	/*
+	System.out.println(getBookmarkString());
+	System.exit(0);
+	*/
 }
 
 //Function to set GUI event handlers separate to main data
@@ -272,20 +284,27 @@ public void setLabel(String myString) {
 }
 
 public void updateDisplay(){
-	if (this.displayMode==2) {
-		String update = getOutlineLevel()+" "+getStyleId();// +" "+getLabel();
+	if (this.displayMode==1) {
+		String update = getLabel();
+        setVisibleNodeText(update);
+	}
+	else if (this.displayMode==2) {
+		String update = getOutlineLevel()+" "+getStyleId();
         setVisibleNodeText(update);
 	}
 	else if (this.displayMode==3) {
-		String update = getStyleId();//getOutlineLevel()+" "+getStyleId();
+		String update = getStyleId();
         setVisibleNodeText(update);
 	}
 	else if (this.displayMode==4) {
 		String update = getdate();//getOutlineLevel()+" "+getStyleId();
         setVisibleNodeText(update);
 	}
-	else if (this.displayMode==1) {
-		String update = getLabel();
+	else if (this.displayMode==5) {
+		String update = getBookmark();
+		if (update.length()==0){
+			update=getBookmarkString(); 
+		}
         setVisibleNodeText(update);
 	}
 }
@@ -486,6 +505,22 @@ public int getOutlineLevel(){
 
 public void setOutlineLevel(int input){
 	this.outlineLevel=input;
+}
+
+public void setBookmark(String input){
+	this.bookmarkName=input;
+}
+
+public String getBookmark(){
+	return this.bookmarkName;
+}
+
+public void setBookmarkString(String input){
+	this.bookmarkString=input;
+}
+
+public String getBookmarkString(){
+	return this.bookmarkString;
 }
 
 public void setdocauthor (String myString) {
