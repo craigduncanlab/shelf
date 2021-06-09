@@ -157,6 +157,19 @@ public xmlPara setmyParaOutlineCode(xmlPara thisPara) {
     return thisPara; //need to do this to update the object 
  }
 
+public String getListBookmarks(){
+    String output = "";
+    ArrayList<xmlPara> myParas = getParaList();
+    for (xmlPara item: myParas) {
+        //add only if specific entry
+        if (item.getBookmarkId().length()>0) {
+            String entry = "["+item.getBookmarkId()+"]"+item.getBookmarkName()+System.getProperty("line.separator");
+            output=output+entry;
+        }
+    }
+    return output;
+} 
+
 // -- METADATA FOR DOCX PROJECTS
 
 /*
