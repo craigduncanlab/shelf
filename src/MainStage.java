@@ -407,7 +407,7 @@ public void unpackBooksAsRow() {
 }
 
 public void wrapBooks() {
-  wrapProjectBooksHorizontal(myProject.getBooksOnShelf());
+  wrapProjectBooksHorizontal(myProject.getBooksOnShelf(),1);
 }
 
 //Adds the book passed here (already in the Project list) to the stage.  AddNewBookToView
@@ -538,12 +538,12 @@ public void nowrap_addProjectBooksHorizontal(ArrayList<Book> myBookSet){
      //AddProjectBooksToStage();
   } 
 
-public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
+public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet, int space){
   int length = myBookSet.size();  // number of blocks
   System.out.println(length); //each of these numbered blocks is a string.
   int colcount=0;
   int rowcount=1;
-  int wrapcol=10;//column to wrap on
+  int wrapcol=11;//column to wrap on
   if (length>0) {
     Iterator<Book> iter = myBookSet.iterator(); 
       while (iter.hasNext()) {
@@ -563,17 +563,27 @@ public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
             setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
             //AddNewBookToStage(thisBook); //adds new book to stage (adds to project only if needed) 
             if (colcount>wrapcol) {
-              colcount=0;
+                //checkers
+              if (space==2 && rowcount % 2 != 0) {
+                colcount=1;
+              }
+              else {
+                colcount=0;
+              }
               rowcount=rowcount+1;
             }
             else {
-              colcount++;
+              colcount=colcount+space;
             }
           } //end while
           
           
      } //end if
   } 
+
+public void wrapProjectBooksCheckers(){
+    wrapProjectBooksHorizontal(myProject.getBooksOnShelf(), 2);
+}
 
 //Simple utility to return contents of file as String
 //This is used to read in styles for Word doc output.

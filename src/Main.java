@@ -236,6 +236,11 @@ private MenuBar makeMenuBar() {
         MenuItem layoutWrap = new MenuItem("Wrap");
         MenuItem rowLayout = new MenuItem("By Row");
         MenuItem colLayout = new MenuItem("By Col");
+        MenuItem checkersLayout = new MenuItem("Checkers");
+        layoutWrap.setOnAction(performBoxWrap);
+        rowLayout.setOnAction(performRowWrap);
+        colLayout.setOnAction(performColWrap);
+        checkersLayout.setOnAction(performCheckersWrap);
         //layoutMenu.getItems().addAll(layoutWrap);
         //MENU GRID : BOX MOVEMENTS
         Menu moveMenu = new Menu("Move");
@@ -243,17 +248,13 @@ private MenuBar makeMenuBar() {
         MenuItem insertRowBeforeItem = new MenuItem("Insert Row (Before)");
         MenuItem insertCellShiftRightItem = new MenuItem("Nudge (Shift Right)");
         MenuItem nudgeCellShiftLeftItem = new MenuItem("Nudge (Shift Left)");
-        layoutWrap.setOnAction(performBoxWrap);
-        rowLayout.setOnAction(performRowWrap);
-        colLayout.setOnAction(performColWrap);
         insertRowBeforeItem.setOnAction(insertRowBeforeHandler);
         insertRowAfterItem.setOnAction(insertRowAfterHandler);
         insertCellShiftRightItem.setOnAction(insertCellShiftRightHandler);
         nudgeCellShiftLeftItem.setOnAction(nudgeCellShiftLeftHandler);
         moveMenu.getItems().addAll(insertRowBeforeItem,insertRowAfterItem,nudgeCellShiftLeftItem,insertCellShiftRightItem);
-        layoutMenu.getItems().addAll(layoutWrap,rowLayout,colLayout);
+        layoutMenu.getItems().addAll(layoutWrap,rowLayout,colLayout,checkersLayout);
         
-
         //DISPLAY OPTIONS
         Menu displayMenu = new Menu("Display");
         MenuItem displayTitles = new MenuItem("Titles");
@@ -557,6 +558,15 @@ The myProject settings should be used by default.
             }
         };
 
+    EventHandler<ActionEvent> performCheckersWrap = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            //Main.this.performBoxWrapFunction();
+            Stage_WS.wrapProjectBooksCheckers();
+            }
+        };
+
     EventHandler<ActionEvent> performRowWrap = 
         new EventHandler<ActionEvent>() {
         @Override 
@@ -574,6 +584,8 @@ The myProject settings should be used by default.
             Stage_WS.unpackBooksAsCol();
             }
         };
+
+   
 
     EventHandler<ActionEvent> addMDStyleXML = 
     new EventHandler<ActionEvent>() {
