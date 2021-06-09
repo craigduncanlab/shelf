@@ -331,7 +331,8 @@ public void OpenDocX(File file) {
 	    } //end while
 	    //out.close(); //close the output stream and file.  close zis?
 	    zis.close();
-	    myFileStream.close(); // close the file stream, release resources
+	    myFileStream.close();
+	   
 	}
 	catch (FileNotFoundException fnf) {
 		System.out.println("FNF Exception");
@@ -390,7 +391,9 @@ public ArrayList<ZipEntry> readAndWriteZip(String fileZip){
 				out.closeEntry();  //optional if you use 'get next entry'
 				zipItem = zis.getNextEntry();
 	    }
-	    out.close(); //close the output stream and file.  
+	    out.close(); //close the output stream and file. 
+	    myFileStream.close();
+	    myOutputStream.close(); 
 	}
 	catch (FileNotFoundException fnf) {
 		System.out.println("FNF Exception");
