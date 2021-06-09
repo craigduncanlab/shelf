@@ -35,18 +35,25 @@ It is best to store them in-memory to work on them later
 
 //nb: this Zip object holds the original docx information, whilst it persists.
 
-public void openDocx(File file){
+public int openDocx(File file){
       originalZip.OpenDocX(file);
+      System.out.println(file.getName());
       setDocString(this.originalZip.getDocument());
-      myStyles.setStylesXML(this.originalZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
-      setStylesString(myStyles.getStylesXML()); //update the document version of styles.xml
-      setSummaryStylesString(myStyles.getSummaryStylesString()); //just for display
-      //System.exit(0);
-      setDocNumberingString(this.originalZip.getNumbering());
-      //populate blocklist for future use
-      setInitialParalist();
-      setInitialBlocklist();
-      makeBooksFromBlocklist();
+      if (getDocString().length()==0) {
+        System.out.println("No document.xml string returned in docXML");
+        return -1;
+      }
+      else {
+          myStyles.setStylesXML(this.originalZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
+          setStylesString(myStyles.getStylesXML()); //update the document version of styles.xml
+          setSummaryStylesString(myStyles.getSummaryStylesString()); //just for display
+          setDocNumberingString(this.originalZip.getNumbering());
+          //populate blocklist for future use
+          setInitialParalist();
+          setInitialBlocklist();
+          makeBooksFromBlocklist();
+          return 0;
+      }
 }
 
 //--blocklist for main API
@@ -149,6 +156,19 @@ public xmlPara setmyParaOutlineCode(xmlPara thisPara) {
     }
     return thisPara; //need to do this to update the object 
  }
+
+public String getListBookmarks(){
+    String output = "";
+    ArrayList<xmlPara> myParas = getParaList();
+    for (xmlPara item: myParas) {
+        //add only if specific entry
+        if (item.getBookmarkId().length()>0) {
+            String entry = "["+item.getBookmarkId()+"]"+item.getBookmarkName()+System.getProperty("line.separator");
+            output=output+entry;
+        }
+    }
+    return output;
+} 
 
 // -- METADATA FOR DOCX PROJECTS
 
@@ -385,9 +405,9 @@ public void makeBooksFromBlocklist(){
     setBooklist(myBookList);
     }
 
-public void saveDocxWithNewStylesOnly(String newfilename){
+public void saveDocxWithNewStylesOnly(File inputFile){
     String myStyles = getStylesObject().getStylesXML();
-    originalZip.readAndReplaceStyles(myStyles,newfilename);
+    originalZip.readAndReplaceStyles(myStyles,inputFile);
 }
 
 }

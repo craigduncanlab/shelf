@@ -195,6 +195,11 @@ public void loadDefaultStylesDB(){
 
 private void extractPreStyles(){
     String contents = this.stylesString;
+    if (this.stylesString.length()==0){
+      System.out.println("No styles string in xmlStyles");
+      System.exit(0);
+    }
+     System.out.println("ss:"+this.stylesString);
     String starttag="<?xml";  //start of the xml file.
     String endtag="<w:style "; //end at the first style tag.
     xmlTool myP = new xmlTool();

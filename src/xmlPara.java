@@ -19,6 +19,8 @@ public class xmlPara {
 	int outLineLevel=99; //TO DO: maybe store here if the style indicates the outline level?
 	String plainText="";
 	String styleXML="";
+	String bookmarkName="";
+	String bookmarkId="";
 
 //constructor
 public xmlPara(){
@@ -49,6 +51,22 @@ public void setLineIndex(int input){
 
 public int getLineIndex(){
 	return this.lineIndex;
+}
+
+public void setBookmarkId(String input){
+	this.bookmarkId=input;
+}
+
+public String getBookmarkId(){
+	return this.bookmarkId;
+}
+
+public void setBookmarkName(String input){
+	this.bookmarkName=input;
+}
+
+public String getBookmarkName(){
+	return this.bookmarkName;
 }
 
 public String getpStyle(){
@@ -116,6 +134,7 @@ public void extractParams(){
 	extractParaId();
 	extractTextId();
 	extractTextTags();
+	extractBookmarkStart();
 }
 
 /* 
@@ -146,6 +165,29 @@ public void extractParaId(){
 	String output=myP.getParameterValue(this.lineText,parameter);
 	//System.out.println("Detected style in this para:"+output);
 	setparaId(output);
+}
+
+private void extractBookmarkStart() {
+	String text = extractBookmarkStartTag();
+	String parameter = "bookmarkStart w:id";
+	xmlTool myP = new xmlTool();
+	String output=myP.getParameterValue(text,parameter);
+	setBookmarkId(output);
+	String parameter2 = "w:name";
+	String output2= myP.getParameterValue(text,parameter2);
+	setBookmarkName(output2);
+}
+
+private String extractBookmarkStartTag(){
+	String output="";
+	String starttag="<w:bookmarkStart ";
+	String endtag="/>";
+	xmlTool myTool = new xmlTool();
+	ArrayList<String> result = myTool.getTagAttribInclusive(this.lineText,starttag,endtag); 
+	if (result.size()>0) {
+		output=result.get(0); //first result
+	}
+	return output;
 }
 
 /*

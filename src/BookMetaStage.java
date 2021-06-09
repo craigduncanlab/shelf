@@ -659,13 +659,6 @@ public void restoreBookMeta() {
 
         styleIdTextArea.setText(updateNode.getStyleId());
         mdTextTabA.setText(updateNode.getMD()); //update the markdown text
-        /*
-        mdTextTabB.setText(updateNode.getHTML()); 
-        mdTextTabC.setText(updateNode.getOOXML());
-        mdTextTabD.setText(updateNode.getNotes());  
-        */
-        
-
         codeNotesTextArea.setText(updateNode.getNotes());
         visibleCheck.setSelected(updateNode.getVisible()); //check box
         outputTextArea.setText(updateNode.getOutputText()); //output node contents

@@ -157,9 +157,11 @@ Tab tab_Visual = new Tab();
 Tab tab_StyleXML = new Tab();
 Tab tab_Styles_docx = new Tab();
 Tab tab_Fields_docx = new Tab();
+Tab tab_Bookmarks = new Tab();
 TextArea styleTextArea = new TextArea();
 TextArea styleSummaryTextArea = new TextArea();
 TextArea fieldsTextArea = new TextArea();
+TextArea bookmarksTextArea = new TextArea();
 
 //NODE'S TEXT CONTENT
 //For storing main text output area for this Stage (if any)
@@ -385,11 +387,11 @@ public void openFileGetBooklist(File file) {
         setFileForView(file);
         myProject.setFile(file);
         docXML myDoc = new docXML();
-        myDoc.openDocx(file);
-        //myBookSet=myDoc.getBooklist(); //could just use myProject later.
-        myProject.setOpenDocx(myDoc); //books added to project if created upon opening
-
-        setDocxForView(myDoc); 
+        int outcome=myDoc.openDocx(file);
+        if (outcome==0) {
+            myProject.setOpenDocx(myDoc); //books added to project if created upon opening
+            setDocxForView(myDoc);
+        } 
     }
     unpackBooksToView(); //all books now set up in myProject object.
     //return myBookSet;
@@ -516,7 +518,6 @@ public void nowrap_addProjectBooksHorizontal(ArrayList<Book> myBookSet){
           Book thisBook =iter.next(); 
           //
           if (thisBook!=null) {
-            System.out.println("Starting iteration of block lines in MD");
             //set position as part of data model
             thisBook.setCol(colcount); //default col is 0.
             thisBook.setRow(1);
@@ -550,7 +551,6 @@ public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
           Book thisBook =iter.next(); 
           //
           if (thisBook!=null) {
-            System.out.println("Starting iteration of block lines in MD");
             //set position as part of data model
             thisBook.setCol(colcount); //default col is 0.
             thisBook.setRow(rowcount);
@@ -574,32 +574,6 @@ public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet){
           
      } //end if
   } 
-
-//Take a raw file, split into sections, and convert to Books...
-//TO DO: use a different function for docx
-//deprecated?
-/*
-public void addBooksFromBlocklist(ArrayList<String> blocklist){
-      Parser myParser=new Parser();
-      //starting with the blocklist, get blocks and put each one inside a 'Book' object
-      int length = blocklist.size();  // number of blocks
-      System.out.println(length); //each of these numbered blocks is a string.
-      if (length>0) {
-        Iterator<String> iter = blocklist.iterator(); 
-          while (iter.hasNext()) {
-              Book newBook=myParser.parseMDfile(MainStage.this,PressBox,DragBox,iter.next());
-              if (newBook!=null) {
-                System.out.println("Starting iteration of block lines in MD");
-                //To DO: Do not add to stage until complete
-                AddNewBookToStage(newBook); //adds new book to myProject books
-              }
-              else {
-                System.out.println("Nothing returned from parser");
-              }
-         } //end while
-      } //end if
-}
-*/
 
 //Simple utility to return contents of file as String
 //This is used to read in styles for Word doc output.
@@ -823,11 +797,6 @@ public void saveAsDocxStyles() {
     if (file != null) {
         setFileForView(file); //sets name of file in myProject
         myProject.setFile(file);
-        System.out.println(myProject.getFilename());
-        System.out.println(myProject.getFilepath());
-        //writeFileOut();
-         //writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
-        //writeOutHTML();
         myProject.writeDocxNewStyles();
         } 
         else {
@@ -902,7 +871,7 @@ public void writeOutBooksToWord() {    //
 
 //function to change way box labels are displayed
 public void setDisplayModeTitles(Integer input){
-  if (input>0 && input<4) {
+  if (input>0 && input<6) {
     ArrayList<Book> myBooksonShelves = myProject.listBooksShelfOrder(); 
     Integer booknum=myBooksonShelves.size();
     for (int x=0;x<booknum;x++) {
@@ -1095,11 +1064,10 @@ public void setFileForView(File myFile){
 public void setDocxForView(docXML input){
   docXML myPDoc = myProject.getOpenDocx();
   String test = myPDoc.getStylesObject().getStylesXML();
-  System.out.println("Test updated stylesXML: \n"+test);
-  //xmlStyles currentStyle = input.getStylesObject();
   styleTextArea.setText(test); //to display in tab_StyleXML
   styleSummaryTextArea.setText(myPDoc.getStylesObject().getSummaryStylesString()); //to display in tab_Styles_docx
   fieldsTextArea.setText(myPDoc.getStylesObject().getFieldsAsString()); //to display in tab_Fields_docx
+  bookmarksTextArea.setText(myPDoc.getListBookmarks());
 }
 
 public void setMDForView(mdFile input) {
@@ -1117,7 +1085,7 @@ public void unpackBooksToView() {
           ArrayList<Book> myBooks = myProject.getBooksOnShelf(); //checks that myProject is updated
           if (myBooks.size()<1){
             System.out.println("No books in project to unpack");
-            System.exit(0);
+            return;
           }
           //DO THIS ONCE PER OPEN FILE
           AddProjectBooksToStage();
@@ -1353,6 +1321,7 @@ public void clearAllBooks() {
     styleTextArea.setText(""); //to display in tab_StyleXML
     styleSummaryTextArea.setText("");
     fieldsTextArea.setText("");
+    bookmarksTextArea.setText("");
 }
 
 /*
@@ -1973,16 +1942,20 @@ private Group makeWorkspaceTree() {
         tab_StyleXML.setText("StyleXML");
         tab_StyleXML.setContent(styleTextArea);
         styleTextArea.setWrapText(true);
-        
-        tab_Styles_docx.setText("Styles(docx)");
+
+        tab_Bookmarks.setText("Bookmarks");
+        tab_Bookmarks.setContent(bookmarksTextArea);
+        bookmarksTextArea.setWrapText(true);
+
+        tab_Styles_docx.setText("Styles");
         tab_Styles_docx.setContent(styleSummaryTextArea);
         styleSummaryTextArea.setWrapText(true);
         
-        tab_Fields_docx.setText("Fields(docx)");
+        tab_Fields_docx.setText("Fields");
         tab_Fields_docx.setContent(fieldsTextArea);
         fieldsTextArea.setWrapText(true);
         // Add tabs in order
-        myTabsGroup.getTabs().addAll(tab_Visual,tab_Fields_docx,tab_Styles_docx,tab_StyleXML);
+        myTabsGroup.getTabs().addAll(tab_Visual,tab_Fields_docx,tab_Bookmarks,tab_Styles_docx,tab_StyleXML);
         
         //Make horizontal lines for grid, and add to FX root node for this Stage
        

@@ -259,10 +259,12 @@ private MenuBar makeMenuBar() {
         MenuItem displayTitles = new MenuItem("Titles");
         MenuItem displayWithDate = new MenuItem("With Date");
         MenuItem displayFieldStyle = new MenuItem("Field/Style");
-        displayMenu.getItems().addAll(displayTitles,displayWithDate,displayFieldStyle);
+        MenuItem displayBookmarks = new MenuItem("Bookmarks");
+        displayMenu.getItems().addAll(displayTitles,displayWithDate,displayFieldStyle,displayBookmarks);
         displayTitles.setOnAction(setDisplayTitles);
         displayWithDate.setOnAction(setDisplayTitleWithDate);
         displayFieldStyle.setOnAction(setDisplayFieldStyle);
+        displayBookmarks.setOnAction(setDisplayBookmarks);
 
         //--- MENU CONCEPTS
         Menu menuEdit = new Menu("Edit");
@@ -327,23 +329,9 @@ public void setLetterStyleXML(){
 }
 
 //
-public void setDisplayModeTitles() {
-    if (this.displayMode!=1){
-        this.displayMode=1;
-        Stage_WS.setDisplayModeTitles(this.displayMode);
-    }
-}
-
-public void setDisplayModeTitleWithDate() {
-    if (this.displayMode!=4){
-        this.displayMode=4;
-        Stage_WS.setDisplayModeTitles(this.displayMode);
-    }
-}
-
-public void setDisplayModeFieldStyle() {
-    if (this.displayMode!=3){
-        this.displayMode=3;
+public void setDisplayModeTitles(int input) {
+    if (input>0 && input<6) {
+        this.displayMode=input;
         Stage_WS.setDisplayModeTitles(this.displayMode);
     }
 }
@@ -612,12 +600,12 @@ The myProject settings should be used by default.
     };
 
 
-    //display
+    //display mode handlers
     EventHandler<ActionEvent> setDisplayTitles = 
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Main.this.setDisplayModeTitles();
+        Main.this.setDisplayModeTitles(1);
         }
     };
 
@@ -625,7 +613,7 @@ The myProject settings should be used by default.
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Main.this.setDisplayModeTitleWithDate();
+        Main.this.setDisplayModeTitles(4);
         }
     };
 
@@ -634,7 +622,15 @@ The myProject settings should be used by default.
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Main.this.setDisplayModeFieldStyle();
+        Main.this.setDisplayModeTitles(3);
+        }
+    };
+
+    EventHandler<ActionEvent> setDisplayBookmarks = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Main.this.setDisplayModeTitles(5);
         }
     };
 

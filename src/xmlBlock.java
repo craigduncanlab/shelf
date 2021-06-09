@@ -18,6 +18,9 @@ public class xmlBlock {
 	int outlineLevel=0; //a way to classify blocks for display etc.
 	String StyleXML="";
 	String styleId=""; //corresponds to the style id in the paragraph that forms the header etc
+	String blockBookmark="";
+	ArrayList<String>bookmarkList=new ArrayList<String>();
+	String plaintext=""; //text in <w:t> tags
 
 //constructor
 public xmlBlock(){
@@ -49,6 +52,14 @@ public String getStyleId(){
 	return this.styleId;
 }
 
+public void setBookmark(String input){
+	this.blockBookmark=input;
+}
+
+public String getBookmark(){
+	return this.blockBookmark;
+}
+
 public void importblockParas(ArrayList<xmlPara> myParas){
 	for (xmlPara myItem: myParas) {
 		blockParas.add(myItem);
@@ -74,8 +85,9 @@ public int getStoredLines(){
 }
 
 //make text from <w:p> paragraphs in this block.  
-public void makeBlockText(){
-	String output="";
+public void makeBlockXMLfromXMLParas(){
+	String XMLoutput="";
+	String plainoutput="";
 	int numLevels=1;
 	int referenceLevel=0;
 	for (xmlPara myItem: this.blockParas) {
@@ -88,20 +100,56 @@ public void makeBlockText(){
 			setOutlineLevel(referenceLevel);
 			String text = myItem.getParaString();
 			String plain = myItem.getplainText(); //removed from <w:t>
-			output=output+text+System.getProperty("line.separator");
+			XMLoutput=XMLoutput+text+System.getProperty("line.separator");
 			setHeaderText(plain);
 			setStyleXML(myItem.getStyleXML());
 			setStyleId(myItem.getpStyle()); //styleId
+			setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
 			}
 		//code 99 for paragraphs that are included in the blocks as general text/notes etc
 		else  {
 			String text = myItem.getParaString();
-			output=output+text+System.getProperty("line.separator");
+			String plaintext = myItem.getplainText();
+			XMLoutput=XMLoutput+text+System.getProperty("line.separator");
+			plainoutput=plainoutput+plaintext+System.getProperty("line.separator");
+			//make a list of bookmarks that are in this block of XML
+			if (myItem.getBookmarkName().length()>0) {
+				this.bookmarkList.add(myItem.getBookmarkName());
+			}
 		}
 	}
-	setBlockText(output);
+	setBlockXMLText(XMLoutput);
+	setPlainText(plainoutput);
 	}
 
+public void makePlainTextfromXMLParas(){
+	String plainoutput="";
+	int numLevels=1;
+	int referenceLevel=0;
+	for (xmlPara myItem: this.blockParas) {
+		int code = myItem.getLineCode(); //alternatively, get outline level
+		int level = myItem.getOutlineLevel();
+		//The range of outline levels that will be included as headings/new blocks, starting at 0
+		//if (level<numLevels) { 
+		if (level==referenceLevel) { 
+			//DO NOTHING
+			}
+		
+		else  {
+			String plaintext = myItem.getplainText();
+			plainoutput=plainoutput+plaintext+System.getProperty("line.separator");
+			}
+		}
+	setPlainText(plainoutput);
+	}
+
+public String getBookmarkListAsString(){
+	String output="";
+	for (String item : bookmarkList) {
+		output=output+item+System.getProperty("line.separator");
+	}
+	return output;
+}
 
 //make notes text from code 6.  This makes multiple notes into a single 'notes' item 
 //However, this may not be the goal in all cases.
@@ -118,13 +166,21 @@ public void makeNotesText(){
 	setNotesText(output);
 }
 
-public void setBlockText(String input) {
+public void setPlainText(String input){
+	this.plaintext=input;
+}
+
+public String getPlainText(){
+	return this.plaintext;
+}
+
+public void setBlockXMLText(String input) {
 	this.blockText=input;
 }
 
 //gets block text based on current block (xmlParas list)
-public String getBlockText(){
-	makeBlockText();
+public String getBlockXMLText(){
+	makeBlockXMLfromXMLParas();
 	return this.blockText;
 }
 
