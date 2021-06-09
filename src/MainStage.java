@@ -157,9 +157,11 @@ Tab tab_Visual = new Tab();
 Tab tab_StyleXML = new Tab();
 Tab tab_Styles_docx = new Tab();
 Tab tab_Fields_docx = new Tab();
+Tab tab_Bookmarks = new Tab();
 TextArea styleTextArea = new TextArea();
 TextArea styleSummaryTextArea = new TextArea();
 TextArea fieldsTextArea = new TextArea();
+TextArea bookmarksTextArea = new TextArea();
 
 //NODE'S TEXT CONTENT
 //For storing main text output area for this Stage (if any)
@@ -869,7 +871,7 @@ public void writeOutBooksToWord() {    //
 
 //function to change way box labels are displayed
 public void setDisplayModeTitles(Integer input){
-  if (input>0 && input<4) {
+  if (input>0 && input<6) {
     ArrayList<Book> myBooksonShelves = myProject.listBooksShelfOrder(); 
     Integer booknum=myBooksonShelves.size();
     for (int x=0;x<booknum;x++) {
@@ -1062,11 +1064,10 @@ public void setFileForView(File myFile){
 public void setDocxForView(docXML input){
   docXML myPDoc = myProject.getOpenDocx();
   String test = myPDoc.getStylesObject().getStylesXML();
-  System.out.println("Test updated stylesXML: \n"+test);
-  //xmlStyles currentStyle = input.getStylesObject();
   styleTextArea.setText(test); //to display in tab_StyleXML
   styleSummaryTextArea.setText(myPDoc.getStylesObject().getSummaryStylesString()); //to display in tab_Styles_docx
   fieldsTextArea.setText(myPDoc.getStylesObject().getFieldsAsString()); //to display in tab_Fields_docx
+  bookmarksTextArea.setText(myPDoc.getListBookmarks());
 }
 
 public void setMDForView(mdFile input) {
@@ -1320,6 +1321,7 @@ public void clearAllBooks() {
     styleTextArea.setText(""); //to display in tab_StyleXML
     styleSummaryTextArea.setText("");
     fieldsTextArea.setText("");
+    bookmarksTextArea.setText("");
 }
 
 /*
@@ -1940,16 +1942,20 @@ private Group makeWorkspaceTree() {
         tab_StyleXML.setText("StyleXML");
         tab_StyleXML.setContent(styleTextArea);
         styleTextArea.setWrapText(true);
-        
-        tab_Styles_docx.setText("Styles(docx)");
+
+        tab_Bookmarks.setText("Bookmarks");
+        tab_Bookmarks.setContent(bookmarksTextArea);
+        bookmarksTextArea.setWrapText(true);
+
+        tab_Styles_docx.setText("Styles");
         tab_Styles_docx.setContent(styleSummaryTextArea);
         styleSummaryTextArea.setWrapText(true);
         
-        tab_Fields_docx.setText("Fields(docx)");
+        tab_Fields_docx.setText("Fields");
         tab_Fields_docx.setContent(fieldsTextArea);
         fieldsTextArea.setWrapText(true);
         // Add tabs in order
-        myTabsGroup.getTabs().addAll(tab_Visual,tab_Fields_docx,tab_Styles_docx,tab_StyleXML);
+        myTabsGroup.getTabs().addAll(tab_Visual,tab_Fields_docx,tab_Bookmarks,tab_Styles_docx,tab_StyleXML);
         
         //Make horizontal lines for grid, and add to FX root node for this Stage
        
