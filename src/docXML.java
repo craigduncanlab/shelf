@@ -73,12 +73,12 @@ public ArrayList<xmlPara>getParaList() {
 
 public void setInitialBlocklist() {
     ArrayList<xmlPara>myLines=getParaList(); 
-    setBlocklist(makeBlocksFromParas(myLines)); //lines are coded as they are added
+    setBlocklist(makeBlocksSplitOnOutlineLevel(myLines)); //lines are coded as they are added
 }
 
 //TO DO: block for first page
 //numLevels should match number in xmlBlock 'makeBlockText' function
-public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
+private ArrayList<xmlBlock> makeBlocksSplitOnOutlineLevel(ArrayList<xmlPara> myLines) {
     int numLevels=1;
     ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
     xmlBlock currentblock = new xmlBlock();
@@ -106,6 +106,44 @@ public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
         }
         //for linecode > 0, add it (could ignore lines with other codes, or pre-process, but don't do it for now)
         if (linecode>(numLevels-1)) { 
+                currentblock.addLineObject(thisPara);
+        }
+        cl++; //increase line count for index   
+    }   //end loop
+
+    //add last block or we drop 1 each time
+    if (currentblock.getStoredLines()>0) {
+        newBlocks.add(currentblock); //add the current block to newBlocks array
+    }
+    return newBlocks;
+}
+
+private ArrayList<xmlBlock> makeBlocksSplitOnBookmarks(ArrayList<xmlPara> myLines) {
+    int numLevels=1;
+    ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
+    xmlBlock currentblock = new xmlBlock();
+    
+    String headertext="";
+    int cl=0;
+    for (xmlPara thisPara: myLines) {
+        String bmcode=thisPara.getBookmarkId();//.get(cl);  cf getLineCode
+        //if this row is a heading
+        System.out.println(cl+") ["+bmcode+"] "+thisPara.getParaString());
+
+        //SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
+
+        //check each level in turn and make a new block if it is detected in this paragraph.
+        if (!bmcode.equals("")) { //if non-empty bookmark
+            //first line
+                if (currentblock.getStoredLines()>0) {
+                    newBlocks.add(currentblock); //add the current block to newBlocks array
+                    currentblock=new xmlBlock(); //reset it to a new pointer
+                }
+                //Adds xmlPara to Block, then makes text property from it.
+                currentblock.addLineObject(thisPara); 
+            }
+        //for linecode > 0, add it (could ignore lines with other codes, or pre-process, but don't do it for now)
+        if (bmcode.equals("")) { 
                 currentblock.addLineObject(thisPara);
         }
         cl++; //increase line count for index   
