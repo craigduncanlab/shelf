@@ -136,9 +136,11 @@ TextArea bookLabelTextArea = new TextArea();
 TextArea codeNotesTextArea = new TextArea();
 TextArea outputTextArea = new TextArea();
 TextArea outlineLevelTextArea = new TextArea();
+TextArea bookmarkNameTextArea = new TextArea();
 TextArea styleIdTextArea = new TextArea();
 Integer textFocus=0;
 Text outlineLevelText;
+Text bookmarkNameText;
 Text styleIdText;
 Text filepathText;
 Text imagepathText;
@@ -633,6 +635,7 @@ private void updateCurrentBookMetaView() {
     imagepathText.setText("Featured image path:");
     urlText.setText("Linked URL path:");
     outlineLevelText.setText("Outline level");
+    bookmarkNameText.setText("BookmarkName");
     styleIdText.setText("StyleId");
     bookLabelText.setText("Main heading/title:");
     multiLineNotesText.setText("Multi-line notes:");
@@ -656,7 +659,7 @@ public void restoreBookMeta() {
         urlTextArea.setText(updateNode.geturlpath());
         bookLabelTextArea.setText(updateNode.getLabel());
         outlineLevelTextArea.setText(updateNode.getdate());
-
+        bookmarkNameTextArea.setText(updateNode.getBookmark());
         styleIdTextArea.setText(updateNode.getStyleId());
         mdTextTabA.setText(updateNode.getMD()); //update the markdown text
         codeNotesTextArea.setText(updateNode.getNotes());
@@ -691,9 +694,10 @@ public void updateBookMeta() {
         String myImage=imagepathTextArea.getText();
         String myLabel=bookLabelTextArea.getText();
         String myStyle=styleIdTextArea.getText();
+        String myBookMDName=bookmarkNameTextArea.getText();
         String myMarkdown=mdTextTabA.getText();
         String myCode=codeNotesTextArea.getText();
-        thisBook.updateEditedText(myFilepath,myURL,myImage,myLabel,myStyle,myOutlineLevel,myMarkdown,mdTextTabD.getText(),myCode);
+        thisBook.updateEditedText(myFilepath,myURL,myImage,myLabel,myStyle,myOutlineLevel,myMarkdown,mdTextTabD.getText(),myCode,myBookMDName);
         thisBook.setLabel(bookLabelTextArea.getText()); //update book label if needed
         updateHTMLpreview(thisBook); //some kind of refresh needed?
         System.out.println(thisBook.getLabel());
@@ -852,6 +856,8 @@ private void makeSceneForBookMetaView() {
         bookLabelTextArea.setStyle(terminalStyle);
         outlineLevelTextArea.setPrefRowCount(1);
         outlineLevelTextArea.setStyle(terminalStyle);
+        bookmarkNameTextArea.setPrefRowCount(1);
+        bookmarkNameTextArea.setStyle(terminalStyle);
         styleIdTextArea.setPrefRowCount(1);
         styleIdTextArea.setStyle(terminalStyle);
         mdTextTabA.setPrefRowCount(20); //for markdown.  Add to boxPane
@@ -907,6 +913,7 @@ private void makeSceneForBookMetaView() {
         imagepathText = new Text();
         bookLabelText = new Text();
         outlineLevelText = new Text();
+        bookmarkNameText = new Text();
         styleIdText = new Text();
         multiLineNotesText = new Text();
         visibleBlockText = new Text();
@@ -930,7 +937,7 @@ private void makeSceneForBookMetaView() {
         HBox imagepathBox = new HBox(0,imagepathTextArea,btnBrowseImagepath);
         HBox urlpathBox = new HBox(0,urlTextArea,btnOpenURL);
         HBox widebox = new HBox(0,htmlEditor); //default - can change as below
-        HBox styleOutlineBox = new HBox(0,styleIdText,styleIdTextArea,outlineLevelText,outlineLevelTextArea);
+        HBox styleOutlineBox = new HBox(0,styleIdText,styleIdTextArea,outlineLevelText,outlineLevelTextArea,bookmarkNameText,bookmarkNameTextArea);
         BorderPane borderPane = new BorderPane();
 
           //Create Tabs for Tab Pane, which will sit inside editor
