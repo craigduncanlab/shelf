@@ -157,7 +157,7 @@ public void updateMDText(String label, String text, String note) {
 }
 
 //general update text function
-public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String styleIdtext, int outlineLeveltext, String mdtext, String tabnote, String note) {
+public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String styleIdtext, int outlineLeveltext, String mdtext, String tabnote, String note, String bookmarkName) {
 	//setDocName(name);
 	setdocfilepath(filepath);
 	setimagefilepath(imagepath);
@@ -174,6 +174,7 @@ public void updateEditedText(String filepath,String urlpath, String imagepath, S
 	setLabel(label);
 	updateDisplay();
 	setMD(mdtext);
+	setBookmark(bookmarkName);
 	//remove this ambiguity.  Make one 'code'
 	if (tabnote.length()>0){
 		setNotes(tabnote);
