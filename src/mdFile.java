@@ -28,7 +28,7 @@ public void openMD(File file){
       if (getExtension().equals("md")) {
       	makeBlocklist();
       }
-      makeBooksFromBlocklist();
+      //makeBooksFromBlocklist(); //handled externally
       //process internal contents of books to distinguish notes etc.  Use LinesIndex.
 }
 
@@ -366,13 +366,10 @@ it works with case statements only if you have hardcoded test cases.
     return out;
 }
 
+/*
 public void makeBooksFromBlocklist(){
       ArrayList<Book> myBookList = new ArrayList<Book>();
       ArrayList<mdBlock> blocks = getBlocklist();
-      /*
-      System.out.println(blocks.toString());
-      System.exit(0);
-      */
       int length = blocks.size();  // number of blocks
       Parser myParser=new Parser();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
@@ -397,6 +394,7 @@ public void makeBooksFromBlocklist(){
     //System.out.println("Make books done with content");
     //System.exit(0);
     }
+*/
 
 public ArrayList<mdBlock>packageBlocksFromLineObjects() {
 	ArrayList<mdBlock> output = new ArrayList<mdBlock>();

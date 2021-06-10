@@ -21,6 +21,8 @@ public class xmlPara {
 	String styleXML="";
 	String bookmarkName="";
 	String bookmarkId="";
+	Boolean pageBreak=false;
+	Boolean sectionBreak=false;
 
 //constructor
 public xmlPara(){
@@ -120,6 +122,22 @@ public void setStyleXML(String input){
 	this.styleXML=input;
 }
 
+private void setPageBreak(Boolean input){
+	this.pageBreak=input;
+}
+
+public Boolean getPageBreak(){
+	return this.pageBreak;
+}
+
+private void setSectionBreak(Boolean input){
+	this.sectionBreak=input;
+}
+
+public Boolean getSectionBreak(){
+	return this.sectionBreak;
+}
+
 // --- 
 
 /*
@@ -135,6 +153,8 @@ public void extractParams(){
 	extractTextId();
 	extractTextTags();
 	extractBookmarkStart();
+	extractPageBreak();
+	extractSectionBreak();
 }
 
 /* 
@@ -190,6 +210,31 @@ private String extractBookmarkStartTag(){
 	return output;
 }
 
+private void extractPageBreak(){
+	String output="";
+	String starttag="<w:lastRenderedPageBreak";
+	String endtag="/>";
+	xmlTool myTool = new xmlTool();
+	ArrayList<String> result = myTool.getTagAttribInclusive(this.lineText,starttag,endtag); 
+	if (result.size()>0) {
+		output=result.get(0); //first result
+		setPageBreak(true);
+	}
+}
+
+//<w:sectPr 
+private void extractSectionBreak(){
+	String output="";
+	String starttag="<w:sectPr ";
+	String endtag="</w:sectPr>";
+	xmlTool myTool = new xmlTool();
+	ArrayList<String> result = myTool.getTagAttribInclusive(this.lineText,starttag,endtag); 
+	if (result.size()>0) {
+		output=result.get(0); //first result
+		setSectionBreak(true);
+	}
+}
+
 /*
 input: a paragraph string from document.xml
 
@@ -204,7 +249,7 @@ public void extractTextTags(){
 	ArrayList<String> result2 =  new ArrayList<String>();
 	//remove ad hoc internal <w:t> tag
 	for (String item: result) {
-		item = item.replace("<w:t xml:space=\"preserve\">",""); 
+		item = item.replace("<w:t xml:space=\"preserve\">","");  //<---replace with no space (sometimes space is needd)
 		result2.add(item);
 	}
 	String output = removeTags(result2,starttag,endtag);

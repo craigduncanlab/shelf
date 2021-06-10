@@ -236,6 +236,11 @@ private MenuBar makeMenuBar() {
         MenuItem layoutWrap = new MenuItem("Wrap");
         MenuItem rowLayout = new MenuItem("By Row");
         MenuItem colLayout = new MenuItem("By Col");
+        MenuItem checkersLayout = new MenuItem("Checkers");
+        layoutWrap.setOnAction(performBoxWrap);
+        rowLayout.setOnAction(performRowWrap);
+        colLayout.setOnAction(performColWrap);
+        checkersLayout.setOnAction(performCheckersWrap);
         //layoutMenu.getItems().addAll(layoutWrap);
         //MENU GRID : BOX MOVEMENTS
         Menu moveMenu = new Menu("Move");
@@ -243,28 +248,36 @@ private MenuBar makeMenuBar() {
         MenuItem insertRowBeforeItem = new MenuItem("Insert Row (Before)");
         MenuItem insertCellShiftRightItem = new MenuItem("Nudge (Shift Right)");
         MenuItem nudgeCellShiftLeftItem = new MenuItem("Nudge (Shift Left)");
-        layoutWrap.setOnAction(performBoxWrap);
-        rowLayout.setOnAction(performRowWrap);
-        colLayout.setOnAction(performColWrap);
         insertRowBeforeItem.setOnAction(insertRowBeforeHandler);
         insertRowAfterItem.setOnAction(insertRowAfterHandler);
         insertCellShiftRightItem.setOnAction(insertCellShiftRightHandler);
         nudgeCellShiftLeftItem.setOnAction(nudgeCellShiftLeftHandler);
         moveMenu.getItems().addAll(insertRowBeforeItem,insertRowAfterItem,nudgeCellShiftLeftItem,insertCellShiftRightItem);
-        layoutMenu.getItems().addAll(layoutWrap,rowLayout,colLayout);
+        layoutMenu.getItems().addAll(layoutWrap,rowLayout,colLayout,checkersLayout);
         
+        //SPLITTING OPTIONS
+        Menu splitMenu = new Menu ("Split");
+        MenuItem splitOutline = new MenuItem("OutlineLvl1");
+        MenuItem splitBookmarks = new MenuItem("Bookmarks");
+        MenuItem splitPageBreak = new MenuItem("PageBreak");
+        splitMenu.getItems().addAll(splitOutline,splitBookmarks,splitPageBreak);
+        splitOutline.setOnAction(splitOnOutline);
+        splitBookmarks.setOnAction(splitOnBookmarks);
+        splitPageBreak.setOnAction(splitOnPageBreak);
 
         //DISPLAY OPTIONS
         Menu displayMenu = new Menu("Display");
+        Menu labelsMenu = new Menu("Labels");
         MenuItem displayTitles = new MenuItem("Titles");
         MenuItem displayWithDate = new MenuItem("With Date");
         MenuItem displayFieldStyle = new MenuItem("Field/Style");
         MenuItem displayBookmarks = new MenuItem("Bookmarks");
-        displayMenu.getItems().addAll(displayTitles,displayWithDate,displayFieldStyle,displayBookmarks);
+        labelsMenu.getItems().addAll(displayTitles,displayWithDate,displayFieldStyle,displayBookmarks);
         displayTitles.setOnAction(setDisplayTitles);
         displayWithDate.setOnAction(setDisplayTitleWithDate);
         displayFieldStyle.setOnAction(setDisplayFieldStyle);
         displayBookmarks.setOnAction(setDisplayBookmarks);
+        displayMenu.getItems().addAll(labelsMenu,layoutMenu);
 
         //--- MENU CONCEPTS
         Menu menuEdit = new Menu("Edit");
@@ -298,7 +311,7 @@ private MenuBar makeMenuBar() {
         
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile,menuEdit,moveMenu,layoutMenu,displayMenu,menuFields);     
+        menuBar.getMenus().addAll(menuFile,menuEdit,moveMenu,splitMenu,displayMenu,menuFields);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
@@ -547,13 +560,47 @@ The myProject settings should be used by default.
 
     // --- EVENT HANDLERS
 
-    //layout
+    //SPLITTING
+    EventHandler<ActionEvent> splitOnOutline = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Stage_WS.setSplitOption("OutlineLvl0");
+        }
+    };
+
+    EventHandler<ActionEvent> splitOnBookmarks = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Stage_WS.setSplitOption("Bookmark");
+        }
+    };
+
+    EventHandler<ActionEvent> splitOnPageBreak = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Stage_WS.setSplitOption("PageBreak");
+        }
+    };
+
+    //LAYOUT
     EventHandler<ActionEvent> performBoxWrap = 
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
             //Main.this.performBoxWrapFunction();
             Stage_WS.wrapBooks();
+            }
+        };
+
+    EventHandler<ActionEvent> performCheckersWrap = 
+        new EventHandler<ActionEvent>() {
+        @Override 
+        public void handle(ActionEvent event) {
+            //Main.this.performBoxWrapFunction();
+            Stage_WS.wrapProjectBooksCheckers();
             }
         };
 
@@ -574,6 +621,8 @@ The myProject settings should be used by default.
             Stage_WS.unpackBooksAsCol();
             }
         };
+
+   
 
     EventHandler<ActionEvent> addMDStyleXML = 
     new EventHandler<ActionEvent>() {

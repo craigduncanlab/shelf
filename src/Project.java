@@ -20,6 +20,7 @@ String filename = "";
 String shortfilename=""; //current filename for saving this project's contents
 String extension="";
 String Rmd_header="";
+String splitOption="OutlineLvl0";
 ArrayList<String> docxStyles;
 docXML openDocx = new docXML();
 mdFile openMD = new mdFile();
@@ -32,7 +33,9 @@ public Project() {
 
 public void setOpenDocx(docXML input) {
     this.openDocx=input;
-    addBooksToProject(input.getBooklist());
+    ArrayList<Book> myBooks = makeBooksFromXMLBlocklist();
+    clearAllBooks(); //in case there are books from previous project
+    addBooksToProject(myBooks);
 }
 
 public docXML getOpenDocx() {
@@ -41,7 +44,8 @@ public docXML getOpenDocx() {
 
 public void setOpenMD(mdFile input){
     this.openMD = input;
-    addBooksToProject(input.getBooklist());
+    ArrayList<Book> myBooks = makeBooksFromMDBlocklist(input);
+    addBooksToProject(myBooks);
 }
 
 public void setOpenRMD(mdFile input){
@@ -59,6 +63,54 @@ private void setDocFile(File input){
 
 public File getDocFile(){
     return this.docFile;
+}
+
+// NUMBER OF BOOKS ON SHELF
+
+public int getNumberBooks(){
+    return getBooksOnShelf().size();
+}
+
+// SPLITTING
+
+//this doesn't perform a save - it just reworks content from xmlParas.
+//it also doesn't place books on stage; it merely updates what project describes as books.
+
+public void updateSplitOptionBooks() {
+    
+    if (getExt().equals("docx")) {
+        ArrayList<Book> myBooks = makeBooksFromXMLBlocklist(); //differs depending on split options
+        if (myBooks.size()>0) {
+            clearAllBooks(); //clear all books from project
+            addBooksToProject(myBooks);
+        }
+       
+    }
+    if (getExt().equals("md")) {
+        clearAllBooks(); //clear all books from project
+        ArrayList<Book> myBooks = makeBooksFromMDBlocklist(this.openMD); //differs depending on split options
+        if (myBooks.size()>0) {
+            clearAllBooks(); //clear all books from project
+            addBooksToProject(myBooks);
+        }
+    }
+
+    if (getExt().equals("rmd") || getExt().equals("Rmd")) {
+        clearAllBooks(); //clear all books from project
+        ArrayList<Book> myBooks = makeBooksFromMDBlocklist(this.openRMD); //differs depending on split options
+        if (myBooks.size()>0) {
+            clearAllBooks(); //clear all books from project
+            addBooksToProject(myBooks);
+        }
+    }
+}
+
+public void setSplitOption(String input){
+    this.splitOption=input;
+}
+
+private String getSplitOption(){
+        return this.splitOption;
 }
 
 // --- FILE OPERATIONS (BASED ON IO.FILE FOR NOW)
@@ -147,6 +199,60 @@ public String getNameNoExt(String name){
 	String output = name.substring(0,name.lastIndexOf("."));
     return output;
 }
+
+//  HANDLE LOADING IN OF DIFFERENT FILE TYPES TO PROJECT
+
+public ArrayList<Book> makeBooksFromXMLBlocklist(){
+        ArrayList<xmlBlock> myBlockList = this.openDocx.blockChoice(getSplitOption());  //choose blocks depending on Split setting.
+        ArrayList<Book> myBookList = new ArrayList<Book>();
+      //starting with the blocklist, get blocks and put each one inside a 'Book' object
+      int length = myBlockList.size();  // number of blocks
+      System.out.println(length); //each of these numbered blocks is a string.
+      int rowcount=0;
+      if (length>0) {
+        Iterator<xmlBlock> iter = myBlockList.iterator(); 
+          while (iter.hasNext()) {
+              xmlBlock myBlock = iter.next();
+              Book newBook =new Book(myBlock);  //constructor handles xmlBlock or mdBlock differently (polymorphism!)
+              //System.out.println("Book heading:"+newBook.getLabel());
+              //
+              if (newBook!=null) {
+                //set default position for GUI?
+                newBook.setRow(rowcount); //default col is 0.
+                newBook.setCol(0);
+              }
+              else {
+                System.out.println("Nothing returned from parser");
+              }
+              myBookList.add(newBook);
+              rowcount++;
+         } //end while
+      } //end if
+    return myBookList;
+    }
+
+public ArrayList<Book> makeBooksFromMDBlocklist(mdFile myDoc){
+      ArrayList<mdBlock> myBlockList = myDoc.getBlocklist();
+      ArrayList<Book> myBookList = new ArrayList<Book>();
+      int length = myBlockList.size();  // number of blocks
+      Parser myParser=new Parser();
+      //starting with the blocklist, get blocks and put each one inside a 'Book' object
+      int rowcount=0;
+      if (length>0) {
+        Iterator<mdBlock> iter = myBlockList.iterator(); 
+          while (iter.hasNext()) {
+            mdBlock myBlock = iter.next();
+            Book newBook =new Book(myBlock); //constructor handles xmlBlock or mdBlock differently (polymorphism!)
+            //add book to list
+            myBookList.add(newBook);
+            rowcount++;
+         } //end while
+      } //end if        
+      else {
+        System.out.println("Nothing returned from parser");
+      }
+    return myBookList;
+    }
 
 // -- METADATA FOR DOCX PROJECTS
 

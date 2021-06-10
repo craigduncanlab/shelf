@@ -126,7 +126,7 @@ public Book(mdBlock input) {
 
 //preferred constructor now: builds book from XML block data
 public Book(xmlBlock input) {
-	setOOXMLtext(input.getBlockXMLText());
+	setOOXMLtext(input.getBlockXMLText()); //this also calls the method that populates the text.
 	setNotes(input.getNotesText());
 	setMD(input.getPlainText()); 
 	setLabel(input.getHeaderText());
@@ -157,7 +157,7 @@ public void updateMDText(String label, String text, String note) {
 }
 
 //general update text function
-public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String styleIdtext, int outlineLeveltext, String mdtext, String tabnote, String note) {
+public void updateEditedText(String filepath,String urlpath, String imagepath, String label,String styleIdtext, int outlineLeveltext, String mdtext, String tabnote, String note, String bookmarkName) {
 	//setDocName(name);
 	setdocfilepath(filepath);
 	setimagefilepath(imagepath);
@@ -174,6 +174,7 @@ public void updateEditedText(String filepath,String urlpath, String imagepath, S
 	setLabel(label);
 	updateDisplay();
 	setMD(mdtext);
+	setBookmark(bookmarkName);
 	//remove this ambiguity.  Make one 'code'
 	if (tabnote.length()>0){
 		setNotes(tabnote);
@@ -312,7 +313,7 @@ public void updateDisplay(){
 private void setVisibleNodeText(String myLabel) {
 	this.displaylabel=myLabel;
 	if (myLabel.length()>50) {
-		myLabel=myLabel.substring(0,50); //limit book label to first "# " + 10 characters
+		myLabel=myLabel.substring(0,48); //limit book label to first "# " + 10 characters
 		}
 		this.bookspinetext.setText(myLabel);
 }

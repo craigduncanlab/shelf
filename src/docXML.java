@@ -51,7 +51,7 @@ public int openDocx(File file){
           //populate blocklist for future use
           setInitialParalist();
           setInitialBlocklist();
-          makeBooksFromBlocklist();
+          //makeBooksFromBlocklist(); //handle this externally
           return 0;
       }
 }
@@ -73,13 +73,15 @@ public ArrayList<xmlPara>getParaList() {
 
 public void setInitialBlocklist() {
     ArrayList<xmlPara>myLines=getParaList(); 
-    setBlocklist(makeBlocksFromParas(myLines)); //lines are coded as they are added
+    setBlocklist(makeBlocksSplitOnChoice("OutlineLvl0")); //lines are coded as they are added
 }
 
 //TO DO: block for first page
 //numLevels should match number in xmlBlock 'makeBlockText' function
-public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
+/*
+private ArrayList<xmlBlock> makeBlocksSplitOnOutlineLevel() {
     int numLevels=1;
+    ArrayList<xmlPara> myLines = getParaList();
     ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
     xmlBlock currentblock = new xmlBlock();
     
@@ -99,6 +101,7 @@ public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
                 if (currentblock.getStoredLines()>0) {
                     newBlocks.add(currentblock); //add the current block to newBlocks array
                     currentblock=new xmlBlock(); //reset it to a new pointer
+                    //currentblock.setSplitType("OutlineLvl0"); //default
                 }
                 //Adds xmlPara to Block, then makes text property from it.
                 currentblock.addLineObject(thisPara); 
@@ -114,6 +117,91 @@ public ArrayList<xmlBlock> makeBlocksFromParas(ArrayList<xmlPara> myLines) {
     //add last block or we drop 1 each time
     if (currentblock.getStoredLines()>0) {
         newBlocks.add(currentblock); //add the current block to newBlocks array
+    }
+    return newBlocks;
+}
+*/
+
+
+public ArrayList<xmlBlock> blockChoice(String input) {
+    //test input
+    ArrayList<xmlBlock> output = makeBlocksSplitOnChoice(input);
+    return output;
+}
+
+/*
+public ArrayList<xmlBlock> getBookmarkBlocklist(){
+    ArrayList<xmlBlock> output = makeBlocksSplitOnChoice("Bookmark");
+    return output;
+}
+
+public ArrayList<xmlBlock> getPageBreakBlocklist(){
+    ArrayList<xmlBlock> output = makeBlocksSplitOnChoice("PageBreak");
+    return output;
+}
+*/
+
+/*Choose split types from:
+1. OutlineLvl0
+2. Bookmark
+3. PageBreak
+
+*/
+private ArrayList<xmlBlock> makeBlocksSplitOnChoice(String splitType) {
+     ArrayList<xmlPara>myLines=getParaList(); 
+    int numLevels=1;
+    ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
+    xmlBlock currentblock = new xmlBlock();
+    currentblock.setSplitType(splitType);
+    
+    String headertext="";
+    int cl=0;
+    for (xmlPara thisPara: myLines) {
+        Boolean isSplitPoint=false;
+        if (splitType.equals("Bookmark")) {
+            if (!thisPara.getBookmarkId().equals("")) {   //if non-empty bookmark
+                isSplitPoint=true;
+            };
+        }
+        if (splitType.equals("OutlineLvl0")){
+            if (thisPara.getOutlineLevel()==0){
+                isSplitPoint=true;
+            }
+        }
+        if (splitType.equals("PageBreak")){
+            //|| thisPara.getSectionBreak()==true
+            if (thisPara.getPageBreak()==true){
+                isSplitPoint=true;
+            }
+        }
+        //SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
+
+        //check each level in turn and make a new block if it is detected in this paragraph.
+        if (isSplitPoint==true) { //if non-empty bookmark
+            //first line
+                if (currentblock.getStoredLines()>0) {
+                    newBlocks.add(currentblock); //add the current block to newBlocks array
+                    currentblock=new xmlBlock(); //reset it to a new pointer
+                    currentblock.setSplitType(splitType);
+                }
+                //Adds xmlPara to Block, then makes text property from it.
+                currentblock.addLineObject(thisPara); 
+            }
+        //for linecode > 0, add it (could ignore lines with other codes, or pre-process, but don't do it for now)
+        if (isSplitPoint==false) { 
+                currentblock.addLineObject(thisPara);
+        }
+        cl++; //increase line count for index   
+    }   //end loop
+
+    //add last block or we drop 1 each time
+    if (currentblock.getStoredLines()>0) {
+        newBlocks.add(currentblock); //add the current block to newBlocks array
+    }
+    setBlocklist(newBlocks);
+    //initialise the content of these new Blocks
+    for (xmlBlock item : newBlocks){
+        item.initialiseBlockContents();
     }
     return newBlocks;
 }
@@ -377,6 +465,7 @@ public ArrayList<xmlPara> getXMLparas(String input,String starttag, String endta
 /* 
 Function to make Book (intermediate data object, for GUI) from xmlBlock objects
 */
+/*
 public void makeBooksFromBlocklist(){
     ArrayList<Book> myBookList = new ArrayList<Book>();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
@@ -387,7 +476,7 @@ public void makeBooksFromBlocklist(){
         Iterator<xmlBlock> iter = this.blocklist.iterator(); 
           while (iter.hasNext()) {
               xmlBlock myBlock = iter.next();
-              Book newBook =new Book(myBlock); 
+              Book newBook =new Book(myBlock);  //constructor handles xmlBlock or mdBlock differently (polymorphism!)
               System.out.println("Book heading:"+newBook.getLabel());
               //
               if (newBook!=null) {
@@ -404,7 +493,7 @@ public void makeBooksFromBlocklist(){
       } //end if
     setBooklist(myBookList);
     }
-
+*/
 public void saveDocxWithNewStylesOnly(File inputFile){
     String myStyles = getStylesObject().getStylesXML();
     originalZip.readAndReplaceStyles(myStyles,inputFile);
