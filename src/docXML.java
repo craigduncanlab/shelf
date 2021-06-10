@@ -99,6 +99,7 @@ private ArrayList<xmlBlock> makeBlocksSplitOnOutlineLevel(ArrayList<xmlPara> myL
                 if (currentblock.getStoredLines()>0) {
                     newBlocks.add(currentblock); //add the current block to newBlocks array
                     currentblock=new xmlBlock(); //reset it to a new pointer
+                    //currentblock.setSplitType("OutlineLvl0"); //default
                 }
                 //Adds xmlPara to Block, then makes text property from it.
                 currentblock.addLineObject(thisPara); 
@@ -118,10 +119,17 @@ private ArrayList<xmlBlock> makeBlocksSplitOnOutlineLevel(ArrayList<xmlPara> myL
     return newBlocks;
 }
 
-private ArrayList<xmlBlock> makeBlocksSplitOnBookmarks(ArrayList<xmlPara> myLines) {
+public ArrayList<xmlBlock> getBookmarkBlocklist(){
+    ArrayList<xmlBlock> output = makeBlocksSplitOnBookmarks();
+    return output;
+}
+
+private ArrayList<xmlBlock> makeBlocksSplitOnBookmarks() {
+     ArrayList<xmlPara>myLines=getParaList(); 
     int numLevels=1;
     ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
     xmlBlock currentblock = new xmlBlock();
+    currentblock.setSplitType("Bookmark");
     
     String headertext="";
     int cl=0;
@@ -138,6 +146,7 @@ private ArrayList<xmlBlock> makeBlocksSplitOnBookmarks(ArrayList<xmlPara> myLine
                 if (currentblock.getStoredLines()>0) {
                     newBlocks.add(currentblock); //add the current block to newBlocks array
                     currentblock=new xmlBlock(); //reset it to a new pointer
+                    currentblock.setSplitType("Bookmark");
                 }
                 //Adds xmlPara to Block, then makes text property from it.
                 currentblock.addLineObject(thisPara); 
@@ -153,6 +162,10 @@ private ArrayList<xmlBlock> makeBlocksSplitOnBookmarks(ArrayList<xmlPara> myLine
     if (currentblock.getStoredLines()>0) {
         newBlocks.add(currentblock); //add the current block to newBlocks array
     }
+    /*
+    System.out.println(newBlocks.toString());
+    System.exit(0);
+    */
     return newBlocks;
 }
 
