@@ -105,13 +105,8 @@ public void updateSplitOptionBooks() {
     }
 }
 
-public void setSplitOption(int input){
-    if (input==1) {
-        this.splitOption="OutlineLvl0";
-    }
-    if (input==2) {
-        this.splitOption="Bookmarks";
-    }
+public void setSplitOption(String input){
+    this.splitOption=input;
 }
 
 private String getSplitOption(){
@@ -208,14 +203,8 @@ public String getNameNoExt(String name){
 //  HANDLE LOADING IN OF DIFFERENT FILE TYPES TO PROJECT
 
 public ArrayList<Book> makeBooksFromXMLBlocklist(){
-    ArrayList<xmlBlock> myBlockList = new ArrayList<xmlBlock>(); 
-    if (getSplitOption().equals("OutlineLvl0")) {
-        myBlockList = this.openDocx.getBlocklist();  //choose blocks depending on Split setting.
-    }
-    if (getSplitOption().equals("Bookmarks")) {
-        myBlockList = this.openDocx.getBookmarkBlocklist(); //same for now
-    }
-    ArrayList<Book> myBookList = new ArrayList<Book>();
+        ArrayList<xmlBlock> myBlockList = this.openDocx.blockChoice(getSplitOption());  //choose blocks depending on Split setting.
+        ArrayList<Book> myBookList = new ArrayList<Book>();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
       int length = myBlockList.size();  // number of blocks
       System.out.println(length); //each of these numbered blocks is a string.
@@ -225,7 +214,7 @@ public ArrayList<Book> makeBooksFromXMLBlocklist(){
           while (iter.hasNext()) {
               xmlBlock myBlock = iter.next();
               Book newBook =new Book(myBlock);  //constructor handles xmlBlock or mdBlock differently (polymorphism!)
-              System.out.println("Book heading:"+newBook.getLabel());
+              //System.out.println("Book heading:"+newBook.getLabel());
               //
               if (newBook!=null) {
                 //set default position for GUI?
