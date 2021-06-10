@@ -879,6 +879,11 @@ public void writeOutBooksToWord() {    //
     */
 }
 
+//function to change the way the opened text files are split for display
+public void setSplitOption(int input) {
+    myProject.setSplitOption(input);
+}
+
 //function to change way box labels are displayed
 public void setDisplayModeTitles(Integer input){
   if (input>0 && input<6) {

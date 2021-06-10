@@ -20,6 +20,7 @@ String filename = "";
 String shortfilename=""; //current filename for saving this project's contents
 String extension="";
 String Rmd_header="";
+String splitOption="OutlineLvl0";
 ArrayList<String> docxStyles;
 docXML openDocx = new docXML();
 mdFile openMD = new mdFile();
@@ -59,6 +60,21 @@ private void setDocFile(File input){
 
 public File getDocFile(){
     return this.docFile;
+}
+
+// SPLITTING
+
+public void setSplitOption(int input){
+    if (input==1) {
+        this.splitOption="OutlineLvl0";
+    }
+    if (input==2) {
+        this.splitOption="Bookmarks";
+    }
+}
+
+private String getSplitOption(){
+        return this.splitOption;
 }
 
 // --- FILE OPERATIONS (BASED ON IO.FILE FOR NOW)

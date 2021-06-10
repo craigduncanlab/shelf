@@ -255,17 +255,27 @@ private MenuBar makeMenuBar() {
         moveMenu.getItems().addAll(insertRowBeforeItem,insertRowAfterItem,nudgeCellShiftLeftItem,insertCellShiftRightItem);
         layoutMenu.getItems().addAll(layoutWrap,rowLayout,colLayout,checkersLayout);
         
+        //SPLITTING OPTIONS
+        Menu splitMenu = new Menu ("Split");
+        MenuItem splitOutline = new MenuItem("OutlineLvl1");
+        MenuItem splitBookmarks = new MenuItem("Bookmarks");
+        splitMenu.getItems().addAll(splitOutline,splitBookmarks);
+        splitOutline.setOnAction(splitOnOutline);
+        splitBookmarks.setOnAction(splitOnBookmarks);
+
         //DISPLAY OPTIONS
         Menu displayMenu = new Menu("Display");
+        Menu labelsMenu = new Menu("Labels");
         MenuItem displayTitles = new MenuItem("Titles");
         MenuItem displayWithDate = new MenuItem("With Date");
         MenuItem displayFieldStyle = new MenuItem("Field/Style");
         MenuItem displayBookmarks = new MenuItem("Bookmarks");
-        displayMenu.getItems().addAll(displayTitles,displayWithDate,displayFieldStyle,displayBookmarks);
+        labelsMenu.getItems().addAll(displayTitles,displayWithDate,displayFieldStyle,displayBookmarks);
         displayTitles.setOnAction(setDisplayTitles);
         displayWithDate.setOnAction(setDisplayTitleWithDate);
         displayFieldStyle.setOnAction(setDisplayFieldStyle);
         displayBookmarks.setOnAction(setDisplayBookmarks);
+        displayMenu.getItems().addAll(labelsMenu,layoutMenu);
 
         //--- MENU CONCEPTS
         Menu menuEdit = new Menu("Edit");
@@ -299,7 +309,7 @@ private MenuBar makeMenuBar() {
         
        
         /* --- MENU BAR --- */
-        menuBar.getMenus().addAll(menuFile,menuEdit,moveMenu,layoutMenu,displayMenu,menuFields);     
+        menuBar.getMenus().addAll(menuFile,menuEdit,moveMenu,splitMenu,displayMenu,menuFields);     
 
         //create an event filter so we can process mouse clicks on menubar (and ignore them!)
         menuBar.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
@@ -548,7 +558,24 @@ The myProject settings should be used by default.
 
     // --- EVENT HANDLERS
 
-    //layout
+    //SPLITTING
+    EventHandler<ActionEvent> splitOnOutline = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Stage_WS.setSplitOption(1);
+        }
+    };
+
+    EventHandler<ActionEvent> splitOnBookmarks = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Stage_WS.setSplitOption(2);
+        }
+    };
+
+    //LAYOUT
     EventHandler<ActionEvent> performBoxWrap = 
         new EventHandler<ActionEvent>() {
         @Override 
