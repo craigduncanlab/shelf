@@ -2,11 +2,13 @@
 
 (c) Craig Duncan 2017-2021.  
 
-The Project Names have progressed through several beta versions (flavours) so far, including PowerDock, M-Press, Shelf and now LitDB.  I am predominantly developing on a mac, but it will be suitable for cross-platform distribution.
+What does the sofware do?  It provides an integrated visual text analysis tool for exploring the visual (GUI) structure of your text documents, and their internal XML structures (style codes and bookmarks in the case of Word).  The structures will likely have been encoded by the authors using the native GUI application, and may or may not form a sensible database schema. 
 
-What does it do?  It provides a visual medium for examining the structure of your text documents, and to align similar information across different documents.   I am writing a more academic paper on its design and potential uses, available in due course.
+It is intended to be interoperable across different text formats or text annotations, including markdown, HTML and OOXML (docx, odf).
 
-The consistent goal is to provide an integrated environment to allow text editing, presentation, and database functions.  It is intended to be interoperable across different text formats or text annotations, including markdown, HTML and OOXML (docx, odf).
+I am writing a more academic paper on its design and potential uses, available in due course.  
+
+The Project names have progressed through several beta versions (flavours) so far, including PowerDock, M-Press, Shelf and now LitDB.  I am predominantly developing on a mac, but it will be suitable for cross-platform distribution.
 
 # Application specific help 
 
@@ -16,7 +18,7 @@ This is still a beta project and full documentation and instructions are yet to 
 
 In general, the workflow is:
 1. Application will open docx, md and rmd formats.  
-2. It will display these according to their high-level structure. [Visual Tab]
+2. It will display these according to their high-level structure. [Choose Split to vary the docx splitting option]
 3. The visual tab will allow users to change the position, order or display of the boxed content of the original file.
 4. Editing or inspecting content is achieved by selecting a box, then pressing enter.
 5. Pressing spacebar when a box is selected will show an HTML preview of the content of that box. Notes are in different style.
@@ -34,8 +36,9 @@ In general, the workflow is:
 ## OOXML/docx files:
 
 1. Docx files are broken up visually according to outline level 1.  Use 'Display' menu to change appearance in Viewer.
-2. In the application, the database concept of Fields is used, and is intended to work with outline level 1.  
-3. Files are visualised in the first tab on the RHS.
+2. In the application, the database concept of Fields is used, and is intended to work with Outline level 1 (Split option=Outline).  
+3. Files are visualised in the first tab on the RHS.  
+   To adopt a different 'block' scheme, choose Split to vary the docx splitting option.  You may need to select a different Display option after changing the Splitting scheme.
 4. A summary of the style and field information appears on the second to fourth RHS tabs.
 5. To add fields to docx, use fields menu.  This is specific to context.  This is in progress.
 These are not retained in the original docx file unless the Update Docx menu item, from the File Menu, is used.  A new filename can be used at that stage.
