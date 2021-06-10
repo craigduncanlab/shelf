@@ -23,6 +23,8 @@ public class xmlBlock {
 	String blockBookmark="";
 	ArrayList<String>bookmarkList=new ArrayList<String>();
 	String plaintext=""; //text in <w:t> tags
+	String splitType="OutlineLvl0"; //default
+	String bookmarkedText="";
 
 //constructor
 public xmlBlock(){
@@ -62,6 +64,14 @@ public String getBookmark(){
 	return this.blockBookmark;
 }
 
+public void setBookmarkedText(String input){
+	this.bookmarkedText=input;
+}
+
+public String getBookmarkedText(){
+	return this.bookmarkedText;
+}
+
 public void importblockParas(ArrayList<xmlPara> myParas){
 	for (xmlPara myItem: myParas) {
 		blockParas.add(myItem);
@@ -86,7 +96,8 @@ public int getStoredLines(){
 	return blockParas.size();
 }
 
-/* We already have a block
+/* We have a block and we need to populate sub-fields, elements of the block.
+
 This function populates some of the block-level meta-data from the set of xmlParas it contains
 It assumes the first xmlPara is the most significant, based on the block-splitting that occurred prior.
 (previously the test was: is the outlinelevel of xmlPara=0, but if this is already established, no need to recheck first para)
@@ -104,23 +115,43 @@ public void makeBlockXMLfromXMLParas(){
 		//The range of outline levels that will be included as headings/new blocks, starting at 0
 		//if (level<numLevels) { 
 		//if (level==referenceLevel) { 
-		if (paracount==0) { //use first para: no longer dependent on block splitting criteria
-			myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
-			setOutlineLevel(referenceLevel);
-			String text = myItem.getParaString();
-			String plain = myItem.getplainText(); //removed from <w:t>
-			XMLoutput=XMLoutput+text+System.getProperty("line.separator");
-			setHeaderText(plain); //block-level header
-			setStyleXML(myItem.getStyleXML()); //block-level 'style' attribution, for outline level
-			setStyleId(myItem.getpStyle()); //styleId for block-level style attribution
-			setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
+		if (paracount==0)  //use first para: no longer dependent on block splitting criteria
+			if(getSplitType().equals("OutlineLvl0")) { 
+				myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
+				setOutlineLevel(referenceLevel);
+				String text = myItem.getParaString();
+				XMLoutput=XMLoutput+text+System.getProperty("line.separator");
+				setStyleXML(myItem.getStyleXML()); //block-level 'style' attribution, for outline level
+				setStyleId(myItem.getpStyle()); //styleId for block-level style attribution
+				String plain = myItem.getplainText(); //removed from <w:t>
+				setHeaderText(plain); //block-level header
+				setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
+			}
+			//bookmarks
+			else {
+				myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
+				setOutlineLevel(referenceLevel);
+				String text = myItem.getParaString();
+				XMLoutput=XMLoutput+text+System.getProperty("line.separator");
+				//cf are bookmarks always on same row as relevant text that describes them?  cf. FCA
+				//block-level header
+				setStyleXML(myItem.getStyleXML()); //block-level 'style' attribution, for outline level
+				setStyleId(myItem.getpStyle()); //styleId for block-level style attribution
+				String plain = myItem.getplainText(); //removed from <w:t>
+				setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
+				setBookmarkedText(myItem.getplainText());
+				String bookmarkData=getBookmarkedText(); //put text of bookmark as header (rather than name)
+				//setBookmarkData(bookmarkData);
+				setHeaderText(myItem.getBookmarkId());  //TO DO: capture header text from last line of previous block.  Do externally.
+				//setNotesText(plain);
+				plainoutput=plainoutput+plain+System.getProperty("line.separator"); //capture the bookmark text in main text
 			}
 		//code 99 for paragraphs that are included in the blocks as general text/notes etc
 		else  {
 			String text = myItem.getParaString();
-			String plaintext = myItem.getplainText();
+			String plain = myItem.getplainText();
 			XMLoutput=XMLoutput+text+System.getProperty("line.separator");
-			plainoutput=plainoutput+plaintext+System.getProperty("line.separator");
+			plainoutput=plainoutput+plain+System.getProperty("line.separator");
 			//make a list of bookmarks that are in this block of XML.  If we split on bookmarks we only need first.
 			if (myItem.getBookmarkName().length()>0) {
 				this.bookmarkList.add(myItem.getBookmarkName());
@@ -180,6 +211,14 @@ public void setPlainText(String input){
 	this.plaintext=input;
 }
 
+public void setSplitType(String input){
+	this.splitType=input;
+}
+
+private String getSplitType(){
+	return this.splitType;
+}
+
 public String getPlainText(){
 	return this.plaintext;
 }
@@ -188,7 +227,7 @@ public void setBlockXMLText(String input) {
 	this.blockText=input;
 }
 
-//gets block text based on current block (xmlParas list)
+//gets block text based on current block (xmlParas list).  OutlineLevel splits.  Called externally by Book constructor.
 public String getBlockXMLText(){
 	makeBlockXMLfromXMLParas();
 	return this.blockText;
