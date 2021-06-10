@@ -51,7 +51,7 @@ public int openDocx(File file){
           //populate blocklist for future use
           setInitialParalist();
           setInitialBlocklist();
-          makeBooksFromBlocklist();
+          //makeBooksFromBlocklist(); //handle this externally
           return 0;
       }
 }
@@ -415,6 +415,7 @@ public ArrayList<xmlPara> getXMLparas(String input,String starttag, String endta
 /* 
 Function to make Book (intermediate data object, for GUI) from xmlBlock objects
 */
+/*
 public void makeBooksFromBlocklist(){
     ArrayList<Book> myBookList = new ArrayList<Book>();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
@@ -425,7 +426,7 @@ public void makeBooksFromBlocklist(){
         Iterator<xmlBlock> iter = this.blocklist.iterator(); 
           while (iter.hasNext()) {
               xmlBlock myBlock = iter.next();
-              Book newBook =new Book(myBlock); 
+              Book newBook =new Book(myBlock);  //constructor handles xmlBlock or mdBlock differently (polymorphism!)
               System.out.println("Book heading:"+newBook.getLabel());
               //
               if (newBook!=null) {
@@ -442,7 +443,7 @@ public void makeBooksFromBlocklist(){
       } //end if
     setBooklist(myBookList);
     }
-
+*/
 public void saveDocxWithNewStylesOnly(File inputFile){
     String myStyles = getStylesObject().getStylesXML();
     originalZip.readAndReplaceStyles(myStyles,inputFile);

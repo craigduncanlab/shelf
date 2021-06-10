@@ -12,6 +12,8 @@ public class xmlBlock {
 	ArrayList<xmlPara> blockParas =new ArrayList<xmlPara>();
 	int blockIndex=0;
 	int blocktype=1; //default.  in substance this is the 'fileindex' code for this line
+
+	//The parameters that the 'block' might hold depend on how we split the file
 	String blockText="";
 	String notesText="";
 	String headerText="";
@@ -84,26 +86,33 @@ public int getStoredLines(){
 	return blockParas.size();
 }
 
-//make text from <w:p> paragraphs in this block.  
+/* We already have a block
+This function populates some of the block-level meta-data from the set of xmlParas it contains
+It assumes the first xmlPara is the most significant, based on the block-splitting that occurred prior.
+(previously the test was: is the outlinelevel of xmlPara=0, but if this is already established, no need to recheck first para)
+*/
+
 public void makeBlockXMLfromXMLParas(){
 	String XMLoutput="";
 	String plainoutput="";
 	int numLevels=1;
 	int referenceLevel=0;
+	int paracount=0;
 	for (xmlPara myItem: this.blockParas) {
 		int code = myItem.getLineCode(); //alternatively, get outline level
 		int level = myItem.getOutlineLevel();
 		//The range of outline levels that will be included as headings/new blocks, starting at 0
 		//if (level<numLevels) { 
-		if (level==referenceLevel) { 
-			myItem.setOutlineLevel(myItem.getOutlineLevel());
+		//if (level==referenceLevel) { 
+		if (paracount==0) { //use first para: no longer dependent on block splitting criteria
+			myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
 			setOutlineLevel(referenceLevel);
 			String text = myItem.getParaString();
 			String plain = myItem.getplainText(); //removed from <w:t>
 			XMLoutput=XMLoutput+text+System.getProperty("line.separator");
-			setHeaderText(plain);
-			setStyleXML(myItem.getStyleXML());
-			setStyleId(myItem.getpStyle()); //styleId
+			setHeaderText(plain); //block-level header
+			setStyleXML(myItem.getStyleXML()); //block-level 'style' attribution, for outline level
+			setStyleId(myItem.getpStyle()); //styleId for block-level style attribution
 			setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
 			}
 		//code 99 for paragraphs that are included in the blocks as general text/notes etc
@@ -112,11 +121,12 @@ public void makeBlockXMLfromXMLParas(){
 			String plaintext = myItem.getplainText();
 			XMLoutput=XMLoutput+text+System.getProperty("line.separator");
 			plainoutput=plainoutput+plaintext+System.getProperty("line.separator");
-			//make a list of bookmarks that are in this block of XML
+			//make a list of bookmarks that are in this block of XML.  If we split on bookmarks we only need first.
 			if (myItem.getBookmarkName().length()>0) {
 				this.bookmarkList.add(myItem.getBookmarkName());
 			}
 		}
+		paracount=paracount+1;
 	}
 	setBlockXMLText(XMLoutput);
 	setPlainText(plainoutput);
