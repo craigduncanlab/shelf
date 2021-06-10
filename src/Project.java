@@ -34,6 +34,7 @@ public Project() {
 public void setOpenDocx(docXML input) {
     this.openDocx=input;
     ArrayList<Book> myBooks = makeBooksFromXMLBlocklist();
+    clearAllBooks(); //in case there are books from previous project
     addBooksToProject(myBooks);
 }
 
@@ -64,6 +65,12 @@ public File getDocFile(){
     return this.docFile;
 }
 
+// NUMBER OF BOOKS ON SHELF
+
+public int getNumberBooks(){
+    return getBooksOnShelf().size();
+}
+
 // SPLITTING
 
 //this doesn't perform a save - it just reworks content from xmlParas.
@@ -87,7 +94,7 @@ public void updateSplitOptionBooks() {
             addBooksToProject(myBooks);
         }
     }
-    
+
     if (getExt().equals("rmd") || getExt().equals("Rmd")) {
         clearAllBooks(); //clear all books from project
         ArrayList<Book> myBooks = makeBooksFromMDBlocklist(this.openRMD); //differs depending on split options
@@ -206,7 +213,7 @@ public ArrayList<Book> makeBooksFromXMLBlocklist(){
         myBlockList = this.openDocx.getBlocklist();  //choose blocks depending on Split setting.
     }
     if (getSplitOption().equals("Bookmarks")) {
-        myBlockList = this.openDocx.getBlocklist(); //same for now
+        myBlockList = this.openDocx.getBookmarkBlocklist(); //same for now
     }
     ArrayList<Book> myBookList = new ArrayList<Book>();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
