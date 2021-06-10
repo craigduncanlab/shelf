@@ -73,13 +73,15 @@ public ArrayList<xmlPara>getParaList() {
 
 public void setInitialBlocklist() {
     ArrayList<xmlPara>myLines=getParaList(); 
-    setBlocklist(makeBlocksSplitOnOutlineLevel(myLines)); //lines are coded as they are added
+    setBlocklist(makeBlocksSplitOnChoice("OutlineLvl0")); //lines are coded as they are added
 }
 
 //TO DO: block for first page
 //numLevels should match number in xmlBlock 'makeBlockText' function
-private ArrayList<xmlBlock> makeBlocksSplitOnOutlineLevel(ArrayList<xmlPara> myLines) {
+/*
+private ArrayList<xmlBlock> makeBlocksSplitOnOutlineLevel() {
     int numLevels=1;
+    ArrayList<xmlPara> myLines = getParaList();
     ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
     xmlBlock currentblock = new xmlBlock();
     
@@ -118,41 +120,75 @@ private ArrayList<xmlBlock> makeBlocksSplitOnOutlineLevel(ArrayList<xmlPara> myL
     }
     return newBlocks;
 }
+*/
 
-public ArrayList<xmlBlock> getBookmarkBlocklist(){
-    ArrayList<xmlBlock> output = makeBlocksSplitOnBookmarks();
+
+public ArrayList<xmlBlock> blockChoice(String input) {
+    //test input
+    ArrayList<xmlBlock> output = makeBlocksSplitOnChoice(input);
     return output;
 }
 
-private ArrayList<xmlBlock> makeBlocksSplitOnBookmarks() {
+/*
+public ArrayList<xmlBlock> getBookmarkBlocklist(){
+    ArrayList<xmlBlock> output = makeBlocksSplitOnChoice("Bookmark");
+    return output;
+}
+
+public ArrayList<xmlBlock> getPageBreakBlocklist(){
+    ArrayList<xmlBlock> output = makeBlocksSplitOnChoice("PageBreak");
+    return output;
+}
+*/
+
+/*Choose split types from:
+1. OutlineLvl0
+2. Bookmark
+3. PageBreak
+
+*/
+private ArrayList<xmlBlock> makeBlocksSplitOnChoice(String splitType) {
      ArrayList<xmlPara>myLines=getParaList(); 
     int numLevels=1;
     ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
     xmlBlock currentblock = new xmlBlock();
-    currentblock.setSplitType("Bookmark");
+    currentblock.setSplitType(splitType);
     
     String headertext="";
     int cl=0;
     for (xmlPara thisPara: myLines) {
-        String bmcode=thisPara.getBookmarkId();//.get(cl);  cf getLineCode
-        //if this row is a heading
-        System.out.println(cl+") ["+bmcode+"] "+thisPara.getParaString());
-
+        Boolean isSplitPoint=false;
+        if (splitType.equals("Bookmark")) {
+            if (!thisPara.getBookmarkId().equals("")) {   //if non-empty bookmark
+                isSplitPoint=true;
+            };
+        }
+        if (splitType.equals("OutlineLvl0")){
+            if (thisPara.getOutlineLevel()==0){
+                isSplitPoint=true;
+            }
+        }
+        if (splitType.equals("PageBreak")){
+            //|| thisPara.getSectionBreak()==true
+            if (thisPara.getPageBreak()==true){
+                isSplitPoint=true;
+            }
+        }
         //SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
 
         //check each level in turn and make a new block if it is detected in this paragraph.
-        if (!bmcode.equals("")) { //if non-empty bookmark
+        if (isSplitPoint==true) { //if non-empty bookmark
             //first line
                 if (currentblock.getStoredLines()>0) {
                     newBlocks.add(currentblock); //add the current block to newBlocks array
                     currentblock=new xmlBlock(); //reset it to a new pointer
-                    currentblock.setSplitType("Bookmark");
+                    currentblock.setSplitType(splitType);
                 }
                 //Adds xmlPara to Block, then makes text property from it.
                 currentblock.addLineObject(thisPara); 
             }
         //for linecode > 0, add it (could ignore lines with other codes, or pre-process, but don't do it for now)
-        if (bmcode.equals("")) { 
+        if (isSplitPoint==false) { 
                 currentblock.addLineObject(thisPara);
         }
         cl++; //increase line count for index   
@@ -162,10 +198,11 @@ private ArrayList<xmlBlock> makeBlocksSplitOnBookmarks() {
     if (currentblock.getStoredLines()>0) {
         newBlocks.add(currentblock); //add the current block to newBlocks array
     }
-    /*
-    System.out.println(newBlocks.toString());
-    System.exit(0);
-    */
+    setBlocklist(newBlocks);
+    //initialise the content of these new Blocks
+    for (xmlBlock item : newBlocks){
+        item.initialiseBlockContents();
+    }
     return newBlocks;
 }
 

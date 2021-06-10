@@ -129,6 +129,7 @@ int spriteX = 0;
 int spriteY = 0;
 String stageName = "";
 String stageTitle = "";
+String displayOption = "Row";
 
 //Book reference_ParentNode = new Book();
 Stage localStage = new Stage();
@@ -390,7 +391,6 @@ public void openFileGetBooklist(File file) {
         int outcome=myDoc.openDocx(file);
         if (outcome==0) {
             myProject.setOpenDocx(myDoc); //books added to project if created upon opening
-            setDocxForView(myDoc);
         } 
     }
     unpackBooksToView(); //all books now set up in myProject object.
@@ -398,12 +398,20 @@ public void openFileGetBooklist(File file) {
 
     }
 
+//DISPLAY OPTIONS
+
 public void unpackBooksAsCol() {
-    nowrap_addProjectBooksVertical(myProject.getBooksOnShelf());//just in order they were added
+    if (myProject.getNumberBooks()>20){
+        wrapBooks();
+    } 
+    repositionProjectBooksVertical(myProject.getBooksOnShelf());//just in order they were added
 }
 
 public void unpackBooksAsRow() {
-    nowrap_addProjectBooksHorizontal(myProject.getBooksOnShelf());
+    if (myProject.getNumberBooks()>20){
+        wrapBooks();
+    } 
+    repositionProjectBooksHorizontal(myProject.getBooksOnShelf());
 }
 
 public void wrapBooks() {
@@ -432,10 +440,12 @@ public void AddNewBookToStage(Book newBook) throws NullPointerException {
     System.out.println("finished adding new book to stage");
 }
 
-//Adds books in project to stage.  TO DO: check not a duplicate?
+//Adds books in project to stage.  
+//If called by UnpackBookstoView then it clears books to avoid duplicates. 
 //This is the logical place to ensure that event handlers and FX setup is completed.
 //This must be done BEFORE calling 'setActiveBook'
-public void AddProjectBooksToStage() throws NullPointerException {
+
+private void AddProjectBooksToStage() throws NullPointerException {
     System.out.println("Adding project books to stage");
    
     ArrayList<Book> myBookList = myProject.getBooksOnShelf();
@@ -472,7 +482,7 @@ One that has no JavaFX dependencies.
 
 //This updates view based on Project.  These are not 'new' books being added.
 
-public void nowrap_addProjectBooksVertical(ArrayList<Book> myBookSet){
+public void repositionProjectBooksVertical(ArrayList<Book> myBookSet){
   //not yet the project booklist? DO THAT.  get these books from project.
   int length = myBookSet.size();  // number of blocks
   System.out.println(length); //each of these numbered blocks is a string.
@@ -498,16 +508,11 @@ public void nowrap_addProjectBooksVertical(ArrayList<Book> myBookSet){
           } //end while
      } //end if
      //---ABOVE JUST CHANGES POSITIONS, ASSUMING ALREADY IN PROJECT/STAGE
-
-    //STEP 2: UPDATE PROJECT BOOKS AND THEN ADD ALL TO STAGE
-    //for now, set/update project books as this new set
-    //myProject.setBooksOnShelf(myBookSet);
-    //AddProjectBooksToStage();
   } 
 
 //TO DO: Allow function to take a row number for insert.
 
-public void nowrap_addProjectBooksHorizontal(ArrayList<Book> myBookSet){
+public void repositionProjectBooksHorizontal(ArrayList<Book> myBookSet){
   //not yet the project booklist? DO THAT.  get these books from project.
   int length = myBookSet.size();  // number of blocks
   System.out.println(length); //each of these numbered blocks is a string.
@@ -533,9 +538,7 @@ public void nowrap_addProjectBooksHorizontal(ArrayList<Book> myBookSet){
           } //end while
      } //end if
      //Books should only need to be added to the project and Stage once.  After that, it's just changing position etc
-      //---ABOVE JUST CHANGES POSITIONS, ASSUMING ALREADY IN PROJECT/STAGE
-     //myProject.setBooksOnShelf(myBookSet);
-     //AddProjectBooksToStage();
+     //---ABOVE JUST CHANGES POSITIONS, ASSUMING ALREADY IN PROJECT/STAGE
   } 
 
 public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet, int space){
@@ -642,8 +645,6 @@ public void openFileAsRow(Integer row) {
         if (tryfile != null) {
           file = tryfile;
           openFileGetBooklist(file); //add books to project
-          //myProject.addBooksToProject(myBooks);
-          //myProject.setBooksOnShelf(myBookSet);
           AddProjectBooksToStage();
           unpackBooksAsRow(); 
         } 
@@ -880,8 +881,10 @@ public void writeOutBooksToWord() {    //
 }
 
 //function to change the way the opened text files are split for display
-public void setSplitOption(int input) {
+public void setSplitOption(String input) {
     myProject.setSplitOption(input);
+    myProject.updateSplitOptionBooks(); //based on split option
+    unpackBooksToView(); //clears stage and adds new books 
 }
 
 //function to change way box labels are displayed
@@ -1080,7 +1083,8 @@ public void setDocxForView(docXML input){
   docXML myPDoc = myProject.getOpenDocx();
   String test = myPDoc.getStylesObject().getStylesXML();
   styleTextArea.setText(test); //to display in tab_StyleXML
-  styleSummaryTextArea.setText(myPDoc.getStylesObject().getSummaryStylesString()); //to display in tab_Styles_docx
+  String summaryOfStyles=myPDoc.getStylesObject().getSummaryStylesString();
+  styleSummaryTextArea.setText(summaryOfStyles); //to display in tab_Styles_docx
   fieldsTextArea.setText(myPDoc.getStylesObject().getFieldsAsString()); //to display in tab_Fields_docx
   bookmarksTextArea.setText(myPDoc.getListBookmarks());
 }
@@ -1090,32 +1094,45 @@ public void setMDForView(mdFile input) {
 }
 
 /* 
-Prior to calling this function, open file functions create a set of books in the myProject Object.
+Prior to calling this function this should have been completed:
+1. Open file functions create a set of books in the myProject Object.
+2. 
 This function:
-1. Adds all books to Stage node (FX).  
+1. Add all project books to Stage node (FX).  
 2. Calls one of the methods that changes the position of books (X,Y parameters that work with FX)
+
 TO DO: pick a default layout according to last selected 'Layout' option?
 */
 public void unpackBooksToView() {
-          ArrayList<Book> myBooks = myProject.getBooksOnShelf(); //checks that myProject is updated
-          if (myBooks.size()<1){
+
+          if (myProject.getNumberBooks()<1){
             System.out.println("No books in project to unpack");
             return;
           }
-          //DO THIS ONCE PER OPEN FILE
-          AddProjectBooksToStage();
-          Integer booknum=myBooks.size();
 
-          if (booknum>20){
-              wrapBooks();
+          //DO THIS ONCE PER OPEN FILE
+          clearAllBooksFromStage(); //clear all stage nodes because we are starting again
+          AddProjectBooksToStage();  //adds current project books back to stage nodes
+
+          //if we wanted to reinstate books from stored positions we'd call  setXYfromRowCol(item); instead of bulk options below
+          //reposition books
+
+          if (myProject.getExt().equals("docx")) {
+            docXML currentDoc = myProject.getOpenDocx();
+            setDocxForView(currentDoc); //update RHS tabs with relevant data
+            }
+
+          if (this.displayOption.equals("Row)")) {
+                unpackBooksAsRow();
           }
-          //default is vertical? If > 50 books wrap
-          else if (booknum<6) {
-            unpackBooksAsCol(); //this will setFile(file) and get data
+          else if (this.displayOption.equals("Col))")) {
+                unpackBooksAsCol();
           }
-          //if between 6 and 20
+          else if (this.displayOption.equals("Wrap")) {
+                wrapBooks();
+          }
           else {
-            unpackBooksAsRow();
+                wrapBooks();
           }
         } 
 
@@ -1325,8 +1342,12 @@ public ScrollPane getSpriteScrollPane() {
 
 
 public void clearAllBooks() {
-    this.bookgroupNode.getChildren().clear();
     myProject.clearAllBooks(); 
+    clearAllBooksFromStage();
+}
+
+public void clearAllBooksFromStage() {
+    this.bookgroupNode.getChildren().clear();
     this.resetBookOrigin();
     String title = "default.md"; //this is not a full path cf other situations
     setFilename(title); //to do - clear all File object in Project?

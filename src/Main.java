@@ -259,9 +259,11 @@ private MenuBar makeMenuBar() {
         Menu splitMenu = new Menu ("Split");
         MenuItem splitOutline = new MenuItem("OutlineLvl1");
         MenuItem splitBookmarks = new MenuItem("Bookmarks");
-        splitMenu.getItems().addAll(splitOutline,splitBookmarks);
+        MenuItem splitPageBreak = new MenuItem("PageBreak");
+        splitMenu.getItems().addAll(splitOutline,splitBookmarks,splitPageBreak);
         splitOutline.setOnAction(splitOnOutline);
         splitBookmarks.setOnAction(splitOnBookmarks);
+        splitPageBreak.setOnAction(splitOnPageBreak);
 
         //DISPLAY OPTIONS
         Menu displayMenu = new Menu("Display");
@@ -563,7 +565,7 @@ The myProject settings should be used by default.
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Stage_WS.setSplitOption(1);
+        Stage_WS.setSplitOption("OutlineLvl0");
         }
     };
 
@@ -571,7 +573,15 @@ The myProject settings should be used by default.
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Stage_WS.setSplitOption(2);
+        Stage_WS.setSplitOption("Bookmark");
+        }
+    };
+
+    EventHandler<ActionEvent> splitOnPageBreak = 
+    new EventHandler<ActionEvent>() {
+    @Override 
+    public void handle(ActionEvent event) {
+        Stage_WS.setSplitOption("PageBreak");
         }
     };
 

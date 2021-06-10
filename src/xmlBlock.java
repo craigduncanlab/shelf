@@ -31,6 +31,10 @@ public xmlBlock(){
 	setHeaderText("First page");
 }
 
+public void initialiseBlockContents(){
+	makeBlockXMLfromXMLParas();
+}
+
 public void setHeaderText(String input){
 	this.headerText=input;
 }
@@ -103,19 +107,20 @@ It assumes the first xmlPara is the most significant, based on the block-splitti
 (previously the test was: is the outlinelevel of xmlPara=0, but if this is already established, no need to recheck first para)
 */
 
-public void makeBlockXMLfromXMLParas(){
+private void makeBlockXMLfromXMLParas(){
 	String XMLoutput="";
 	String plainoutput="";
 	int numLevels=1;
 	int referenceLevel=0;
 	int paracount=0;
+
 	for (xmlPara myItem: this.blockParas) {
 		int code = myItem.getLineCode(); //alternatively, get outline level
 		int level = myItem.getOutlineLevel();
 		//The range of outline levels that will be included as headings/new blocks, starting at 0
 		//if (level<numLevels) { 
 		//if (level==referenceLevel) { 
-		if (paracount==0)  //use first para: no longer dependent on block splitting criteria
+		if (paracount==0) { //use first para: no longer dependent on block splitting criteria
 			if(getSplitType().equals("OutlineLvl0")) { 
 				myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
 				setOutlineLevel(referenceLevel);
@@ -126,9 +131,10 @@ public void makeBlockXMLfromXMLParas(){
 				String plain = myItem.getplainText(); //removed from <w:t>
 				setHeaderText(plain); //block-level header
 				setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
+				System.out.println(plain);
 			}
 			//bookmarks
-			else {
+			else if (getSplitType().equals("Bookmark")){
 				myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
 				setOutlineLevel(referenceLevel);
 				String text = myItem.getParaString();
@@ -146,6 +152,25 @@ public void makeBlockXMLfromXMLParas(){
 				//setNotesText(plain);
 				plainoutput=plainoutput+plain+System.getProperty("line.separator"); //capture the bookmark text in main text
 			}
+			else if (getSplitType().equals("PageBreak")){
+				myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
+				setOutlineLevel(referenceLevel);
+				String text = myItem.getParaString();
+				XMLoutput=XMLoutput+text+System.getProperty("line.separator");
+				//cf are bookmarks always on same row as relevant text that describes them?  cf. FCA
+				//block-level header
+				setStyleXML(myItem.getStyleXML()); //block-level 'style' attribution, for outline level
+				setStyleId(myItem.getpStyle()); //styleId for block-level style attribution
+				String plain = myItem.getplainText(); //removed from <w:t>
+				setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
+				setBookmarkedText(myItem.getplainText());
+				String bookmarkData=getBookmarkedText(); //put text of bookmark as header (rather than name)
+				//setBookmarkData(bookmarkData);
+				setHeaderText(plain);  //TO DO: capture header text from last line of previous block.  Do externally.
+				//setNotesText(plain);
+				plainoutput=plainoutput+plain+System.getProperty("line.separator"); //capture the bookmark text in main text
+			}
+		}
 		//code 99 for paragraphs that are included in the blocks as general text/notes etc
 		else  {
 			String text = myItem.getParaString();
@@ -229,7 +254,7 @@ public void setBlockXMLText(String input) {
 
 //gets block text based on current block (xmlParas list).  OutlineLevel splits.  Called externally by Book constructor.
 public String getBlockXMLText(){
-	makeBlockXMLfromXMLParas();
+	//makeBlockXMLfromXMLParas();
 	return this.blockText;
 }
 
