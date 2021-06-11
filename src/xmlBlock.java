@@ -108,85 +108,56 @@ It assumes the first xmlPara is the most significant, based on the block-splitti
 */
 
 private void makeBlockXMLfromXMLParas(){
-	String XMLoutput="";
-	String plainoutput="";
-	int numLevels=1;
-	int referenceLevel=0;
 	int paracount=0;
-
 	for (xmlPara myItem: this.blockParas) {
 		int code = myItem.getLineCode(); //alternatively, get outline level
 		int level = myItem.getOutlineLevel();
-		//The range of outline levels that will be included as headings/new blocks, starting at 0
-		//if (level<numLevels) { 
-		//if (level==referenceLevel) { 
-		if (paracount==0) { //use first para: no longer dependent on block splitting criteria
+		if (paracount==0) { //use first para for block metadata: no longer dependent on block splitting criteria
 			if(getSplitType().equals("OutlineLvl0")) { 
-				myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
-				setOutlineLevel(referenceLevel);
-				String text = myItem.getParaString();
-				XMLoutput=XMLoutput+text+System.getProperty("line.separator");
-				setStyleXML(myItem.getStyleXML()); //block-level 'style' attribution, for outline level
-				setStyleId(myItem.getpStyle()); //styleId for block-level style attribution
-				String plain = myItem.getplainText(); //removed from <w:t>
-				setHeaderText(plain); //block-level header
-				setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
-				System.out.println(plain);
+				setOutlineLevel(0); //unnecessary?
+				setBlockParametersAtSplitPoint(myItem);
+				//do not add in the header (plaintext) line to the rest of the block para.
 			}
-			//bookmarks
 			else if (getSplitType().equals("Bookmark")){
 				myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
-				setOutlineLevel(referenceLevel);
-				String text = myItem.getParaString();
-				XMLoutput=XMLoutput+text+System.getProperty("line.separator");
-				//cf are bookmarks always on same row as relevant text that describes them?  cf. FCA
-				//block-level header
-				setStyleXML(myItem.getStyleXML()); //block-level 'style' attribution, for outline level
-				setStyleId(myItem.getpStyle()); //styleId for block-level style attribution
-				String plain = myItem.getplainText(); //removed from <w:t>
-				setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
-				setBookmarkedText(myItem.getplainText());
-				String bookmarkData=getBookmarkedText(); //put text of bookmark as header (rather than name)
-				//setBookmarkData(bookmarkData);
+				setBlockParametersAtSplitPoint(myItem);
 				setHeaderText(myItem.getBookmarkId());  //TO DO: capture header text from last line of previous block.  Do externally.
-				//setNotesText(plain);
-				plainoutput=plainoutput+plain+System.getProperty("line.separator"); //capture the bookmark text in main text
 			}
 			else if (getSplitType().equals("PageBreak")){
-				myItem.setOutlineLevel(myItem.getOutlineLevel()); //??
-				setOutlineLevel(referenceLevel);
-				String text = myItem.getParaString();
-				XMLoutput=XMLoutput+text+System.getProperty("line.separator");
-				//cf are bookmarks always on same row as relevant text that describes them?  cf. FCA
-				//block-level header
-				setStyleXML(myItem.getStyleXML()); //block-level 'style' attribution, for outline level
-				setStyleId(myItem.getpStyle()); //styleId for block-level style attribution
-				String plain = myItem.getplainText(); //removed from <w:t>
-				setBookmark(myItem.getBookmarkName()); //only if a bookmark coincides with a reference level
-				setBookmarkedText(myItem.getplainText());
-				String bookmarkData=getBookmarkedText(); //put text of bookmark as header (rather than name)
-				//setBookmarkData(bookmarkData);
-				setHeaderText(plain);  //TO DO: capture header text from last line of previous block.  Do externally.
-				//setNotesText(plain);
-				plainoutput=plainoutput+plain+System.getProperty("line.separator"); //capture the bookmark text in main text
+				setBlockParametersAtSplitPoint(myItem);
+				//TO DO: capture header text from last line of previous block.  Do externally.
+			}
+			//add in text on split line to the block text, unless it is an outline heading
+			if (!getSplitType().equals("OutlineLvl0")) {
+				setPlainText(getPlainText()+myItem.getplainText()+System.getProperty("line.separator"));
 			}
 		}
-		//code 99 for paragraphs that are included in the blocks as general text/notes etc
+		//line code 99 for paragraphs that are included in the blocks as general text/notes etc
 		else  {
 			String text = myItem.getParaString();
-			String plain = myItem.getplainText();
-			XMLoutput=XMLoutput+text+System.getProperty("line.separator");
-			plainoutput=plainoutput+plain+System.getProperty("line.separator");
+			setBlockXMLText(getBlockXMLText()+myItem.getParaString()+System.getProperty("line.separator"));
+			setPlainText(getPlainText()+myItem.getplainText()+System.getProperty("line.separator"));
 			//make a list of bookmarks that are in this block of XML.  If we split on bookmarks we only need first.
-			if (myItem.getBookmarkName().length()>0) {
+			if (getSplitType().equals("Bookmark") && myItem.getBookmarkName().length()>0) {
 				this.bookmarkList.add(myItem.getBookmarkName());
 			}
 		}
 		paracount=paracount+1;
 	}
-	setBlockXMLText(XMLoutput);
-	setPlainText(plainoutput);
 	}
+
+private void setBlockParametersAtSplitPoint(xmlPara input){
+	setBlockXMLText(getBlockXMLText()+input.getParaString()+System.getProperty("line.separator"));
+	//cf are bookmarks always on same row as relevant text that describes them?  cf. FCA
+	//block-level header
+	setStyleXML(input.getStyleXML()); //block-level 'style' attribution, for outline level
+	setStyleId(input.getpStyle()); //styleId for block-level style attribution
+	setHeaderText(input.getplainText());
+	setBookmark(input.getBookmarkName()); //only if a bookmark coincides with a reference level
+	setBookmarkedText(input.getplainText());
+	String bookmarkData=getBookmarkedText(); //put text of bookmark as header (rather than name)
+	//setBookmarkData(bookmarkData);	
+}
 
 public void makePlainTextfromXMLParas(){
 	String plainoutput="";
