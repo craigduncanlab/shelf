@@ -1104,7 +1104,7 @@ This function:
 TO DO: pick a default layout according to last selected 'Layout' option?
 */
 public void unpackBooksToView() {
-
+          
           if (myProject.getNumberBooks()<1){
             System.out.println("No books in project to unpack");
             return;
@@ -1113,7 +1113,7 @@ public void unpackBooksToView() {
           //DO THIS ONCE PER OPEN FILE
           clearAllBooksFromStage(); //clear all stage nodes because we are starting again
           AddProjectBooksToStage();  //adds current project books back to stage nodes
-
+          
           //if we wanted to reinstate books from stored positions we'd call  setXYfromRowCol(item); instead of bulk options below
           //reposition books
 
