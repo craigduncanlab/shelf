@@ -211,7 +211,8 @@ public void setSplitType(String input){
 	this.splitType=input;
 }
 
-private String getSplitType(){
+//called by Book
+public String getSplitType(){
 	return this.splitType;
 }
 
