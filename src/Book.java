@@ -89,6 +89,7 @@ Integer stdWidth=80; //same as BookIcon width.
 EventHandler myPressBox;
 EventHandler myDragBox;
 Integer displayMode=1;
+String splitType="OutlineLvl0"; //default
 
 //empty constructor no arguments
 public Book() {
@@ -135,6 +136,10 @@ public Book(xmlBlock input) {
 	setOutlineLevel(input.getOutlineLevel());
 	setBookmark(input.getBookmark()); //retrieves bookmark if it coincides with para of ref level heading
 	setBookmarkString(input.getBookmarkListAsString());
+	setSplitType(input.getSplitType());
+	if (getSplitType().equals("Bookmark")){ 
+        setDisplayMode(5); //bookmarks default. update?
+    }
 	/*
 	System.out.println(getBookmarkString());
 	System.exit(0);
@@ -183,6 +188,16 @@ public void updateEditedText(String filepath,String urlpath, String imagepath, S
 	    setNotes(note);
 	}
     setCode(code);
+}
+
+// SPLIT MODE
+
+public void setSplitType(String input){
+	this.splitType=input;
+}
+
+private String getSplitType(){
+	return this.splitType;
 }
 
 
