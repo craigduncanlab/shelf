@@ -109,7 +109,8 @@ public void setSplitOption(String input){
     this.splitOption=input;
 }
 
-private String getSplitOption(){
+//called externally by MainStage
+public String getSplitOption(){
         return this.splitOption;
 }
 
