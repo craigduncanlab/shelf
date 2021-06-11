@@ -504,6 +504,12 @@ public int getOutlineLevel(){
 	return this.outlineLevel;
 }
 
+//jdk16 compliant
+public String getOutlineLevelAsString(){
+	String output = Integer.toString(getOutlineLevel());
+	return output;
+}
+
 public void setOutlineLevel(int input){
 	this.outlineLevel=input;
 }

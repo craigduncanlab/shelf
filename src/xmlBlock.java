@@ -17,7 +17,7 @@ public class xmlBlock {
 	String blockText="";
 	String notesText="";
 	String headerText="";
-	int outlineLevel=0; //a way to classify blocks for display etc.
+	int outlineLevel=1; //a way to classify blocks for display etc.
 	String StyleXML="";
 	String styleId=""; //corresponds to the style id in the paragraph that forms the header etc
 	String blockBookmark="";
@@ -114,7 +114,7 @@ private void makeBlockXMLfromXMLParas(){
 		int level = myItem.getOutlineLevel();
 		if (paracount==0) { //use first para for block metadata: no longer dependent on block splitting criteria
 			if(getSplitType().equals("OutlineLvl0")) { 
-				setOutlineLevel(0); //unnecessary?
+				setOutlineLevel(0); //transfer from paragraph to block
 				setBlockParametersAtSplitPoint(myItem);
 				//do not add in the header (plaintext) line to the rest of the block para.
 			}

@@ -110,6 +110,7 @@ public int getOutlineLevel(){
 }
 
 //usually done by comparing it to the relevant style parameter, at document level.
+//nb: In Word, the first Outline Level '1' is stored as index value of 0.
 public void setOutlineLevel(int input){
 	this.outLineLevel=input;
 }

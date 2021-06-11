@@ -652,36 +652,36 @@ private void updateCurrentBookMetaView() {
 //REFRESHES ALL GUI DATA FROM FILE 
 public void restoreBookMeta() {
         //LHS
-        Book updateNode=getActiveBook();
+        Book activeBook=getActiveBook();
 
-        filepathTextArea.setText(updateNode.getdocfilepath());
-        imagepathTextArea.setText(updateNode.getimagefilepath());
-        urlTextArea.setText(updateNode.geturlpath());
-        bookLabelTextArea.setText(updateNode.getLabel());
-        outlineLevelTextArea.setText(updateNode.getdate());
-        bookmarkNameTextArea.setText(updateNode.getBookmark());
-        styleIdTextArea.setText(updateNode.getStyleId());
-        mdTextTabA.setText(updateNode.getMD()); //update the markdown text
-        codeNotesTextArea.setText(updateNode.getNotes());
-        visibleCheck.setSelected(updateNode.getVisible()); //check box
-        outputTextArea.setText(updateNode.getOutputText()); //output node contents
+        filepathTextArea.setText(activeBook.getdocfilepath());
+        imagepathTextArea.setText(activeBook.getimagefilepath());
+        urlTextArea.setText(activeBook.geturlpath());
+        bookLabelTextArea.setText(activeBook.getLabel());
+        outlineLevelTextArea.setText(activeBook.getOutlineLevelAsString());
+        bookmarkNameTextArea.setText(activeBook.getBookmark());
+        styleIdTextArea.setText(activeBook.getStyleId());
+        mdTextTabA.setText(activeBook.getMD()); //update the markdown text
+        codeNotesTextArea.setText(activeBook.getNotes());
+        visibleCheck.setSelected(activeBook.getVisible()); //check box
+        outputTextArea.setText(activeBook.getOutputText()); //output node contents
         //RHS
         //dynamic update of Book's HTML data
-        updateHTMLpreview(updateNode);
+        updateHTMLpreview(activeBook);
         //put OOXML in if there is some.  For docx files this will also be the markdown text (at this stage).
         //Should probably gather it from source data i.e. Block class.
-        mdTextTabB.setText(updateNode.getHTML()); 
+        mdTextTabB.setText(activeBook.getHTML()); 
         String ootext = "No OOXML";
-        if (updateNode.getOOXMLtext().length()>0) {
-            ootext=updateNode.getOOXMLtext();
+        if (activeBook.getOOXMLtext().length()>0) {
+            ootext=activeBook.getOOXMLtext();
         }
         String notext = "";
-        if (updateNode.getNotes().length()>0) {
-            notext=updateNode.getNotes();
+        if (activeBook.getNotes().length()>0) {
+            notext=activeBook.getNotes();
         }
         mdTextTabC.setText(ootext);
         mdTextTabD.setText(notext);
-        mdTextTabE.setText(updateNode.getStyleXML());
+        mdTextTabE.setText(activeBook.getStyleXML());
 }
 
 public void updateBookMeta() {
