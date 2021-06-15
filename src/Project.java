@@ -45,12 +45,15 @@ public docXML getOpenDocx() {
 public void setOpenMD(mdFile input){
     this.openMD = input;
     ArrayList<Book> myBooks = makeBooksFromMDBlocklist(input);
+    clearAllBooks(); //in case there are books from previous project
     addBooksToProject(myBooks);
 }
 
 public void setOpenRMD(mdFile input){
     this.openRMD = input;
-    addBooksToProject(input.getBooklist());
+    ArrayList<Book> myBooks = makeBooksFromMDBlocklist(input);
+    clearAllBooks(); //in case there are books from previous project
+    addBooksToProject(myBooks);
 }
 
 public mdFile getOpenMD() {
@@ -87,7 +90,6 @@ public void updateSplitOptionBooks() {
        
     }
     if (getExt().equals("md")) {
-        clearAllBooks(); //clear all books from project
         ArrayList<Book> myBooks = makeBooksFromMDBlocklist(this.openMD); //differs depending on split options
         if (myBooks.size()>0) {
             clearAllBooks(); //clear all books from project
@@ -96,7 +98,6 @@ public void updateSplitOptionBooks() {
     }
 
     if (getExt().equals("rmd") || getExt().equals("Rmd")) {
-        clearAllBooks(); //clear all books from project
         ArrayList<Book> myBooks = makeBooksFromMDBlocklist(this.openRMD); //differs depending on split options
         if (myBooks.size()>0) {
             clearAllBooks(); //clear all books from project
