@@ -210,27 +210,27 @@ public void addLetterStyles() {
     }
     
     if (addressTest==false){
-      addLetterRecordStyle("Address");
+      addLevel0Style("Address");
       failedTests++;
     }
     if (addressTest==false){
-      addLetterRecordStyle("Recipient");
+      addLevel0Style("Recipient");
       failedTests++;
     }
     if (writerTest==false){
-      addLetterRecordStyle("Writer");
+      addLevel0Style("Writer");
       failedTests++;
     }
     if (dateTest==false){
-      addLetterRecordStyle("Date");
+      addLevel0Style("Date");
       failedTests++;
     }
     if (subjectTest==false){
-      addBoldLetterRecordStyle("SubjectLine");
+      addLevel0Style("SubjectLine");
       failedTests++;
     }
     if (messageTest==false){
-      addLetterRecordStyle("Message");
+      addLevel0Style("Message");
       failedTests++;
     }
    
@@ -241,12 +241,25 @@ public void addLetterStyles() {
 	}
 }
 
+//All it basically requires is a name for the style, its 'styleId'
+public void addLevel0Style(String input){
+  addStyleOutline0BasedOnNormal(input,0); 
+}
+
+//All it basically requires is a name for the style, its 'styleId'
+public void addLevel1Style(String input){
+  addStyleOutline0BasedOnNormal(input,1); 
+}
+
 //Does not set font or text size.  Based on Normal.
-private void addLetterRecordStyle(String styleName) {
+//Sets outline level to 0, with the font name
+
+private void addStyleOutline0BasedOnNormal(String styleName, int level) {
 
   String test="<w:style w:type=\"paragraph\" w:customStyle=\"1\" w:styleId=\""+styleName+"\"><w:name w:val=\""+styleName+"\"/><w:basedOn w:val=\"Normal\"/><w:next w:val=\"Normal\"/><w:autoRedefine/><w:qFormat/><w:pPr><w:outlineLvl w:val=\"0\"/></w:pPr><w:rPr></w:rPr></w:style>";
   xstyle newStyle = new xstyle();
-  newStyle.setStyleAttrib(styleName,"Normal","Normal",0,"",0,"",0,"",""); 
+  //(String id, String basedOn, String nextp, int outline, String font, int size, String shade, int after, String color, String format)
+  newStyle.setStyleAttrib(styleName,"Normal","Normal",level,"",0,"",0,"",""); 
   if (!newStyle.getStyleXML().equals(test)){
   	System.out.println("Test:");
   	System.out.println(test);
@@ -257,7 +270,7 @@ private void addLetterRecordStyle(String styleName) {
   updatedXMLStyles.addStyle(newStyle); //add to current list of styles (via XML string).
 }
 
-private void addBoldLetterRecordStyle(String styleName) {
+private void addBoldStyleBasedOnNormal(String styleName) {
 
   String test="<w:style w:type=\"paragraph\" w:customStyle=\"1\" w:styleId=\""+styleName+"\"><w:name w:val=\""+styleName+"\"/><w:basedOn w:val=\"Normal\"/><w:next w:val=\"Normal\"/><w:autoRedefine/><w:qFormat/><w:pPr><w:outlineLvl w:val=\"0\"/></w:pPr><w:rPr><w:b/></w:rPr></w:style>";
   xstyle newStyle = new xstyle();
