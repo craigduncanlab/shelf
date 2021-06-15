@@ -43,24 +43,31 @@ public int getStoredLines(){
 	return blockLines.size();
 }
 
+public void initialiseBlock(){
+	//setHeaderText(getHeaderText());
+	makeBlockText();
+}
+
 //make text from code 1
 public void makeBlockText(){
 	String output="";
+	int linecount=0;
 	for (mdLineObject myItem: this.blockLines) {
 		int code = myItem.getLineCode();
-		if (code==0) {
+		if (linecount==0) { //base this on first line, not whether code is one.  i.e. adopts whatever block splits we have.
 			String text = myItem.getLineText();
 			//if we have a header line set the block header
 			if (text.substring(0,2).equals("# ")) {
 				String hline = text.substring(2,text.length());
-				setHeaderText(hline); //set block header based on the 0 coded line
+				setHeaderText(hline); //set block header based on the balance of the line
 				text=hline; //maybe do text="";?
 			}
 		}
-		if (code==1) {
+		else { //if (code==1)
 			String hline = myItem.getLineText();
 			output=output+hline+System.getProperty("line.separator");
 		}
+		linecount++;
 	}
 	setBlockText(output);
 }

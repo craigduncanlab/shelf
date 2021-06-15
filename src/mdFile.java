@@ -411,17 +411,16 @@ public ArrayList<mdBlock>packageBlocksFromLineObjects() {
 		System.out.println(cl+") ["+linecode+"] "+lineItem.getLineText());
 
 		//SPLIT INTO SMALLER BLOCKS BASED ON 0 CODES
-		if (linecode==0) { //if we encounter start of next block (#)
+		if (linecode==0) { //if we encounter start of next block (#).  This is only 'split' mechanism for now.
 			//first line
 				if (currentblock.getStoredLines()>0) {
 					output.add(currentblock); //add the current block to newBlocks array
 					currentblock = new mdBlock(); //start again with a new block
           currentblock.addLineObject(lineItem); // in any case start a new block, or start first
-          currentblock.setHeaderText(lineItem.getHeaderText());
+          
 				}
         else {
           currentblock.addLineObject(lineItem); // in any case start a new block, or start first
-          currentblock.setHeaderText(lineItem.getHeaderText());
         }
 				
         testnum++;
@@ -445,6 +444,9 @@ public ArrayList<mdBlock>packageBlocksFromLineObjects() {
 	if (headertext.length()>0) {
 		//projectCopy.setHeader(headertext); //store for later;
 	}
+  for (mdBlock myItem : output) {
+    myItem.initialiseBlock();
+  }
 	//System.exit(0);
 	return output;
 }
