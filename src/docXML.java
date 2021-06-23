@@ -231,6 +231,7 @@ public xmlPara setmyParaOutlineCode(xmlPara thisPara) {
         //make reference to all the styles
         xmlStyles stylesObject = getStylesObject(); //(xmlStyles).  
         ArrayList<xstyle> stylesList=stylesObject.getOutlineStyles(); //all the Outline styles
+        //
         for (xstyle item : stylesList ) {
             thisPara.setLineCode(code); //for custom block definition
             String styleId=item.getId(); //this is styleid in the xstyle

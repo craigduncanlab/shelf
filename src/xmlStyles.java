@@ -29,6 +29,7 @@ private void updateSummaryStylesString() {
 }
 
 //called externally by docXML when new Styles.xml is obtained
+
 public void setStylesXML(String input){
 	this.stylesString=input;
   extractPreStyles();
@@ -114,11 +115,24 @@ public void convertStylesXMLtoObjects(){
     xmlTool myP = new xmlTool();
     ArrayList<xstyle> myStyles = new ArrayList<xstyle>();
     ArrayList<String> result=myP.getTagAttribInclusive(contents,starttag,endtag);
+    ArrayList<xstyle> outlineStyles = new ArrayList<xstyle>();
     System.out.println("Style List (main)");
     for (String item: result) {
     	 xstyle currentStyle= new xstyle();
     	 currentStyle.setStyleXML(item);
     	 addStyle(currentStyle);
+       if (currentStyle.getOutlineLevel()!=99) {
+          outlineStyles.add(currentStyle); //store outline level styles for later
+       }
+    }
+    //update the outline levels for all unknowns with 'based on' styles having outline lvl
+    ArrayList<xstyle> newList = new ArrayList<xstyle>();
+    for (xstyle oitems: outlineStyles) {
+      for (xstyle item: this.styleList) {
+       if (item.getOutlineLevel()==99 && item.getBasedOn().equals(oitems.getId())) {
+          item.setOutlineLevel(oitems.getOutlineLevel());
+       }
+      } 
     }
     //for each new Styles XML save the preparatory section
     //System.out.println("Extracted pre styles");

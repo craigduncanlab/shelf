@@ -308,7 +308,14 @@ public void extractBasedOn(String ss){
 	setBasedOn(output);
 }
 
+/* Complicating factors in Word:
+If a style is 'based on' another style this will not immediately find outline level
+in the style definition.  So an additional step is needed to query other styles.
+see function convertStylesXMLtoObjects() in xmlStyles
+e.g. Heading 1, then Word doesn't independently store the outline level with this style.
+*/
 public void extractOutlineLevel(String ss){
+	System.out.println("ss string:"+ss);
 	int output=99; //default if not specified in document
 	String parameter="w:outlineLvl w:val";
 	xmlTool myP = new xmlTool();
