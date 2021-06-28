@@ -16,7 +16,7 @@ import javafx.stage.Stage;
 import javafx.stage.Screen;
 //File chooser
 import javafx.stage.FileChooser;
-//Screen positioning
+//Screen positioning and size/bounds
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.Insets;
 
@@ -122,11 +122,11 @@ double myBigX = ScreenBounds.getWidth();
 double myBigY = ScreenBounds.getHeight();
 double wsPaneWidth=0.8*myBigX;
 double wsPaneHeight=0.8*myBigY;
+/*
 double scrollSceneWidth=0.8*myBigX;
 double scrollSceneHeight=0.8*myBigY;
+*/
 ArrayList<Stage> myStageList = new ArrayList<Stage>();
-int spriteX = 0;
-int spriteY = 0;
 String stageName = "";
 String stageTitle = "";
 String displayOption = "Row";
@@ -134,11 +134,11 @@ String displayOption = "Row";
 //Book reference_ParentNode = new Book();
 Stage localStage = new Stage();
 Node rootNode; //Use Javafx object type
-Group bookgroupNode;
+gridSpace myGridSpace = new gridSpace();
+//Group bookgroupNode;
 ScrollPane spriteScrollPane;
 Pane spritePane;
 Scene localScene;
-Book focusBook; //for holding active sprite in this scene.  Pass to app.
 Book clipboardBook; //for cut,copy and paste
 //To hold Stage with open node that is current
 BookMetaStage bookMetaInspectorStage; 
@@ -194,18 +194,21 @@ CheckBox visibleCheck = new CheckBox("Visible");
 
 Integer margin_yaxis;
 Integer margin_xaxis;
+/*
 Integer cellcols=50;
 Integer cellrows=50; //make this 50 for sure
 Integer cellgap_x=80; //cellwidth x dimension
 Integer cellgap_y=100; //cell width y dimension
 Integer firstcell_x=this.cellgap_x;
 Integer firstcell_y=0;
+Integer cellrowoffset_y=30;
+
 Integer gridwidth=1000;
 Integer gridlineheight=1;
+*/
 Integer filenameoffset_y=20;
 Integer filenameoffset_x=400; //how far across the filename appears
-Integer cellrowoffset_y=30;
-Integer boxtopmargin=10;
+//Integer boxtopmargin=10;
 Color shelfborder=Color.BLACK;
 Color gridOuterColor=Color.LIGHTBLUE; //Color.WHITE;
 //Color shelffill=Color.WHITE; //background to 'grid' cf. DARKSLATEGREY
@@ -218,7 +221,7 @@ Project myProject = new Project(); //this is OK without waiting for constructor?
 //ArrayList<Book> booksOnShelf = new ArrayList<Book>(); //generic store of contents of boxes
 
 //Currently, 'selected' is kind of GUI property, reflected in individual Book property as well.
-ArrayList<Book> selectedBooks = new ArrayList<Book>(); //for GUI selections
+//ArrayList<Book> selectedBooks = new ArrayList<Book>(); //for GUI selections
 //
 ArrayList myFileList = new ArrayList(); 
 ObservableList<String> myObList;
@@ -257,10 +260,7 @@ public MainStage() {
 //Passes MenuBar from main application for now
 //Passes general eventhandlers from Main (at present, also uses these for the boxes)
 public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage) {
-    //Book baseNode, 
-    //category
-    //NodeCategory NC_WS = new NodeCategory ("workspace",99,"white");
-    //view
+    
     this.metaMode=false;
     this.shiftMode=false;
     this.parentClass=parent;
@@ -275,12 +275,9 @@ public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage
         }
     */
     setMenuBar(myMenu); //storesmenubar object for later
-    //TO DO: setLocalSpriteSelect(processLocalBoxClick);
-    //set event handlers as local instance variables.  These are used at time of Book creation
-    //They are set here so that the Books can access BookMetaStage level data
-    //See the 'addNodeToView' function that creates a new Book here.
+    
     setPressBox(processLocalBoxClick); //stores this in a variable to pass to Book.
-    //setPressBox(PressBox);
+
     setDragBox(DragBox); //stores this to pass to Book 
     setKeyPressHandler(SaveKeyEventHandler); //TO do - set a variable to pass to sprites=
     
@@ -289,10 +286,10 @@ public MainStage(String title, MenuBar myMenu, Main parent, Stage myprimarystage
     newWorkstageFromGroup(title);
     currentLayer.setLayerNumber(1);
     System.out.println ("The initial bookgroupNode...");
-    System.out.println (this.bookgroupNode);
+    System.out.println (myGridSpace.getGridGroup());
     System.out.println("Reference of this stage object MainStage");
     System.out.println(MainStage.this);
-    resetBookOrigin();
+    
     //fileops
     this.currentFileChooser.getExtensionFilters().add(myExtFilter);
 }
@@ -346,9 +343,12 @@ public Boolean checkExtensions(File file){
 }
 
 /*
+General file opening function:
 
-Opens up a file, creates a generic 'block' object to hold meaningful divisions in file,
-creates an array of those blocks for the GUI.
+1. Opens up a file
+2. Creates a generic 'block' object to hold meaningful divisions in file,
+3. Creates an array of those blocks for the GUI.
+4. Arranges for file to be opened and all GUI Views updated.
 
 This does not internally process the blocks to distinguish notes and other text, but this is easy to do for markdown since this is already coded for .
 
@@ -393,72 +393,32 @@ public void openFileGetBooklist(File file) {
             myProject.setOpenDocx(myDoc); //books added to project if created upon opening
         } 
     }
-    unpackBooksToView(); //all books now set up in myProject object.
-    //return myBookSet;
-
+    unpackBooksToAllViews(); //all books now set up in myProject object.
+    
     }
 
 //DISPLAY OPTIONS
 
-public void unpackBooksAsCol() {
-    if (myProject.getNumberBooks()>20){
-        wrapBooks();
-    } 
-    repositionProjectBooksVertical(myProject.getBooksOnShelf());//just in order they were added
-}
+/*
+Function: Adds books in project to stage.  
+(Is called by unpackBooksToAllViews)
 
-public void unpackBooksAsRow() {
-    if (myProject.getNumberBooks()>20){
-        wrapBooks();
-    } 
-    repositionProjectBooksHorizontal(myProject.getBooksOnShelf());
-}
+This is the logical place to ensure that event handlers and FX setup is completed,
+because this is where the Project books are added to the gridSpace object.
+This must be done BEFORE calling 'setActiveBook'
 
-public void wrapBooks() {
-  wrapProjectBooksHorizontal(myProject.getBooksOnShelf(),1);
-}
-
-//Adds the book passed here (already in the Project list) to the stage.  AddNewBookToView
-public void AddNewBookToStage(Book newBook) throws NullPointerException {
-    try {
-        setActiveBook(newBook);
-        //setXYfromRowCol(newBook); X and Y are already set
-        if (this.bookgroupNode.getChildren().contains(newBook)) {
-            System.out.println("Detected book already on stage");
-            System.exit(0);
-        }
-        this.bookgroupNode.getChildren().add(newBook); //<----JAVAFX ADDS OBJECT. CAN'T DO TWICE (ERROR)
-        System.out.println("finished adding new book to project.  R,C:"+newBook.getRow()+","+newBook.getCol());
-        //System.exit(0);
-    }
-    catch (NullPointerException e) {
-        System.out.println("NullPointerException in AddNewBookToStage");
-        System.exit(0);
-    } 
-    //
-    //addBookToStage(newBook); 
-    System.out.println("finished adding new book to stage");
-}
-
-//Adds books in project to stage.  
-//If called by UnpackBookstoView then it clears books to avoid duplicates. 
-//This is the logical place to ensure that event handlers and FX setup is completed.
-//This must be done BEFORE calling 'setActiveBook'
+The default starting row,col is 0,0 which differs from the Display Options.
+*/
 
 private void AddProjectBooksToStage() throws NullPointerException {
-    System.out.println("Adding project books to stage");
-   
-    ArrayList<Book> myBookList = myProject.getBooksOnShelf();
-    System.out.println("Project books:"+myBookList.size());
     
+    ArrayList<Book> myBookList = myProject.getBooksOnShelf();
+    //logBooksToView(myBookList.size());
     for (Book item: myBookList) {
     try {
-        //This if for FX purposes, but must be done as part of creation of new books ASAP, before setActive.
+        //This if for FX purposes, but must be done as part of creation of new books ASAP, setting alerts
         item.setHandlers(PressBox,DragBox);
-        setActiveBook(item);
-        this.bookgroupNode.getChildren().add(item); //<----JAVAFX ADDS OBJECT. CAN'T DO TWICE (ERROR)
-        setXYfromRowCol(item);
-        //positionBookOnStage(newBook);  //not needed outside drags
+        myGridSpace.addBook(item); 
     }
     catch (NullPointerException e) {
         System.out.println("NullPointerException in AddNewBookToStage");
@@ -467,209 +427,14 @@ private void AddProjectBooksToStage() throws NullPointerException {
   } //end for loop
 }
 
-/* input:
-The blocklist (strings) plus docXML info to obtain metadata
-//TO DO: Use objects/Project data model to store/get blocklists, rather than arbitrary blocklists.
-Two steps here:
-Update the GUI location for the blocks
-Add the blocks to stage.
-Have MainStage functions that will add blocks vertically or horizontally (2 Views)
-
-TO DO: Have a separate data object that can be created by file format classes:
-One that has no JavaFX dependencies.
-
-*/
-
-//This updates view based on Project.  These are not 'new' books being added.
-
-public void repositionProjectBooksVertical(ArrayList<Book> myBookSet){
-  //not yet the project booklist? DO THAT.  get these books from project.
-  int length = myBookSet.size();  // number of blocks
-  System.out.println(length); //each of these numbered blocks is a string.
-  int rowcount=0;
-  //STEP 1: SET GUI PARAMETERS BEFORE ADDING TO STAGE
-  if (length>0) {
-    Iterator<Book> iter = myBookSet.iterator(); 
-      while (iter.hasNext()) {
-          Book thisBook =iter.next(); 
-          if (thisBook!=null) {
-           
-            //set position as part of data model
-            thisBook.setRow(rowcount); //default col is 0.
-            thisBook.setCol(0);
-            //This if for FX purposes, but must be done as part of creation of new books ASAP.
-            //thisBook.setHandlers(PressBox,DragBox);
-            setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
-            }
-            else {
-              System.out.println("No book to add");
-            }           
-            rowcount++;
-          } //end while
-     } //end if
-     //---ABOVE JUST CHANGES POSITIONS, ASSUMING ALREADY IN PROJECT/STAGE
-  } 
-
-//TO DO: Allow function to take a row number for insert.
-
-public void repositionProjectBooksHorizontal(ArrayList<Book> myBookSet){
-  //not yet the project booklist? DO THAT.  get these books from project.
-  int length = myBookSet.size();  // number of blocks
-  System.out.println(length); //each of these numbered blocks is a string.
-  int colcount=1;
-  if (length>0) {
-    Iterator<Book> iter = myBookSet.iterator(); 
-      while (iter.hasNext()) {
-          Book thisBook =iter.next(); 
-          //
-          if (thisBook!=null) {
-            //set position as part of data model
-            thisBook.setCol(colcount); //default col is 0.
-            thisBook.setRow(1);
-            }
-            else {
-              System.out.println("No book to add");
-            }
-            //This if for FX purposes, but must be done as part of creation of new books ASAP.
-            //thisBook.setHandlers(PressBox,DragBox);
-            setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
-            //AddNewBookToStage(thisBook); //adds new book to stage (adds to project only if needed) 
-            colcount++;
-          } //end while
-     } //end if
-     //Books should only need to be added to the project and Stage once.  After that, it's just changing position etc
-     //---ABOVE JUST CHANGES POSITIONS, ASSUMING ALREADY IN PROJECT/STAGE
-  } 
-
-public void wrapProjectBooksHorizontal(ArrayList<Book> myBookSet, int space){
-  int length = myBookSet.size();  // number of blocks
-  System.out.println(length); //each of these numbered blocks is a string.
-  int colcount=0;
-  int rowcount=1;
-  int wrapcol=11;//column to wrap on
-  if (length>0) {
-    Iterator<Book> iter = myBookSet.iterator(); 
-      while (iter.hasNext()) {
-        //if books do not appear change the pointer to iter.next() directly
-          Book thisBook =iter.next(); 
-          //
-          if (thisBook!=null) {
-            //set position as part of data model
-            thisBook.setCol(colcount); //default col is 0.
-            thisBook.setRow(rowcount);
-            }
-            else {
-              System.out.println("No book to add");
-            }
-            //This if for FX purposes, but must be done as part of creation of new books ASAP.
-            //thisBook.setHandlers(PressBox,DragBox);
-            setXYfromRowCol(thisBook); //update stage XY position (GUI/VIEW)
-            //AddNewBookToStage(thisBook); //adds new book to stage (adds to project only if needed) 
-            if (colcount>wrapcol) {
-                //checkers
-              if (space==2 && rowcount % 2 != 0) {
-                colcount=1;
-              }
-              else {
-                colcount=0;
-              }
-              rowcount=rowcount+1;
-            }
-            else {
-              colcount=colcount+space;
-            }
-          } //end while
-          
-          
-     } //end if
-  } 
-
-public void wrapProjectBooksCheckers(){
-    wrapProjectBooksHorizontal(myProject.getBooksOnShelf(), 2);
-}
-
-//Simple utility to return contents of file as String
-//This is used to read in styles for Word doc output.
-// TO DO: create a docx class for output, store styles in there.
-
-public String getFileText(File myFile) {
-  StringBuffer myText = new StringBuffer(); //mutable String
-  String endOfLine="\n"; //to do - operating system independent
-  try {
-    Scanner scanner1 = new Scanner(myFile);
-    if (scanner1==null) {
-      System.out.println("No text/html content");
-      return null;
-    }
-    int nl=0;
-    while (scanner1.hasNextLine()) {
-      nl++;
-      String thisRow=scanner1.nextLine();
-      System.out.println(thisRow);
-      myText.append(thisRow);
-      myText.append(endOfLine);
-    }
-    scanner1.close();
-  }
-  catch (Throwable t)
-  {
-    t.printStackTrace();
-    //System.exit(0);
-    return null;
-  }
-  //System.out.println(myText);
-  //System.exit(0);
-  return myText.toString();
-}
-
-
-//use row for positions
-//NO need to return file as it will be stored in specific file that is opened.
-//TO DO: Describe funciton as 'Open File as Row'?
-public void openFileAsRow(Integer row) {
-        this.spriteX=(int)convertColtoX(0);
-        this.spriteY=(int)convertRowtoY(row);
-        System.out.println("Row check:"+row+", spriteY:"+this.spriteY);
-        //System.exit(0);
-        // final FileChooser fileChooser = new FileChooser();
-        File file = new File (myProject.getFilename());
-        if (file==null) {
-            file = new File ("untitled.md");
-        } 
-        Stage myStage = new Stage();
-        myStage.setTitle("Open File");
-        this.currentFileChooser.setTitle("Open A File");
-        //this.currentFileChooser.setSelectedExtensionFilter(this.myExtFilter);   
-        this.currentFileChooser.setSelectedExtensionFilter(myExtFilter); 
-        File tryfile = currentFileChooser.showOpenDialog(myStage);
-        if (tryfile != null) {
-          file = tryfile;
-          openFileGetBooklist(file); //add books to project
-          AddProjectBooksToStage();
-          unpackBooksAsRow(); 
-        } 
-        else {
-            //DO SOMETHING
-        }
-    //return file;
-}
-
-
-//what is returned by getrow?
-public Integer getRowofActiveBook() {
-    Integer row=0;
-    Book thisBook = getActiveBook();
-    if (thisBook!=null) {
-        row=thisBook.getRow();
-    }
-    return row;
+public void logBooksToView(Integer num){
+    System.out.println("Adding project books to stage");
+    System.out.println("Project books:"+num);
 }
 
 //use row for positions
 //This is called from 'Main' so it returns the 'File' for future use.
-//TO DO: store in myproject.
-//It could equally return the 'myProject' object that contains file details etc?
-//Distinguish between 'Import to Project' and 'Open to GUI and show contents' (as here)
+
 public File openNewFile() {
         //System.exit(0);
         // final FileChooser fileChooser = new FileChooser();
@@ -713,7 +478,7 @@ public void addNewStyleTheme(String input){
      docXML currentDoc = myProject.getOpenDocx();
      currentDoc.setStylesObject(themeTool.getUpdatedStylesXML());
      //currentDoc.getStylesObject().logging();
-     setDocxForView(currentDoc); //update visible stylesXML information.
+     setDocxForMainTabs(currentDoc); //update visible stylesXML information.
   }
   if (input.equals("Letter")){
      XMLStyleThemeMaker themeTool = new XMLStyleThemeMaker();
@@ -724,16 +489,22 @@ public void addNewStyleTheme(String input){
      docXML currentDoc = myProject.getOpenDocx();
      currentDoc.setStylesObject(themeTool.getUpdatedStylesXML());
      //currentDoc.getStylesObject().logging();
-     setDocxForView(currentDoc); //update visible stylesXML information.
+     setDocxForMainTabs(currentDoc); //update visible stylesXML information.
   }
 }
 
-//for save as
+/*
+Function for general Save As
+
+SaveAs will use current path so prompts with filename only.
+writeOutBooksToWord() writes from the markdown + notes elements for now (not the docx content)
+       
+*/
 public void saveAs() {
     Stage myStage = new Stage();
     myStage.setTitle("Save As ...");
     //change filename just in case, for Word
-    String myFilename= myProject.getFilename(); //SaveAs will use current path so only name is needed
+    String myFilename= myProject.getFilename(); 
     //if Word let's prompt to make sure we don't harm original
     if (myProject.getExt().equals("docx")) {
       String fn=myProject.getFilenameNoExt();
@@ -752,7 +523,7 @@ public void saveAs() {
         System.out.println(myProject.getFilename());
         System.out.println("SaveAsCalled");
         writeFileOut();
-        writeOutBooksToWord(); //This is just writing from markdown + notes for now (not the docx)
+        writeOutBooksToWord(); 
         writeOutHTML();
         } 
         else {
@@ -884,173 +655,21 @@ public void writeOutBooksToWord() {    //
 public void setSplitOption(String input) {
     myProject.setSplitOption(input);
     myProject.updateSplitOptionBooks(); //based on split option
-    unpackBooksToView(); //clears stage and adds new books 
+    unpackBooksToAllViews(); //clears stage and adds new books 
 }
 
-//function to change way box labels are displayed
-public void setDisplayModeTitles(Integer input){
-  if (input>0 && input<6) {
-    ArrayList<Book> myBooksonShelves = myProject.listBooksShelfOrder(); 
-    Integer booknum=myBooksonShelves.size();
-    for (int x=0;x<booknum;x++) {
-          Book item = myBooksonShelves.get(x);
-          item.setDisplayMode(input);
-    }
-      //'booksOnShelf' is the global arraylist holding books
-      myProject.setBooksOnShelf(myBooksonShelves); //change the pointer (if needed?)
-    }
-    System.out.println("Display Mode set: "+input);
+public void setLayoutMode(String input){
+    myGridSpace.setLayoutMode(input); 
 }
 
-
-//wrap layout of books to 10 books wide (default)
-//Is this redundant now there is 'wrapBooks'?
-/*
-//This sets both row,col and X,Y.  TO DO:  set only Row, Col attributes in main API and let layout manager position cell.
-public void unpackBooksWrapped() {
-    //until reloaded the item order in memory isn't same as GUI
-    //ArrayList<Book> myBooksonShelves = getBooksOnShelf(); 
-    //'booksOnShelf' is the global arraylist holding books
-    ArrayList<Book> myBooksonShelves = myProject.listBooksShelfOrder(); 
-    Integer booknum=myBooksonShelves.size();
-    Integer xcount=0;
-    Integer ycount=0;
-    for (int x=0;x<booknum;x++) {
-        Book item = myBooksonShelves.get(x);
-        if (xcount<9) {
-          xcount=xcount+1;
-        }
-        else {
-          xcount=0;
-          ycount=ycount+1;
-        }
-        setXYfromNewRowCol(item,ycount,xcount);
-    }   
-    myProject.setBooksOnShelf(myBooksonShelves); //change the pointer (if needed?)
-}
+/* 
+   Function to change way box labels are displayed
+   Books in 'project' not updated, but if object pointers are same, will be.
 */
-public void singleSelection(Book thisBook){
-  
-  if (this.selectedBooks.size()>0) {
-      for (Book item: this.selectedBooks) {
-         item.endAlert();
-      }
-  }
-  
-  try {
-      ArrayList<Book> newSelection= new ArrayList<Book>();
-      newSelection.add(thisBook);
-      this.focusBook=thisBook; 
-      thisBook.doAlert(); //Change this so there is a general 'undo alert'
-      this.selectedBooks=newSelection;
-  }
-  catch (Throwable t) //for greater detail for debugging
-        {
-            t.printStackTrace();
-            return;
-        }
+public void setDisplayMode(String input){
+    myGridSpace.setLabelsMode(input); 
 }
 
-//no need for these to be sorted.  However, books in selection should be 
-public void refreshSelectedBooksColour() {
-  ArrayList<Book> sorted= myProject.getBooksOnShelf(); //can this be stored, only updated when needed?
-  Iterator <Book> myIterator = sorted.iterator();
-  while(myIterator.hasNext()){
-    Book item = myIterator.next();
-    if (this.selectedBooks.contains(item)) {
-      item.doAlert();
-    }
-    else {
-      item.endAlert();
-    }
-  }
-}
-
-public void toggleExtraSelection(Book thisBook){
-    //ArrayList<Book> myBooksonShelves = getBooksOnShelf();
-
-    if (selectedBooks.contains(thisBook)) {
-        int num = selectedBooks.size();
-        System.out.println("selectedBooks items:"+num);
-        for (int x =0;x<num;x++){
-          System.out.println(selectedBooks.get(x).getLabel());
-        }
-        selectedBooks.remove(thisBook);
-        thisBook.endAlert();
-        System.out.println("Toggle, but found book");
-    }
-    else if (!selectedBooks.contains(thisBook)) {
-        selectedBooks.add(thisBook);
-        thisBook.doAlert();
-        this.focusBook=thisBook;
-        System.out.println("Toggle, but did not find book");
-    }
-}
-
-public void shiftedSelection(Book thisBook) {
-      Book firstBook = this.selectedBooks.get(0);
-      ArrayList<Book> newList = new ArrayList<Book>();
-      //newList.add(firstBook); //start selection again with only origin book
-      this.selectedBooks = newList;
-      ArrayList<Book> sorted= myProject.listBooksShelfOrder(); //can this be stored, only updated when needed?
-      Iterator <Book> myIterator = sorted.iterator();
-      Boolean selection=false;
-      Boolean stop=false;
-      while(myIterator.hasNext()) {
-      Book item = myIterator.next();
-      item.endAlert(); //reset
-
-      //find start of selection
-      if (item==firstBook && !this.selectedBooks.contains(thisBook)){
-            selection=true;
-      }
-      if (item==thisBook && !this.selectedBooks.contains(firstBook)){
-            selection=true;
-      }
-      //find end of selection
-      if (item==firstBook && this.selectedBooks.contains(thisBook)){
-            stop=true;
-            selection=false;
-            this.selectedBooks.add(item);
-            item.doAlert();
-      }
-      if (item==thisBook && this.selectedBooks.contains(firstBook)){
-            stop=true;
-            selection=false;
-            this.selectedBooks.add(item);
-            item.doAlert();
-      }
-      //if still in mid range selection
-      if (selection==true && !this.selectedBooks.contains(item)) {
-            this.selectedBooks.add(item); 
-            item.doAlert();     
-      }
-    } //end while
-   }
-
-
-
-/*
-//will save this file (assumes it is text, html etc)
-private void basicFileWriter(String logstring,String filename) {
-    //String reportfile=this.templatefolder+filename+".md";
-
-    try {
-      PrintStream console = System.out;
-      PrintStream outstream = new PrintStream(new FileOutputStream(filename,false)); //true = append.  This overwrites.
-      System.setOut(outstream);
-      //String logString = Integer.toString(myNode.getNodeRef())+"@@P"+myNode.getDocName()+"@@P"+myNode.getHeading()+"@@P"+myNode.getNotes()+"@@P"+myNode.getHTML()+"@@P@EOR";
-      System.out.print(logstring); //don't use println.  No CR needed.
-      outstream.close();
-      System.setOut(console);
-    }
-        catch (Throwable t)
-        {
-            t.printStackTrace();
-            return;
-        }
-} 
-*/ 
 
 //JAVAFX SCENE GRAPH GUI INFO (THIS IS NOT THE DATA NODE!)
 public void setSceneRoot(Node myNode) {
@@ -1079,7 +698,7 @@ public void setFileForView(File myFile){
 }
 
 //update view parameters that are based on a newly opened docx
-public void setDocxForView(docXML input){
+public void setDocxForMainTabs(docXML input){
   docXML myPDoc = myProject.getOpenDocx();
   String test = myPDoc.getStylesObject().getStylesXML();
   styleTextArea.setText(test); //to display in tab_StyleXML
@@ -1095,15 +714,15 @@ public void setMDForView(mdFile input) {
 
 /* 
 Prior to calling this function this should have been completed:
-1. Open file functions create a set of books in the myProject Object.
-2. 
+1. Open file functions will create a set of Books in the myProject Object.
+
 This function:
-1. Add all project books to Stage node (FX).  
+1. Add all Project books to gridSpace object (FX).  
 2. Calls one of the methods that changes the position of books (X,Y parameters that work with FX)
 
 TO DO: pick a default layout according to last selected 'Layout' option?
 */
-public void unpackBooksToView() {
+public void unpackBooksToAllViews() {
           
           if (myProject.getNumberBooks()<1){
             System.out.println("No books in project to unpack");
@@ -1111,29 +730,18 @@ public void unpackBooksToView() {
           }
 
           //DO THIS ONCE PER OPEN FILE
-          clearAllBooksFromStage(); //clear all stage nodes because we are starting again
-          AddProjectBooksToStage();  //adds current project books back to stage nodes
+          clearAllViews(); //clear all stage nodes because we are starting again
+          AddProjectBooksToStage();  //adds current project books back to gridSpace view
           
           //if we wanted to reinstate books from stored positions we'd call  setXYfromRowCol(item); instead of bulk options below
           //reposition books
 
           if (myProject.getExt().equals("docx")) {
             docXML currentDoc = myProject.getOpenDocx();
-            setDocxForView(currentDoc); //update RHS tabs with relevant data
+            setDocxForMainTabs(currentDoc); //update RHS tabs with relevant data
             }
-
-          if (this.displayOption.equals("Row)")) {
-                unpackBooksAsRow();
-          }
-          else if (this.displayOption.equals("Col))")) {
-                unpackBooksAsCol();
-          }
-          else if (this.displayOption.equals("Wrap")) {
-                wrapBooks();
-          }
-          else {
-                wrapBooks();
-          }
+          //default view.  No saved state for 'this.displayOption' yet
+          //myGridSpace.setLayoutMode("row");
         } 
 
 //set filename to currently open file.
@@ -1320,54 +928,29 @@ public Stage getStage() {
     return this.localStage;
 }
 
-/*
-setter for the Group sprite boxes will be added to
-*/
-
-public void setGridGroup(Group myGroup) {
-    this.bookgroupNode = myGroup;
-}
-
-public Group getGridGroup() {
-    return this.bookgroupNode;
-}
-
-public void setSpriteScrollPane(ScrollPane myPane) {
-    this.spriteScrollPane = myPane;
-}
-
-public ScrollPane getSpriteScrollPane() {
-    return this.spriteScrollPane;
-}
-
-
 public void clearAllBooks() {
     myProject.clearAllBooks(); 
-    clearAllBooksFromStage();
-}
-
-public void clearAllBooksFromStage() {
-    this.bookgroupNode.getChildren().clear();
-    this.resetBookOrigin();
+    clearAllViews();
     String title = "default.md"; //this is not a full path cf other situations
     setFilename(title); //to do - clear all File object in Project?
     //To do - reconcile data here with Main class and Project class.  Or is just GUI?
     this.parentClass.resetFileNames(title); //to update general file name etc
+}
+
+/*
+    A function that will clear all books from grid UI, without clearing the Project books
+    This will allow repopulating grid UI again
+*/
+
+public void clearAllViews() {
+    myGridSpace.clear();
     //clean up workspace
     styleTextArea.setText(""); //to display in tab_StyleXML
     styleSummaryTextArea.setText("");
     fieldsTextArea.setText("");
     bookmarksTextArea.setText("");
+    //change title if we want to
 }
-
-/*
-public void swapbookgroupNode(Group myGroup) {
-    Pane myPane = getSpritePane();
-    myPane.getChildren().remove(getbookgroupNode());
-    setbookgroupNode(myGroup);
-    myPane.getChildren().addAll(myGroup);
-}
-*/
 
 private void setStagePosition(double x, double y) {
     this.localStage.setX(x);
@@ -1443,55 +1026,15 @@ private Scene makeSceneForBoxes(ScrollPane myPane) {
 }
 */
 
+/*
 //Method to change title depending on data mode the node is in.
 private String getTitleText(String myString) {
-    System.out.println("Make Scene. User Node View: "+getActiveBook().getUserView());
+    System.out.println("Make Scene. User Node View: "+getActiveViewBook().getUserView());
     //main function        
-    return getActiveBook().getDocName()+myString;
+    return getActiveViewBook().getDocName()+myString;
    
 }
-
-//snap to grid - move to nearest cell based on <= 50% out of position
-public double snapYtoShelf(Book myBook, double newTranslateY){
-    Integer modY=(int)newTranslateY%(int)this.cellgap_y;
-    Integer quotY=(int)((newTranslateY-modY)/this.cellgap_y);
-    Integer half = (int)this.cellgap_y/2;
-    System.out.println("Num: "+newTranslateY+"cellgapY: "+this.cellgap_y+" quot:"+quotY+" mod:"+modY);
-    if (modY>half) {
-        quotY=quotY+1;
-    }
-    //checkbounds
-    if (quotY<0) {
-        quotY=0;
-    }
-    if(quotY>(this.cellrows-1)) {
-        quotY=(this.cellrows-1);
-    }
-    myBook.setRow(quotY);
-    newTranslateY=(this.cellgap_y*quotY)+this.cellrowoffset_y+this.boxtopmargin;
-    return newTranslateY;
-}
-
-//snap to grid - move to nearest cell based on <= 50% out of position
-public double snapXtoShelf(Book myBook, double newTranslateX){
-    Integer modX=(int)newTranslateX%(int)this.cellgap_x;
-    Integer quotX=(int)((newTranslateX-modX)/this.cellgap_x);
-    Integer half = (int)this.cellgap_x/2;
-    System.out.println("Num: "+newTranslateX+"cellgapX: "+this.cellgap_x+" quot:"+quotX+" mod:"+modX);
-    if (modX>half) {
-        quotX=quotX+1;
-    }
-    //checkbounds
-    if (quotX<0) {
-        quotX=0;
-    }
-    if(quotX>this.cellcols+1) {
-        quotX=this.cellcols+1;
-    }
-    myBook.setCol(quotX);
-    newTranslateX=this.cellgap_x*quotX;
-    return newTranslateX;
-}
+*/
 
 /* New Local mouse event handler */
  EventHandler<KeyEvent> SaveKeyEventHandler = new EventHandler<KeyEvent>() {
@@ -1499,7 +1042,7 @@ public double snapXtoShelf(Book myBook, double newTranslateX){
     public void handle(KeyEvent ke) {
         //Book hasFocus = Main.this.getcurrentBook();
         Book hadFocus=null;
-        Book currentBook = MainStage.this.getActiveBook(); //clicksource
+        Book currentBook = MainStage.this.getActiveViewBook(); //clicksource
             //in Edit Stage only a straight "Save" not SaveAs is checked for
             if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
                  System.out.println("CMD-S pressed for save");
@@ -1522,7 +1065,7 @@ EventHandler<MouseEvent> DragBox =
             System.out.println("Event");
             System.out.println(TYPE.toString());
             // && MainStage.this.metaMode==false && MainStage.this.shiftMode==false
-            if (currentBook!=null && MainStage.this.selectedBooks.size()==1) {
+            if (currentBook!=null && MainStage.this.myGridSpace.getNumberSelectedBooks()==1) {
                 MainStage.this.setActiveBook(currentBook); //clicked sprite
                 double offsetX = t.getSceneX() - orgSceneX;
                 double offsetY = t.getSceneY() - orgSceneY;
@@ -1533,14 +1076,7 @@ EventHandler<MouseEvent> DragBox =
                     System.out.println("Mouse released");
                     System.out.println("release position: x "+newTranslateX+" y "+newTranslateY);
                     //shelf parameters
-                                       
-                    newTranslateY=MainStage.this.snapYtoShelf(currentBook,newTranslateY);
-                    newTranslateX=MainStage.this.snapXtoShelf(currentBook,newTranslateX);
-                    //System.exit(0);
-                    currentBook.setTranslateX(newTranslateX);
-                    currentBook.setTranslateY(newTranslateY);
-
-                    currentBook.doAlert();
+                    MainStage.this.myGridSpace.snapBook(currentBook,newTranslateX,newTranslateY);                   
                     } 
                 else {
                     System.out.println("The handler for drag box is acting");
@@ -1572,7 +1108,7 @@ EventHandler<MouseEvent> processLocalBoxClick =
         else {
             System.out.println(TYPE);
         }
-        Book hadFocus=MainStage.this.getActiveBook();
+        Book hadFocus=MainStage.this.getActiveViewBook();
         Book currentBook = (Book)t.getSource();  //selects a class for click source
         if (currentBook!=null) {
             System.out.println("Found click on sprite");
@@ -1605,41 +1141,19 @@ EventHandler<MouseEvent> processLocalBoxClick =
                   Integer latestRow=currentBook.getRow();
                   Integer latestCol=currentBook.getCol();
                   System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
-                  MainStage.this.toggleExtraSelection(currentBook);
+                  MainStage.this.myGridSpace.toggleExtraSelection(currentBook);
                 }
                 if (t.isShiftDown()) {
                   Integer latestRow=currentBook.getRow();
                   Integer latestCol=currentBook.getCol();
                   System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
-                  MainStage.this.shiftedSelection(currentBook);
+                  MainStage.this.myGridSpace.shiftedSelection(currentBook);
                 }
 
                 else if (!t.isShiftDown() && !t.isControlDown() && !t.isMetaDown()) {
-                  MainStage.this.singleSelection(currentBook);
+                  MainStage.this.myGridSpace.singleSelection(currentBook);
                 }
-                /*if (MainStage.this.metaMode) {
-                  System.out.println("One click with Meta");
-                  Integer latestRow=currentBook.getRow();
-                  Integer latestCol=currentBook.getCol();
-                  System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
-                  MainStage.this.metaMode=false;
-                  MainStage.this.toggleExtraSelection(currentBook);
-                }
-                else if (MainStage.this.shiftMode) {
-                  System.out.println("One click with SHIFT");
-                  Integer latestRow=currentBook.getRow();
-                  Integer latestCol=currentBook.getCol();
-                  System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
-                }
-
-                else if (MainStage.this.shiftMode==false && MainStage.this.metaMode==false) {
-                  MainStage.this.singleSelection(currentBook);
-                }
-                */
                 
-                //change stage focus with just one click on Book (but node still closed)
-                //bookMetaInspectorStage=currentBook.getStageLocation();
-                //refreshNodeViewScene();
                 break;
             case 2:
                 System.out.println("Two clicks");
@@ -1672,14 +1186,14 @@ The JavaObject (BookMetaStage) creates a custom JavaFX.stage object that functio
 The editor stage opened will be able to edit the contents of the currently selected Book (cell). */
 //TO DO: check Book isn't the basis for inspector stage before opening new stage.
 private void OpenRedBookNow(Book currentBook) {
-     //Book currentBook= getActiveBook(); //currentBook.getBoxNode();
+     //Book currentBook= getActiveViewBook(); //currentBook.getBoxNode();
      //bookMetaInspectorStage.closeThisStage(); //close open stage.  No save checks? //TO DO: close all child stages
      Stage parent = this.localStage; // the Stage associated with this object, not the MainStage object itself.
      bookMetaInspectorStage = new BookMetaStage(parent, currentBook, PressBox, DragBox, SaveKeyEventHandler); 
      
      System.out.println("set BookMetaStage...");
      setMetaStageParams(bookMetaInspectorStage);  //stores the UI 'stage' as the local stage.  That's all.
-     bookMetaInspectorStage.storeSelectedBooks(this.selectedBooks); //pass any selection to the editor to use (for fills etc)
+     bookMetaInspectorStage.storeSelectedBooks(myGridSpace.getSelectedBooks()); //pass any selection to the editor to use (for fills etc)
      System.out.println("new Stage Parameters Set ...");
 }
 /*switch(clickcount) {
@@ -1787,11 +1301,8 @@ myGroup_root--->
 myBP(top)-->menuBarGroup-->myMenu
 Tabs here?
 tab_Visual:
-myBP(center)-->myScrollPane-->filename+workspacePane (Pane) -->displayAreaGroup (for BookIcons etc to be added)+ RowLines (Line) + ColLines (Line)
+myBP(center)-->myScrollPane-->filename+workspacePane (Pane) -->gridGroup (for BookIcons etc to be added)+ RowLines (Line) + ColLines (Line)
 Tab B:
-
-TO DO: the Pane should only display a 'Window' of content and then shift content, so that it is an infinite size and does not need to be defined.
-We might need at least 30 rows for some outline views of Word docs etc.
 */
 
 private Group makeWorkspaceTree() {
@@ -1804,9 +1315,6 @@ private Group makeWorkspaceTree() {
 
         Group layerGroup = new Group();
 
-        //an array list for list view
-        
-        
         //create observable list backed by an array list
         //takes 'List' as an argument.  Obs List = Changes update automatically in view.
         //ArrayList myFileList = new ArrayList(); //can't be 'List'
@@ -1820,8 +1328,7 @@ private Group makeWorkspaceTree() {
         //ObservableList<String> 
         myObList = FXCollections.observableArrayList(myFileList);
         ListView<String> layerListView = new ListView<String>(myObList); 
-        BorderPane myBP = new BorderPane(); 
-        
+       
         //listen for changes to list; not clicks
         myObList.addListener(new ListChangeListener() { 
           @Override
@@ -1843,7 +1350,7 @@ private Group makeWorkspaceTree() {
         
         //cells only need definition when structure being customised
         //basic approach is to set the column, then the cells
-        //ayerListView.setCellFactory(p -> new DraggableCell<>());
+        //layerListView.setCellFactory(p -> new DraggableCell<>());
         /*
         layerListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
         //above line also creates the new ListCell as second item
@@ -1883,6 +1390,7 @@ private Group makeWorkspaceTree() {
            */ //end of the override
         
         //<---end customised cells section ---> 
+        
         //Add some Tabs so we can easily shift between gridview and viewing Styles.xml or similar.
 
         //choiceboxlistcell
@@ -1894,87 +1402,20 @@ private Group makeWorkspaceTree() {
         
         MenuBar myMenu = getMenuBar(); //retrieve stored menu bar object
 
-        //Set title of this stage to the file name
-        /*
-        String myupdate=this.shelfFileName.getText();
-        setTitle(myupdate);
-        */
-        /*
-        BorderPane borderPane = new BorderPane();
-        borderPane.setTop(menuBar);
-        
-        primaryStage.setScene(new Scene(borderPane));
-        */
         menubarGroup.getChildren().addAll(myMenu);
         
-        //<--- ** centre region of the BorderPane ** --->
-        /*
-        this.shelfFileName.setY(this.filenameoffset_y);
-        this.shelfFileName.setX(this.filenameoffset_x); 
-        */
-        Pane workspacePane = new Pane(); 
-        //workspacePane.setPrefWidth(this.wsPaneWidth);
-        //workspacePane.setPrefHeight(this.wsPaneHeight);
-        //the Pane holding the group allows movement of Books independently, without relative movement
-         /*ScrollPane boxPane = makeScrollGroup();
-        boxPane.setPannable(true);
-        boxPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
-        boxPane.setVmax(500);
-        */
-        Group displayAreaGroup = new Group(); //subgroup of Pane; where Squares/Boxes located
-        //myScrollPane.getChildren().addAll(displayAreaGroup);
-        //VBox centrelayout = new VBox(this.shelfFileName,workspacePane);
-
-        //TABS in CENTRE PANE. FOR SCROLLPANE
-         //Create Tabs for Tab Pane, which will sit inside editor
-        //Tab tab_Visual = new Tab();
         tab_Visual.setText("Visual");
-        
-
-       // --- IF USING A SCROLLPANE HERE, ADD THAT TO THE BP
-        ScrollPane myScrollPane = new ScrollPane(workspacePane); //content is the workspacePane
-
-
-        myScrollPane.setPrefViewportWidth(this.scrollSceneWidth);
-        myScrollPane.setPrefViewportHeight(this.scrollSceneHeight);
-        myScrollPane.pannableProperty().set(false);  //to prevent panning by mouse
-        myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS")); //AS_NEEDED or ALWAYS
-        myScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
-       
-        
-
-        //--- IF USING A PANE
-
-        //myScrollPane.setVmax(500);
-        workspacePane.getChildren().addAll(displayAreaGroup);
-        //String wpaneStyle="-fx-background-color:white; ";
-        //String wpaneStyle="-fx-background-color:LightGrey; "; //main grid background colour
-        String wpaneStyle="-fx-background-color: CADETBLUE; "; 
-        workspacePane.setStyle(wpaneStyle);
-         //make it big enough for number of rows/cols
-        //ScrollPane myScrollPane= new ScrollPane();
-        String scrollpaneStyle="-fx-background-color:blue; ";
-        myScrollPane.setStyle(scrollpaneStyle);
-        
-        setGridGroup(displayAreaGroup); //store dAG in bookgroupNode variable as global variable
-        //myScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.valueOf("ALWAYS"));
-       // myScrollPane.setVmax(500);
-        //Pane workspacePane = new Pane(); //to hold a group, holding a bookgroupNode
-        //This is empty initially...
-
-        //setSpritePane(workspacePane); //store for later use
-        
-
-        
+               
         //<--- ** ADD CONTENTS TO BORDERPANE REGIONS ** --->
+        BorderPane myBP = new BorderPane(); 
         myBP.setLeft(myLayerScroller);
         myBP.setMargin(myLayerScroller, new Insets(0,10,0,0));
         myBP.setTop(menubarGroup); //this includes the top menu.  Do not set anywhere else
         //myBP.setMargin(workspacePane, new Insets(50,50,50,50)); //i.e. Y=-50='translateX=0'
-        myBP.setMargin(myScrollPane, new Insets(0,0,0,0));
+        myBP.setMargin(myGridSpace.getScrollPane(), new Insets(0,0,0,0));
         
         myBP.setCenter(myTabsGroup);
-        tab_Visual.setContent(myScrollPane);
+        tab_Visual.setContent(myGridSpace.getScrollPane());
         tab_StyleXML.setText("StyleXML");
         tab_StyleXML.setContent(styleTextArea);
         styleTextArea.setWrapText(true);
@@ -1993,33 +1434,6 @@ private Group makeWorkspaceTree() {
         // Add tabs in order
         myTabsGroup.getTabs().addAll(tab_Visual,tab_Fields_docx,tab_Bookmarks,tab_Styles_docx,tab_StyleXML);
         
-        //Make horizontal lines for grid, and add to FX root node for this Stage
-       
-        ArrayList<Line> myRowLines=new ArrayList<Line>();
-        double startX=0.0; //+cellrowoffset_y;
-        double endX=(this.cellcols+2)*this.cellgap_x;
-        for (int i=0;i<this.cellrows+2;i++) {
-            Line line = new Line(startX,(i*cellgap_y)+cellrowoffset_y,endX,(i*cellgap_y)+cellrowoffset_y);
-            myRowLines.add(line); //future use
-            workspacePane.getChildren().add(line); //put them here so they are not 'erased' and remains visible
-            //displayAreaGroup.getChildren().add(line);
-        }
-        ArrayList<Line> myColLines=new ArrayList<Line>();
-        double startY=0.0+this.cellrowoffset_y;
-        double endY=((this.cellrows+2)*this.cellgap_y)+this.cellrowoffset_y;
-        //we need 2 extra lines
-        for (int i=0;i<this.cellcols+3;i++) {
-            //System.out.println(cellrows+", i:"+i+" startY:"+startY+" endY:"+endY);
-            Line line2 = new Line(i*this.cellgap_x,startY,i*this.cellgap_x,endY);
-            myColLines.add(line2); //future use
-            workspacePane.getChildren().add(line2);
-            //displayAreaGroup.getChildren().add(line);
-        }
-              
-        //make up a pane to display filename of bookshelf (not used)
-        //Pane shelfFilePane = new Pane();
-        //shelfFilePane.getChildren().add(this.shelfFileTextArea);
-                
         //add the Border Pane and branches to root Group 
         myGroup_root.getChildren().addAll(myBP);
         //putting lines first means they appear at back
@@ -2134,7 +1548,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                  if (ke.isMetaDown() && ke.getCode().getName().equals("I") || ke.getCode()==KeyCode.ENTER) {
                     System.out.println("CMD-I or ENTER pressed (will open metadata inspector stage)");
                     try {
-                        Book myBook= MainStage.this.getActiveBook();
+                        Book myBook= MainStage.this.getActiveViewBook();
                         myBook.setUserView("metaedithtml");
                         MainStage.this.OpenRedBookNow(myBook);
                     }
@@ -2146,8 +1560,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                 if (ke.getCode()==KeyCode.DELETE || ke.getCode()==KeyCode.BACK_SPACE) {
                     System.out.println("BS/DELETE pressed (will delete book with focus)");
                     try {
-                        Book myBook= MainStage.this.getActiveBook();
-                        MainStage.this.removeBookFromStage(myBook);
+                        MainStage.this.removeActiveBook();
                     }
                     catch (NullPointerException e) {
                         //do nothing
@@ -2157,7 +1570,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                 if (ke.getCode()==KeyCode.SPACE) {
                     System.out.println("SPACEBAR pressed (will open stage to inspect HTML in built-in Web Browser)");
                     try {
-                        Book myBook= MainStage.this.getActiveBook();
+                        Book myBook= MainStage.this.getActiveViewBook();
                         myBook.setUserView("HTMLonly");
                         MainStage.this.OpenRedBookNow(myBook);
                     }
@@ -2192,14 +1605,14 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      System.out.println("CMD-N pressed for new book");
                      MainStage.this.addNewBookToView();
                      //then to open new link automatically for editing
-                     Book myBook= MainStage.this.getActiveBook();
+                     Book myBook= MainStage.this.getActiveViewBook();
                      myBook.setUserView("metaedit");
                      MainStage.this.OpenRedBookNow(myBook);
                 }
                 //copy
                 if (ke.isMetaDown() && ke.getCode().getName().equals("C")) {
                      System.out.println("CMD-C pressed for copy book");
-                     Book myBook= MainStage.this.getActiveBook();
+                     Book myBook= MainStage.this.getActiveViewBook();
                      MainStage.this.clipboardBook=myBook.cloneBook();  //pointer to book, but memory doesn't survive this ?
                      System.out.println(MainStage.this.clipboardBook+", old: "+myBook);
                      //System.exit(0);
@@ -2210,62 +1623,50 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      //cf try
                      if (MainStage.this.clipboardBook!=null) {
                         Book myBook = MainStage.this.clipboardBook;
-                        //adjacent to clipboard (is this always active book? if so use adjacent function)
-                        double xp=MainStage.this.clipboardBook.getX();
-                        MainStage.this.clipboardBook.setX(xp+cellgap_x); //offset
-                        System.out.println(MainStage.this.clipboardBook+", check: "+myBook);
-                        MainStage.this.AddNewBookToStage(MainStage.this.clipboardBook);
-                        //System.exit(0);
+                        MainStage.this.myGridSpace.pasteBook(myBook);
                      }  
                 }
                 //nudge left
                 if (ke.isMetaDown() && ke.getCode().getName().equals("E")) {
                      System.out.println("CMD-E pressed for nudge left");
-                     
-                        Book myBook= MainStage.this.getActiveBook();
-                        Integer row=myBook.getRow();
-                        Integer col=myBook.getCol();
-                        MainStage.this.nudgeCellLeftInRow(row,col);
-                        //System.exit(0);
-                     
+                        MainStage.this.cellShift("left");//active                    
                 }
                 //nudge right
                 if (ke.isMetaDown() && ke.getCode().getName().equals("R")) {
                      System.out.println("CMD-R pressed for nudge right");
-                     //cf try
-                        Book myBook= MainStage.this.getActiveBook();
-                        Integer row=myBook.getRow();
-                        Integer col=myBook.getCol();
-                        MainStage.this.nudgeCellRightInRow(row,col);
-                        //System.exit(0);
+                     MainStage.this.cellShift("right");
                 }
                 //change focus to right
                 if (ke.getCode()==KeyCode.RIGHT) {
                   ke.consume();
                   System.out.println("Right key pressed for move right");
-                  Book myBook= MainStage.this.getActiveBook();
-                  MainStage.this.moveActiveRight(myBook);
+                  //Book myBook= MainStage.this.getActiveViewBook();
+                  //MainStage.this.moveActiveRight(myBook);
+                  MainStage.this.moveFocusCell("right");
                }
                //change focus to left
                if (ke.getCode()==KeyCode.LEFT) {
                   ke.consume();
                   System.out.println("Left key pressed for move left");
-                  Book myBook= MainStage.this.getActiveBook();
-                  MainStage.this.moveActiveLeft(myBook);
+                  //Book myBook= MainStage.this.getActiveViewBook();
+                  //MainStage.this.moveActiveLeft(myBook);
+                  MainStage.this.moveFocusCell("left");
                }
                //change focus up
                if (ke.getCode()==KeyCode.UP) {
                   ke.consume();
                   System.out.println("Up key pressed");
-                  Book myBook= MainStage.this.getActiveBook();
-                  MainStage.this.moveActiveUp(myBook);
+                  //Book myBook= MainStage.this.getActiveViewBook();
+                  //MainStage.this.moveActiveUp(myBook);
+                  MainStage.this.moveFocusCell("up");
                }
                //change focus down
                if (ke.getCode()==KeyCode.DOWN) {
                   ke.consume();
                   System.out.println("Down key pressed");
-                  Book myBook= MainStage.this.getActiveBook();
-                  MainStage.this.moveActiveDown(myBook);
+                  //Book myBook= MainStage.this.getActiveViewBook();
+                  //MainStage.this.moveActiveDown(myBook);
+                  MainStage.this.moveFocusCell("down");
                }
 
              }
@@ -2274,35 +1675,19 @@ private Scene makeWorkspaceScene(Group myGroup) {
         return workspaceScene;
     }
 
+public void insertRow(String input){
+    myGridSpace.insertRowActive(input);
+}
+
+public void cellShift(String input){
+    myGridSpace.cellShift(input);
+}
+
 //set active sprite.  if problem with tracker, ignore.
 public void setActiveBook(Book b) {
-
-   singleSelection(b);
-  /*
-    try {
-        if (this.focusBook!=null) {
-            Book hadFocus = this.focusBook;
-            hadFocus.endAlert();
-        }
-    }
-    catch (Exception e) {
-         System.out.println("Exception in setActiveBook");
-         e.printStackTrace(new java.io.PrintStream(System.out));
-         System.exit(0);
-    }
-    this.focusBook=b;
-    this.focusBook.doAlert();
-    */
+   myGridSpace.singleSelection(b);
 }
 
-//set active sprite.  if problem with tracker, ignore.
-public Book getActiveBook() {
-    if (this.focusBook==null) {
-        System.out.println("No book in setActiveBook method");
-        return null;//just creates one
-    }
-    return this.focusBook;
-}
 
 //method to put new book (that doesn't exist in Project) on stage.  
 //cf if you have an existing Book object. addBookToStage
@@ -2310,266 +1695,28 @@ public Book getActiveBook() {
 
 public void addNewBookToView () {
     Book b = new Book(PressBox,DragBox,"untitled","","");
-    b = getNewBookPositionAdjacent(b);
     myProject.addBookToProject(b); //data model
-    AddNewBookToStage(b); //view.  differs from Main  
+    myGridSpace.pasteBook(b); //view.  differs from Main  
 }
 
-public void removeBookFromStage(Book thisBook) {
+public Book getActiveViewBook(){
+    return myGridSpace.getActiveBook();
+}
+
+public void removeActiveBook(){
+    removeBookFromProjectAndViews(getActiveViewBook());
+}
+
+public void removeBookFromProjectAndViews(Book thisBook) {
     //TO DO: remove Node (data) ? is it cleaned up by GUI object removal?
-    this.bookgroupNode.getChildren().remove(thisBook); //view/GUI
+    myGridSpace.remove(thisBook);
     myProject.removeBook(thisBook);
     getStage().show(); //refresh GUI
     
 }
 
-public Book getNewBookPositionAdjacent(Book b){
-    
-    b.setLayer(this.currentLayer.getLayerNumber()); //give book a layer reference
-    //
-    Book lastBook=getActiveBook();
-    if (lastBook!=null) {
-        int row = lastBook.getRow();
-        int col = lastBook.getCol();
-        b.setCol(col+1);
-        b.setRow(row);
-        setXYfromRowCol(b);
-    }
-    if (b==null) {
-        System.out.println("Book null in addnodetoview");
-        System.exit(0);
-    }
-    return b;
-}
-
-public void setBooksOnShelf(ArrayList<Book> inputObject) {
-    myProject.setBooksOnShelf(inputObject);
-}
-
-public void insertRow(Integer firstrow){
-    ArrayList<Book> bookList = myProject.getBooksOnShelf();
-    Iterator<Book> myIterator=bookList.iterator();
-    while(myIterator.hasNext()) {
-        Book item = myIterator.next();
-        Integer checkRow=item.getRow();
-        if (checkRow>=firstrow) {
-            checkRow=checkRow+1;
-            item.setRow(checkRow);
-            double newY=convertRowtoY(checkRow);
-            item.setY(newY);
-            //System.out.println("Set a row for a Book to +1");
-        }
-    }
-}
-
-//nudge cell right
-public void nudgeCellRightInRow(Integer firstrow, Integer firstcol){
-    ArrayList<Book> bookList = myProject.getBooksOnShelf();
-    Iterator<Book> myIterator=bookList.iterator();
-    while(myIterator.hasNext()) {
-        Book item = myIterator.next();
-        Integer checkRow=item.getRow();
-        Integer checkCol=item.getCol();
-        if (checkRow==firstrow && checkCol>=firstcol) {
-            checkCol=checkCol+1;
-            item.setCol(checkCol);
-            double newX=convertColtoX(checkCol);
-            item.setX(newX);
-            double newY=convertRowtoY(checkRow);
-            item.setY(newY);
-            //System.out.println("Set a col for a Book to +1");
-        }
-    }
-}
-
-//nudgeCellLeftInRow
-
-public void nudgeCellLeftInRow(Integer firstrow, Integer firstcol){
-    ArrayList<Book> bookList = myProject.getBooksOnShelf();
-    Iterator<Book> myIterator=bookList.iterator();
-    while(myIterator.hasNext()) {
-        Book item = myIterator.next();
-        Integer checkRow=item.getRow();
-        Integer checkCol=item.getCol();
-        if (checkRow==firstrow && checkCol>=firstcol && firstcol>0) {
-            checkCol=checkCol-1;
-            item.setCol(checkCol);
-            double newX=convertColtoX(checkCol);
-            item.setX(newX);
-            double newY=convertRowtoY(checkRow);
-            item.setY(newY);
-            //System.out.println("Set a col for a Book to -1");
-        }
-    }
-}
-
-//moveactiveright
-public void moveActiveRight(Book myBook) {
-    System.out.println("move right...");
-    Integer row=myBook.getRow();
-    Integer col=myBook.getCol();
-    Boolean moved = false;
-    ArrayList<Book> sorted= myProject.listBooksShelfOrder();
-    Iterator <Book> myIterator = sorted.iterator();
-    while(myIterator.hasNext()) {
-      Book item = myIterator.next();
-      System.out.println(item+" "+item.getLabel());
-      if (item.getRow()==row && item.getCol()==col && moved==false) {
-          if (myIterator.hasNext()) {
-              MainStage.this.setActiveBook(myIterator.next());
-              moved=true;
-          }
-      }
-   }
-}
-
-//moveactiveright
-public void moveActiveLeft(Book myBook) {
-    //System.out.println("move left...");
-    Integer row=myBook.getRow();
-    Integer col=myBook.getCol();
-    Boolean moved = false;
-    ArrayList<Book> sorted= myProject.listBooksShelfOrder();
-    Integer mySize=sorted.size();
-    ListIterator <Book> myIterator = sorted.listIterator(mySize); //must pass argument at time of creation to set at right end
-    Boolean start=false;
-    while(myIterator.hasPrevious()) {
-      Book item = myIterator.previous();
-      if (item.getRow()==row && item.getCol()==col && moved==false) {
-        if (myIterator.hasPrevious()) {
-          MainStage.this.setActiveBook(myIterator.previous());
-          moved=true;
-        }  
-      }
-   }
-}
-
-//At present this function moves to existing 'boxes' not grid position
-public void moveActiveUp(Book myBook) {
-    //System.out.println("move left...");
-    Integer row=myBook.getRow();
-    Integer col=myBook.getCol();
-    Boolean moved = false;
-    ArrayList<Book> sorted= myProject.listBooksShelfOrder();
-    Integer mySize=sorted.size();
-    ListIterator <Book> myIterator = sorted.listIterator(mySize); //must pass argument at time of creation to set at right end
-    Boolean start=false;
-    while(myIterator.hasPrevious()) {
-      Book item = myIterator.previous();
-      if (item.getRow()<row && item.getCol()==col && moved==false) {
-          MainStage.this.setActiveBook(item);
-          moved=true;
-        }  
-   }
-}
-
-//At present this function moves to existing 'boxes' not grid position
-public void moveActiveDown(Book myBook) {
-    //System.out.println("move left...");
-    Integer row=myBook.getRow();
-    Integer col=myBook.getCol();
-    Boolean moved = false;
-    ArrayList<Book> sorted= myProject.listBooksShelfOrder();
-    Integer mySize=sorted.size();
-    Iterator <Book> myIterator = sorted.iterator(); //must pass argument at time of creation to set at right end
-    Boolean start=false;
-    while(myIterator.hasNext()) {
-      Book item = myIterator.next();
-      if (item.getRow()>row && item.getCol()==col && moved==false) {
-          MainStage.this.setActiveBook(item);
-          moved=true;
-        }  
-   }
-}
-
-//this acts as a layout API - converts raw row, col to pixel coords
-public double convertRowtoY(Integer myRow){
-     double newY=(myRow*this.cellgap_y)+this.cellrowoffset_y+this.boxtopmargin;
-     return newY;
-}
-
-public double convertColtoX(Integer myCol) {
-    double newX=(myCol*this.cellgap_x);
-    return newX;
-}
-
-/*
-Function to update Book X,Y position based on Row,Col coordinates
-
-*/
-
-public void setXYfromRowCol(Book myBook) {
-    int minimumY=40;
-    double newY=this.cellgap_y*myBook.getRow()+minimumY;
-    double newX=this.cellgap_x*myBook.getCol();
-    myBook.setXY(newX,newY);
-}
-
-/*
-Function to update Book X,Y position based on Row,Col coordinates
-*/
-
-public void setXYfromNewRowCol(Book myBook, Integer row, Integer col) {
-    int minimumY=40;
-    double newY=this.cellgap_y*row+minimumY;
-    double newX=this.cellgap_x*col;
-    myBook.setXY(newX,newY);
-}
-
-/*
-public ArrayList<Book> getBooksOnShelf() {
-    return this.booksOnShelf;
-}
-*/
-
-
-//TO DO: simplify so that Row,Col is used if not being dragged.
-
-public void positionBookOnStage(Book myBook) {
-        
-    if (myBook.getY()!=0) {
-        double ypos=snapYtoShelf(myBook,myBook.getY());
-        double xpos=snapXtoShelf(myBook,myBook.getX()); //
-        myBook.setY(ypos);
-        myBook.setX(xpos);
-    }
-    else {
-        //myBook.setX(this.spriteX); //xpos advances according to advance method
-        //TO DO?  set column for this book?
-        double xpos=snapXtoShelf(myBook,this.spriteX); //
-        double ypos=snapYtoShelf(myBook,this.spriteY); //does setRow
-        this.spriteY=(int)ypos;
-        this.spriteX=(int)xpos;
-        myBook.setX(xpos);
-        myBook.setY(ypos);
-        //myBook.setTranslateX(this.spriteX);
-        //myBook.setTranslateY(this.spriteY);
-    }
-    myBook.setTranslateY(myBook.getY());
-    myBook.setTranslateX(myBook.getX());
-}
-
-public void resetBookOrigin() {
-    this.spriteY=firstcell_y;
-    this.spriteX=firstcell_x;
-}
-
-//new 'shelf'??
-private void newBookColumn() {
-    this.spriteY=this.spriteY+this.cellgap_y;
-    this.spriteX=firstcell_x;
-}
-
-//TO DO: Reset sprite positions when re-loading display.  To match a Grid Layout.
-//TO DO: use Row, Col and convert to abs X,Y later
-private void advanceBookPositionHor() {
-        if (this.spriteX>((this.cellcols+1)*this.cellgap_x)) {
-                this.spriteY=spriteY+this.cellgap_y; //drop down
-                this.spriteX=firstcell_x;
-            }
-            else {
-                this.spriteX = this.spriteX+this.cellgap_x; //uniform size for now
-            }
+public void moveFocusCell(String input){
+    myGridSpace.moveFocusCell(input);
 }
 
 //max screen dimensions

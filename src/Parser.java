@@ -756,7 +756,7 @@ public Book MDfileFilter(ArrayList<Integer> fileindex,String input) {
 		newNode.setLayer(layer);
 		newNode.setXY(x,y); //x,y  must be doubles	
 		newNode.setXYZ(x,y,z);//x,y,z must be doubles
-		this.mainstage.snapYtoShelf(newNode,y); //check y and set shelf number
+		//this.mainstage.snapYtoShelf(newNode,y); //check y and set shelf number
 		//At present visibility reflects the last markdown # code detected in file.
 		newNode.setVisible(true);
 		//convert contents to html for initial 'preview'

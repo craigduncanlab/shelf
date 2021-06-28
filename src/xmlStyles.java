@@ -156,7 +156,7 @@ private void makeSummaryStylesList(){
 /*
 input: inclusive arraylist of styles tags from styles.xml (as full strings)
 
-output: only a list of names of styles that contain outline lvl= 0
+output: only a list of names of styles that contain outline lvl = 0 or 1
 */
 
 public void setOutlineNames() {

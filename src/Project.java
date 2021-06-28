@@ -282,13 +282,16 @@ public void addBooksToProject(ArrayList<Book> input) {
     }
 }
 
-//add a new Book but not before checking it is not duplicate
-//Even though this is for data only purposes, because a 'Book' is also (for now) a JavaFX object
-//We need to ensure that it's basic FX setup is complete, including adding event handlers
-//by the time it is added to stage.
+/*
+Adds a new Book to Project array, but not before checking it is not duplicate
+Primarily for data only purposes. However, because a 'Book' is also (for now) a JavaFX object:
+We need to ensure that it's basic FX setup is complete, including adding event handlers
+by the time it is added to stage.  Handled externally.
+*/
+
 public Book addBookToProject(Book myBook){
     if (myBook==null) {
-        System.out.println("Project. addBookToStage.  No Book to add");
+        System.out.println("Project. addBookToProject.  No Book to add");
         System.exit(0);
     }
     Book newBook = myBook;
@@ -326,13 +329,13 @@ public ArrayList<Book> listBooksShelfOrder() {
         scoreIndexes.add(score);
     }
     Collections.sort(scoreIndexes); //performs a sort
-    System.out.println("Sorting collection in Project.java");
-    System.out.println(scoreIndexes);
+    //System.out.println("Sorting collection in Project.java");
+    //System.out.println(scoreIndexes);
     //System.exit(0);
-    System.out.println("Books num: "+booknum);
+    //System.out.println("Books num: "+booknum);
     ArrayList<Book> sortedBooks = new ArrayList<Book>();
     Iterator<Integer> myIterator = scoreIndexes.iterator();
-    System.out.println("Book score printout:\n");
+    //System.out.println("Book score printout:\n");
          while (myIterator.hasNext()) {
             Integer targetscore = myIterator.next();
             System.out.println("target:"+targetscore);
@@ -340,7 +343,7 @@ public ArrayList<Book> listBooksShelfOrder() {
             while (bookIterator.hasNext()) {
                 Book item = bookIterator.next();
                 Integer test = item.getRowScore(); //calculated based on row, col
-                System.out.println("test score:"+test);
+                //System.out.println("test score:"+test);
                 if (test.equals(targetscore)) {
                     System.out.println("matched");
                     sortedBooks.add(item);

@@ -1,4 +1,4 @@
-//(c) Craig Duncan 2017-2020 
+//(c) Craig Duncan 2017-2021
 //www.craigduncan.com.au
 
 import javafx.application.Application;
@@ -221,7 +221,7 @@ private MenuBar makeMenuBar() {
             System.exit(0);
             }
         });
-        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,SaveAsDocxMenuItem,UpdateDocxMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,importAsRowBelow,exit);
+        menuFile.getItems().addAll(OpenTempl,SaveShelf,SaveAsMenuItem,SaveAsDocxMenuItem,UpdateDocxMenuItem,saveRowAsMenuItem,ClearBookshelfMenuItem,exit);
         SaveShelf.setOnAction(SaveHandler);
         SaveAsMenuItem.setOnAction(SaveAsHandler); //docname
         SaveAsDocxMenuItem.setOnAction(SaveAsDocxEvent);
@@ -229,6 +229,7 @@ private MenuBar makeMenuBar() {
         saveRowAsMenuItem.setOnAction(saveRowAsHandler);
         OpenTempl.setOnAction(openTemplate);
         ClearBookshelfMenuItem.setOnAction(clearBookShelf);
+        //No longer using import as Row below on menu 28.6.21
         importAsRowBelow.setOnAction(importAsRowHandler);
 
         //GENERAL LAYOUT/WRAP OPTIONS
@@ -341,14 +342,6 @@ public void setLetterStyleXML(){
     Stage_WS.addNewStyleTheme("Letter");
 }
 
-//
-public void setDisplayModeTitles(int input) {
-    if (input>0 && input<6) {
-        this.displayMode=input;
-        Stage_WS.setDisplayModeTitles(this.displayMode);
-    }
-}
-
 //clearBooksFromShelf
 public void clearBooksFromShelf() {
     //clear filepath too, to prevent saving over?
@@ -376,104 +369,56 @@ public Integer getColofActiveBook() {
 
 //clearBooksFromShelf
 public void importAsRowBelowMethod() {
-    //clear filepath too, to prevent saving over?
-    Integer row = getRowofActiveBook();
-    Integer newRow=row+1;
-    insertRowAfterMethod(row); //clear out the row.
+    Stage_WS.insertRow("after"); //clear out the row.
     //to do - see if 'length' of array with Books from Row x+1 is zero.  If so, just import.  If not, 'insert' row first.
-    Stage_WS.openFileAsRow(newRow);
-}
-
-//inserts a row before input row
-public void insertRowBeforeMethod(Integer firstrow) {
-    if (firstrow<0) {
-        firstrow=0;
-    }
-    Stage_WS.insertRow(firstrow);
-    //update appearance?
-}
-
-//inserts a row after input row
-public void insertRowAfterMethod(Integer firstrow) {
-    if (firstrow<0) {
-        firstrow=0;
-    }
-    firstrow=firstrow+1;
-    Stage_WS.insertRow(firstrow);
-    //update appearance?
-}
-
-//insertCellShiftRightMethod
-public void insertCellShiftRightMethod(Integer firstrow, Integer firstcol) {
-    if (firstrow<0) {
-        firstrow=0;
-    }
-    if (firstcol<0) {
-        firstcol=0;
-    }
-    //firstcol=firstcol+1;
-    Stage_WS.nudgeCellRightInRow(firstrow,firstcol);
-    //update appearance?
-}
-
-//nudgeCellShiftLeftMethod
-public void nudgeCellShiftLeftMethod(Integer firstrow, Integer firstcol) {
-    if (firstrow<0) {
-        firstrow=0;
-    }
-    if (firstcol<0) {
-        firstcol=0;
-    }
-    //firstcol=firstcol+1;
-    Stage_WS.nudgeCellLeftInRow(firstrow,firstcol);
-    //update appearance?
+    //Discontinued 28.6.21
+    //Stage_WS.openFileAsRow(newRow);
 }
 
 public void resetFileNames(String title) {
     this.currentOpenFile=new File (title);
-    //this.currentOpenFile = new File ("untitled.md");
-    //Stage_WS.setFilename(this.currentOpenFile.getPath());
 }
 
 /*
 Method to end alert status for current sprite and reassign
 Currently this looks at all Sprite Boxes globally (regardless of viewer/location)
-*/
+
 private void moveAlertFromBooktoBook(Book hadFocus, Book myBook) {
 
-    if (Stage_WS.getActiveBook()==null) {
-            System.out.println("activeBook is null move alert");
+    if (Stage_WS.getActiveViewBook()==null) {
+            System.out.println("activeBook is null : moveAlert in Main");
             System.exit(0);
         }
     Stage_WS.setActiveBook(myBook);
     }
  
-
+*/
 //general method to store currentSprite
 
 private void setActiveBook(Book myBook) {
-    if (Stage_WS.getActiveBook()==null) {
-            System.out.println("activeBook is null set current sprite");
+    if (Stage_WS.getActiveViewBook()==null) {
+            System.out.println("activeBook is null : setActiveBook in Main");
             System.exit(0);
         }
     Stage_WS.setActiveBook(myBook);
 }
 
 private Book getActiveBook() {
-    return Stage_WS.getActiveBook();  
+    return Stage_WS.getActiveViewBook();  
 }
 
-/* Method to remove current Book and contents 
+/* 
+Method to remove current Book from Project and Views
 */
 
-public void deleteSpriteGUI(Book myBook) {
+public void deleteBookFromProject(Book myBook) {
     
     if (myBook!=null) {
-        Stage_WS.removeBookFromStage(myBook);
+        Stage_WS.removeBookFromProjectAndViews(myBook);
     }
     else
     {
-        System.out.println("Error : no sprite selected to delete");
+        System.out.println("Error : no Book to delete : deleteBookFromProject in Main");
     }
 }
 
@@ -491,14 +436,14 @@ public void deleteSpriteGUI(Book myBook) {
         MenuBar myMenu = makeMenuBar();
        
         //The main Stage for Workspace.  
-        Stage_WS = new MainStage("Literate Database (c) Craig Duncan 2021", myMenu,Main.this,primaryStage);  //sets up GUI for view
+        Stage_WS = new MainStage("SAVvy Text Data Processor (c) Craig Duncan 2021", myMenu,Main.this,primaryStage);  //sets up GUI for view
         
         if (this.Stage_WS==null) {
-            System.out.println("Stage_WS is null start application");
+            System.out.println("Stage_WS is null : start in Main");
             System.exit(0);
         }
         else {
-            System.out.println("Stage_WS object created.");
+            System.out.println("Stage_WS object created in Main.");
         }
         //setWordStyles();
         //testZip();
@@ -512,7 +457,7 @@ public void deleteSpriteGUI(Book myBook) {
         @Override
         public void handle(ActionEvent t) {
         
-            deleteSpriteGUI(getActiveBook());
+            deleteBookFromProject(getActiveBook());
             }
         };
 
@@ -521,10 +466,6 @@ public void deleteSpriteGUI(Book myBook) {
     public void mainFileLoader() {
         this.currentOpenFile=Main.this.Stage_WS.openNewFile();
     }
-
-    //TO DO: Link this to 'Project' class, which will hold filetypes, and kind of file we loaded.
-    //if we have a list of the Book objects inside the Books, and they have the relevant metadata (including x,y),
-    //Then we do not need to actually query the Book class - we can just save as per clause container
 
 /* Save the current file.
 The myProject settings should be used by default.
@@ -590,8 +531,7 @@ The myProject settings should be used by default.
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-            //Main.this.performBoxWrapFunction();
-            Stage_WS.wrapBooks();
+            Stage_WS.setLayoutMode("wrap");
             }
         };
 
@@ -599,8 +539,7 @@ The myProject settings should be used by default.
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-            //Main.this.performBoxWrapFunction();
-            Stage_WS.wrapProjectBooksCheckers();
+            Stage_WS.setLayoutMode("checkers");
             }
         };
 
@@ -608,8 +547,7 @@ The myProject settings should be used by default.
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-            //Main.this.performBoxWrapFunction();
-            Stage_WS.unpackBooksAsRow();
+            Stage_WS.setLayoutMode("row");
             }
         };
 
@@ -617,8 +555,7 @@ The myProject settings should be used by default.
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-            //Main.this.performBoxWrapFunction();
-            Stage_WS.unpackBooksAsCol();
+            Stage_WS.setLayoutMode("col");
             }
         };
 
@@ -654,7 +591,7 @@ The myProject settings should be used by default.
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Main.this.setDisplayModeTitles(1);
+        Main.this.Stage_WS.setDisplayMode("title"); //1
         }
     };
 
@@ -662,7 +599,7 @@ The myProject settings should be used by default.
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Main.this.setDisplayModeTitles(4);
+        Main.this.Stage_WS.setDisplayMode("date"); //4
         }
     };
 
@@ -671,7 +608,7 @@ The myProject settings should be used by default.
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Main.this.setDisplayModeTitles(3);
+        Main.this.Stage_WS.setDisplayMode("field"); //3
         }
     };
 
@@ -679,7 +616,7 @@ The myProject settings should be used by default.
     new EventHandler<ActionEvent>() {
     @Override 
     public void handle(ActionEvent event) {
-        Main.this.setDisplayModeTitles(5);
+        Main.this.Stage_WS.setDisplayMode("bookmark"); //5
         }
     };
 
@@ -728,7 +665,7 @@ The myProject settings should be used by default.
         @Override 
         public void handle(ActionEvent event) {
             Integer row=Main.this.getRowofActiveBook();
-            Main.this.insertRowAfterMethod(row);
+            Main.this.Stage_WS.insertRow("after");
            
             }
         };
@@ -737,7 +674,7 @@ The myProject settings should be used by default.
         @Override 
         public void handle(ActionEvent event) {
             Integer row=Main.this.getRowofActiveBook();
-            Main.this.insertRowBeforeMethod(row);
+            Main.this.Stage_WS.insertRow("before");
            
             }
         };
@@ -747,10 +684,7 @@ The myProject settings should be used by default.
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-            Integer row=Main.this.getRowofActiveBook();
-            Integer col=Main.this.getColofActiveBook();
-            Main.this.insertCellShiftRightMethod(row,col);
-           
+             Main.this.Stage_WS.cellShift("right");
             }
         };
 
@@ -759,10 +693,7 @@ The myProject settings should be used by default.
         new EventHandler<ActionEvent>() {
         @Override 
         public void handle(ActionEvent event) {
-            Integer row=Main.this.getRowofActiveBook();
-            Integer col=Main.this.getColofActiveBook();
-            Main.this.nudgeCellShiftLeftMethod(row,col);
-           
+            Main.this.Stage_WS.cellShift("left");
             }
         };
 

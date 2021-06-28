@@ -15,6 +15,7 @@ ArrayList<String> stylesList;
 ArrayList<String> lvl0StyleNames;
 ArrayList<String> headingTextList;
 ArrayList<xmlBlock> blocklist;
+ArrayList<ooxmlTable> tablelist;
 ArrayList<Book>  booklist;	
 xmlStyles myStyles = new xmlStyles();
 ZipUtil originalZip = new ZipUtil();
@@ -23,6 +24,7 @@ ZipUtil originalZip = new ZipUtil();
 public docXML() {
 	lvl0StyleNames = new ArrayList<String>();
 	headingTextList = new ArrayList<String>();
+    tablelist = new ArrayList<ooxmlTable>();
 }
 
 //-- LOADER
@@ -39,6 +41,10 @@ public int openDocx(File file){
       originalZip.OpenDocX(file);
       System.out.println(file.getName());
       setDocString(this.originalZip.getDocument());
+      /*
+      System.out.println(getDocString());
+      System.exit(0);
+      */
       if (getDocString().length()==0) {
         System.out.println("No document.xml string returned in docXML");
         return -1;
@@ -49,7 +55,8 @@ public int openDocx(File file){
           setSummaryStylesString(myStyles.getSummaryStylesString()); //just for display
           setDocNumberingString(this.originalZip.getNumbering());
           //populate blocklist for future use
-          setInitialParalist();
+          setInitialTables();
+          setInitialParalist(); 
           setInitialBlocklist();
           //makeBooksFromBlocklist(); //handle this externally
           return 0;
@@ -58,10 +65,51 @@ public int openDocx(File file){
 
 //--blocklist for main API
 
+/*
+
+Input: 
+
+Uses the current document.xml contents as basis for extraction.
+
+Function: Find tables in this document, and since they are higher level XML element to
+paragraphs, store both the string and the index positions in file to help
+categorise paragraph entries that are also in tables
+
+Output: stores tables in ooxmlTable objects, adds to:
+tablelist - the global array of such objects in this class
+
+*/
+
+public void setInitialTables(){
+    setTableList(getTableIndexes(getDocString()));
+    // logTables();
+}
+
+public void logTables(){
+    ArrayList<ooxmlTable> myTL = getTableList();
+    for (ooxmlTable currentTable : myTL){
+        System.out.println("Found table with index positions: "+currentTable.getStartIndex()+" to: "+currentTable.getEndIndex());
+        System.out.println("----");
+        System.out.println(currentTable.getString());
+        System.out.println("----");
+    }
+    System.out.println("Current number of tables:"+myTL.size());
+    // System.exit(0);
+}
+
 public void setInitialParalist() {
     ArrayList<xmlPara>myLines=extractParas(); //lines are coded as they are added
     setParaList(myLines);
 }
+
+public void setTableList(ArrayList <ooxmlTable> input) {
+    this.tablelist=input;
+}
+
+public ArrayList<ooxmlTable>getTableList() {
+    return this.tablelist;
+}
+
 
 public void setParaList(ArrayList <xmlPara> input) {
     this.paraList=input;
@@ -355,11 +403,27 @@ public ArrayList<Book> getBooklist() {
 
 // --- Parsers
 
+
+public ArrayList<xmlPara> extractTables(){
+    String contents = getDocString(); 
+    String starttag="<w:tbl>";
+    String endtag="</w:tbl>";
+    //ArrayList<String> result=getTagAttribInclusive(contents,starttag,endtag);
+    ArrayList<xmlPara> result=getXMLparas(contents,starttag,endtag);
+    return result;
+}
+
 //get OOXML <w:p> paras (modelled on my xmlutil.py)
 /* input:
-This is the entire document.xml (could be a smaller string, if needed)
-output:
-An array of String type with elements that inclusively match the requested tags
+The original input was the entire document.xml (could be a smaller string, if needed)
+
+Note: Due to the nature of OOXML tagging, which can wrap some paras inside table properties,
+this specific tag matching will extract paras from inside tables without recognising they are inside tables.
+
+So here, we capture table positions first, and then if the paras here appear inside a table,
+We can choose how to deal with this.  i.e. model the document as a mix of paras and tables
+and we capture the whole table as one 'xmlPara' but with special type?
+
 */
 public ArrayList<xmlPara> extractParas(){
 	String contents = getDocString(); 
@@ -422,6 +486,61 @@ public ArrayList<String> getTagAttribInclusive(String thispara,String starttag, 
             newstart=newstart+1;
         }
     }
+    return output;
+}
+
+/*
+This will be a function to find tables, store index positions for secondary parsing
+It will then integrate the table objects into main document model 'array' of content
+
+Input : The whole document.xml string
+
+Output: Array of ooxmlTable objects, for number of tables detected.
+
+*/
+
+public ArrayList<ooxmlTable> getTableIndexes(String input) {
+    String starttag="<w:tbl>";
+    String endtag="</w:tbl>";
+    ArrayList<ooxmlTable> output= new ArrayList<ooxmlTable>();
+    ooxmlTable currentTable = new ooxmlTable();
+    int stop = input.length();
+    int newstart=0;
+    String starttagend=starttag.substring(starttag.length()-1,starttag.length()); // this will be > in all cases
+    starttag=starttag.substring(0,starttag.length()-1);// strip off closing >
+    while (newstart<=stop) {
+        currentTable = new ooxmlTable(); //to reset the reference.
+        int sindex=input.indexOf(starttag,newstart); //unlike python 'find', stop value not needed
+        if (sindex==-1) {
+            //System.out.println("Found nothing");
+            return output; // nothing found to end = None?
+        }
+        int findex=input.indexOf(endtag,sindex); //find first index of end tag
+        String test=input.substring(sindex+starttag.length(),sindex+starttag.length()+1);
+        if (test.equals(starttagend) || test.equals(" ")) {
+            if (findex!=-1){
+                String thistext=input.substring(sindex,findex+endtag.length());
+
+                // omit if this is a picture
+                //testpict="<w:pict>"
+                //if testpict not in thistext:
+                currentTable.setString(thistext); //initialise the paragraph with text
+                currentTable.setStartIndex(sindex);
+                currentTable.setEndIndex(findex+endtag.length());
+                //TO DO: currentTable.setTableFeatures();
+                //currentPara=setmyParaOutlineCode(currentPara); //update para with style information
+                output.add(currentTable); // add to the array
+                newstart=findex+endtag.length(); //len(endtag);
+            }
+            else {
+                newstart=newstart+1;
+            }
+        }
+        else {
+            newstart=newstart+1;
+        }
+    }
+    //System.exit(0);
     return output;
 }
 

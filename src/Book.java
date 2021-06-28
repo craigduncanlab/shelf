@@ -88,7 +88,7 @@ Integer layerNumber=1;
 Integer stdWidth=80; //same as BookIcon width.
 EventHandler myPressBox;
 EventHandler myDragBox;
-Integer displayMode=1;
+String displayMode="title";
 String splitType="OutlineLvl0"; //default
 
 //empty constructor no arguments
@@ -138,7 +138,7 @@ public Book(xmlBlock input) {
 	setBookmarkString(input.getBookmarkListAsString());
 	setSplitType(input.getSplitType());
 	if (getSplitType().equals("Bookmark")){ 
-        setDisplayMode(5); //bookmarks default. update?
+        setDisplayMode("bookmark"); //bookmarks default. update?
     }
 	/*
 	System.out.println(getBookmarkString());
@@ -284,8 +284,8 @@ public void setZ(double z) {
 
 //---UPDATE TEXT DISPLAYED ON BOX
 
-public void setDisplayMode(Integer mode) {
-	if (mode>0) {
+public void setDisplayMode(String mode) {
+	if (!mode.equals("")) {
 		this.displayMode=mode;
 	}
 	updateDisplay();
@@ -294,43 +294,53 @@ public void setDisplayMode(Integer mode) {
  //helper function to set label of underlying BookIcon 
 public void setLabel(String myString) {
     if (!myString.equals("")) {
-    	this.booklabel=myString;
+    	this.booklabel=myString; //cf displaylabel
     	updateDisplay();
     }
 }
 
-public void updateDisplay(){
-	if (this.displayMode==1) {
-		String update = getLabel();
-        setVisibleNodeText(update);
+/*
+Update text on front of book/box depending on selected display mode
+*/
+
+private void updateDisplay() {
+	String update = getLabel();//default
+	if (this.displayMode.equals("title")) {
+		update = getLabel();  
 	}
-	else if (this.displayMode==2) {
-		String update = getOutlineLevel()+" "+getStyleId();
-        setVisibleNodeText(update);
+	else if (this.displayMode.equals("combo")) {
+		update = getOutlineLevel()+" "+getStyleId();
 	}
-	else if (this.displayMode==3) {
-		String update = getStyleId();
-        setVisibleNodeText(update);
+	else if (this.displayMode.equals("field")) {
+		update = getStyleId();
 	}
-	else if (this.displayMode==4) {
-		String update = getdate();//getOutlineLevel()+" "+getStyleId();
-        setVisibleNodeText(update);
+	else if (this.displayMode.equals("date")) {
+		update = getdate();//getOutlineLevel()+" "+getStyleId();
 	}
-	else if (this.displayMode==5) {
-		String update = getBookmark();
+	else if (this.displayMode.equals("bookmark")) {
+		update = getBookmark();
 		if (update.length()==0){
 			update=getBookmarkString(); 
 		}
-        setVisibleNodeText(update);
 	}
+	setVisibleNodeText(update);
 }
 
 private void setVisibleNodeText(String myLabel) {
+	//logDisplayMode(myLabel);
 	this.displaylabel=myLabel;
 	if (myLabel.length()>50) {
 		myLabel=myLabel.substring(0,48); //limit book label to first "# " + 10 characters
 		}
 		this.bookspinetext.setText(myLabel);
+}
+
+private void logDisplayMode(String input){
+	logger(input);
+}
+
+private void logger (String input){
+	System.out.println(input);
 }
 
 // ---- 
@@ -349,16 +359,20 @@ public double getZ() {
 
 }
 
-public void setRow(Integer myShelf) {
-	this.rowNumber=myShelf;
+public void setRow(Integer input) {
+	if (input>=0){
+		this.rowNumber=input;
+	}
 }
 
 public Integer getRow() {
 	return this.rowNumber;
 }
 
-public void setCol(Integer myCol) {
-	this.columnNumber=myCol;
+public void setCol(Integer input) {
+	if (input>=0){
+		this.columnNumber=input;
+	}
 }
 
 public Integer getCol() {

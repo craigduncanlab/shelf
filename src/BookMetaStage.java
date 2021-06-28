@@ -722,7 +722,7 @@ public void fillSelectionDate() {
         if (outline>=0) {
             item.setOutlineLevel(outline);
         }
-        item.updateDisplay();
+        //item.updateDisplay();
         /* just do dates
         if(tl.length()>0){
             item.settime(tl);
