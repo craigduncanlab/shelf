@@ -3,17 +3,19 @@
 ## Copyright holder
 
 The copyright holder is Craig Duncan, of Perth, Western Australia.
-Copyright © 2017-2020, Craig Duncan www.craigduncan.com.au; http://github.com/craigduncanlab All rights reserved.
+Copyright © 2017-2021, Craig Duncan www.craigduncan.com.au; http://github.com/craigduncanlab All rights reserved.
 
 ## Repository License
 
-Repository URL: https://github.com/craigduncanlab/shelf ("Repository")
+Repository URL: https://github.com/craigduncanlab/litdb ("Repository")
 
-The copyright holder's programs located in the Repository (software) at any time are disclosed on the following terms and conditions.
+The copyright holder's programs and data located in the Repository (software) at any time are disclosed on the following terms and conditions.
 
 ## Use restrictions
 
-The software is not in the public domain - copyright is retained by Craig Duncan.
+The software is not in the public domain - copyright is retained by Craig Duncan.  
+
+Non-commercial use and adaptation of source is likely to be permitted if you get in touch first and explain your proposed use, and abide by the terms of the licence granted to you by me at that time (for example a Creative Commons Licence, or a modified form of Creative Commons Licence).   
 
 Please direct requests for use (private, educational), or collaboration, to the author.  Commercial use is prohibited at this time.
 
@@ -23,4 +25,4 @@ If the software is removed from the Repository, these terms continue to apply to
 
 ## Last updated
 
-1 September 2020.
+15 June 2021
