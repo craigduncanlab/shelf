@@ -144,6 +144,7 @@ public void addBook(Book newBook){
 
 /*
 pasteBook is like addBook but it shifts the location one column to right
+The event handlers are already there because it uses clone function to create.
 */
 
 public void pasteBook(Book newBook){

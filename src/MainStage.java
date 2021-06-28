@@ -148,9 +148,7 @@ String filename = "";
 String shortfilename=""; //current filename for saving this stage's contents
 */
 String category="";
-//Displayed Book (i.e. Node).  Will be updated through GUI.
-//Book displayNode = new Book();
-int doccount=0; //document counter for this stage
+
 
 //TABS FOR RHS
 TabPane myTabsGroup = new TabPane();
@@ -398,9 +396,10 @@ public void openFileGetBooklist(File file) {
     }
 
 //DISPLAY OPTIONS
+// ------- BEGIN GRIDSPACE API ----- 
 
 /*
-Function: Adds books in project to stage.  
+Function: Adds books in project to gridSpace scrollpane.
 (Is called by unpackBooksToAllViews)
 
 This is the logical place to ensure that event handlers and FX setup is completed,
@@ -410,7 +409,7 @@ This must be done BEFORE calling 'setActiveBook'
 The default starting row,col is 0,0 which differs from the Display Options.
 */
 
-private void AddProjectBooksToStage() throws NullPointerException {
+private void AddProjectBooksToGridView() throws NullPointerException {
     
     ArrayList<Book> myBookList = myProject.getBooksOnShelf();
     //logBooksToView(myBookList.size());
@@ -431,6 +430,51 @@ public void logBooksToView(Integer num){
     System.out.println("Adding project books to stage");
     System.out.println("Project books:"+num);
 }
+
+public void insertRow(String input){
+    myGridSpace.insertRowActive(input);
+}
+
+public void cellShift(String input){
+    myGridSpace.cellShift(input);
+}
+
+//set active sprite.  if problem with tracker, ignore.
+public void setActiveBook(Book b) {
+   myGridSpace.singleSelection(b);
+}
+
+//method to put new book (that doesn't exist in Project) on stage.  
+//cf if you have an existing Book object. addBookToStage
+//This should also (in due course) take layer into account? i.e. Book's layer and Z properties.
+
+public void addNewBookToView () {
+    Book b = new Book(PressBox,DragBox,"untitled","","");
+    myProject.addBookToProject(b); //data model
+    myGridSpace.pasteBook(b); //view.  differs from Main  
+}
+
+public void removeBookFromProjectAndViews(Book thisBook) {
+    //TO DO: remove Node (data) ? is it cleaned up by GUI object removal?
+    myGridSpace.remove(thisBook);
+    myProject.removeBook(thisBook);
+    getStage().show(); //refresh GUI
+    
+}
+
+public Book getActiveViewBook(){
+    return myGridSpace.getActiveBook();
+}
+
+public void removeActiveBook(){
+    removeBookFromProjectAndViews(getActiveViewBook());
+}
+
+public void moveFocusCell(String input){
+    myGridSpace.moveFocusCell(input);
+}
+
+// ------- END GRIDSPACE API ----- 
 
 //use row for positions
 //This is called from 'Main' so it returns the 'File' for future use.
@@ -731,17 +775,12 @@ public void unpackBooksToAllViews() {
 
           //DO THIS ONCE PER OPEN FILE
           clearAllViews(); //clear all stage nodes because we are starting again
-          AddProjectBooksToStage();  //adds current project books back to gridSpace view
-          
-          //if we wanted to reinstate books from stored positions we'd call  setXYfromRowCol(item); instead of bulk options below
-          //reposition books
-
+          AddProjectBooksToGridView();  //adds current project books back to gridSpace view
+          //Optional tab information : tabs only filled for docx
           if (myProject.getExt().equals("docx")) {
             docXML currentDoc = myProject.getOpenDocx();
             setDocxForMainTabs(currentDoc); //update RHS tabs with relevant data
             }
-          //default view.  No saved state for 'this.displayOption' yet
-          //myGridSpace.setLayoutMode("row");
         } 
 
 //set filename to currently open file.
@@ -751,18 +790,6 @@ public void setFilename(String myFile) {
     String fn = myProject.getFilename(); //after checks
     this.shelfFileName.setText(fn);
     this.setTitle(fn); //update title on window
-}
-
-public int getDocCount() {
-    return this.doccount;
-}
-
-public void resetDocCount() {
-    this.doccount=0;
-}
-
-public int advanceDocCount() {
-    return this.doccount++;
 }
 
 //make new scene with Scroller
@@ -789,56 +816,12 @@ private void setKeyPressHandler(EventHandler<KeyEvent> myKE) {
     getStage().addEventFilter(KeyEvent.KEY_PRESSED, myKE);
 }
 
-
-
 EventHandler myMouseLambda = new EventHandler<MouseEvent>() {
  @Override
  public void handle(MouseEvent mouseEvent) {
     System.out.println("Mouse click detected for text output window! " + mouseEvent.getSource());
      }
  };
-
-//JAVA FX TEXT AREAS - GETTERS AND SETTERS
-
-public void setOutputText(String myText) {
-    outputTextArea.setText(myText);
-}
-
-public String getOutputText() {
-    return outputTextArea.getText();
-}
-
-//Return the JavaFX object (Node) 
-public TextArea getOutputTextNode() {
-    return this.outputTextArea;
-}
-
-//Input text area e.g. importer
-public void setInputText(String myText) {
-    inputTextArea.setText(myText);
-}
-
-public String getInputText() {
-    return inputTextArea.getText();
-}
-
-/* Text Area in JavaFX inherits selected text method from
-javafx.scene.control.TextInputControl
-*/
-
-private String getSelectedInputText() {
-    return inputTextArea.getSelectedText();
-}
-
-//set the identified JavaFX object (TextArea) for the Stage
-public void setStageTextArea(TextArea myTA) {
-    this.inputTextArea = myTA;
-}
-
-//Return the JavaFX object (Node) 
-public TextArea getInputTextNode() {
-    return this.inputTextArea;
-}
 
 //SIMPLE SCENE GETTERS AND SETTERS AS JAVA FX WRAPPER
 
@@ -885,14 +868,6 @@ private void refreshTitle() {
 }
 */
 
-public void setCategory(String myCat) {
-    this.category=myCat;
-}
-
-public String getCategory() {
-    return this.category;
-}
-
 //for passing in a menubar from main (for now: 29.4.18)
 public void setMenuBar(MenuBar myMenu) {
     this.localmenubar = myMenu;
@@ -928,6 +903,11 @@ public Stage getStage() {
     return this.localStage;
 }
 
+/*
+    A function that will clear all books from grid UI, AND the Project books
+    
+*/
+
 public void clearAllBooks() {
     myProject.clearAllBooks(); 
     clearAllViews();
@@ -944,7 +924,10 @@ public void clearAllBooks() {
 
 public void clearAllViews() {
     myGridSpace.clear();
-    //clean up workspace
+    cleanAllTabContent();
+}
+
+public void cleanAllTabContent(){
     styleTextArea.setText(""); //to display in tab_StyleXML
     styleSummaryTextArea.setText("");
     fieldsTextArea.setText("");
@@ -963,13 +946,6 @@ private void stageBack() {
 
 private void stageFront() {
     this.localStage.toFront();
-}
-
-//getters and setters
-public void setCurrentXY(double x, double y) {
-
-	this.latestX=x;
-    this.latestY=y;
 }
 
 //method to fix the BookMetaStage instance position relative to screen dimensions
@@ -1007,34 +983,6 @@ public void toggleStage() {
         return;
     }
 }
-
-/*
-//The scene only contains a pane to display sprite boxes
-private Scene makeSceneForBoxes(ScrollPane myPane) {
-        
-        Scene tempScene = new Scene (myPane,650,400); //default width x height (px)
-        //add event handler for mouse event
-        tempScene.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
-         @Override
-         public void handle(MouseEvent mouseEvent) {
-         System.out.println("Mouse click on SM scene detected! " + mouseEvent.getSource());
-         //setStageFocus("document");
-             }
-        });
-        updateScene(tempScene);
-        return tempScene;
-}
-*/
-
-/*
-//Method to change title depending on data mode the node is in.
-private String getTitleText(String myString) {
-    System.out.println("Make Scene. User Node View: "+getActiveViewBook().getUserView());
-    //main function        
-    return getActiveViewBook().getDocName()+myString;
-   
-}
-*/
 
 /* New Local mouse event handler */
  EventHandler<KeyEvent> SaveKeyEventHandler = new EventHandler<KeyEvent>() {
@@ -1138,15 +1086,11 @@ EventHandler<MouseEvent> processLocalBoxClick =
                 //test for multiple selection
                 if (t.isMetaDown()) {
                   System.out.println("One click with Meta");
-                  Integer latestRow=currentBook.getRow();
-                  Integer latestCol=currentBook.getCol();
-                  System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
+                  //logger(currentBook);
                   MainStage.this.myGridSpace.toggleExtraSelection(currentBook);
                 }
                 if (t.isShiftDown()) {
-                  Integer latestRow=currentBook.getRow();
-                  Integer latestCol=currentBook.getCol();
-                  System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
+                  //logger(currentBook);
                   MainStage.this.myGridSpace.shiftedSelection(currentBook);
                 }
 
@@ -1157,16 +1101,7 @@ EventHandler<MouseEvent> processLocalBoxClick =
                 break;
             case 2:
                 System.out.println("Two clicks");
-                
-                //moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
-                
-                //Dbl Click action options depending on box type
-               
-                //bookMetaInspectorStage=currentBook.getStageLocation();
-                //only open if not already open (TO DO: reset when all children closed)
-                //prevent closing until all children closed
-                //close all children when node closed.
-                OpenRedBookNow(currentBook);
+                openBlockEditorNow(currentBook);
                 
                 break;
             case 3:
@@ -1180,12 +1115,17 @@ EventHandler<MouseEvent> processLocalBoxClick =
     }
 };
 
+public void logger(Book currentBook){
+    Integer latestRow=currentBook.getRow();
+    Integer latestCol=currentBook.getCol();
+    System.out.println("TO row: "+ latestRow+ " col: "+latestCol);
+}
 
 /* This function passes current book, selection information and event handlers to a new Java Object (BookMetaStage).
 The JavaObject (BookMetaStage) creates a custom JavaFX.stage object that functions as a book data editor.
 The editor stage opened will be able to edit the contents of the currently selected Book (cell). */
 //TO DO: check Book isn't the basis for inspector stage before opening new stage.
-private void OpenRedBookNow(Book currentBook) {
+private void openBlockEditorNow(Book currentBook) {
      //Book currentBook= getActiveViewBook(); //currentBook.getBoxNode();
      //bookMetaInspectorStage.closeThisStage(); //close open stage.  No save checks? //TO DO: close all child stages
      Stage parent = this.localStage; // the Stage associated with this object, not the MainStage object itself.
@@ -1196,34 +1136,6 @@ private void OpenRedBookNow(Book currentBook) {
      bookMetaInspectorStage.storeSelectedBooks(myGridSpace.getSelectedBooks()); //pass any selection to the editor to use (for fills etc)
      System.out.println("new Stage Parameters Set ...");
 }
-/*switch(clickcount) {
-    //single click
-    case 1:
-        moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
-        System.out.println("One click");
-        //change stage focus with just one click on Book (but node still closed)
-        bookMetaInspectorStage=currentBook.getStageLocation();
-        //refreshNodeViewScene();
-        break;
-    case 2:
-        System.out.println("Two clicks");
-        
-        moveAlertFromBoxtoBox(getcurrentBook(),currentBook);
-        
-        //Dbl Click action options depending on box type
-       
-        bookMetaInspectorStage=currentBook.getStageLocation();
-        //only open if not already open (TO DO: reset when all children closed)
-        //prevent closing until all children closed
-        //close all children when node closed.
-        OpenRedNodeNow(currentBook);
-        
-        break;
-    case 3:
-        System.out.println("Three clicks");
-        break;
-}
-*/
 
 
 /*Mouse event handler - to deal with boxes being dragged over this stage manager and release
@@ -1290,7 +1202,7 @@ Create root node and branches that is ready for placing in a Scene.
 Sets up workspace stage with 2 subgroups for vertical separation:
 (a) menu bar
 (aa) layers listview
-(b) sprite display area, which is inside a border pane and group for layout reasons.
+(b) display area
 
 This method does not update content of the Sprite-display GUI node.
 
@@ -1299,10 +1211,9 @@ This method does not update content of the Sprite-display GUI node.
 
 myGroup_root--->
 myBP(top)-->menuBarGroup-->myMenu
-Tabs here?
-tab_Visual:
-myBP(center)-->myScrollPane-->filename+workspacePane (Pane) -->gridGroup (for BookIcons etc to be added)+ RowLines (Line) + ColLines (Line)
-Tab B:
+myBP(center)-->tabGroup tab_Visual etc 
+tab_Visual: ScrollPane and contents from gridSpace object.  Added to tabsGroup.
+
 */
 
 private Group makeWorkspaceTree() {
@@ -1550,7 +1461,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                     try {
                         Book myBook= MainStage.this.getActiveViewBook();
                         myBook.setUserView("metaedithtml");
-                        MainStage.this.OpenRedBookNow(myBook);
+                        MainStage.this.openBlockEditorNow(myBook);
                     }
                     catch (NullPointerException e) {
                         //do nothing
@@ -1572,7 +1483,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                     try {
                         Book myBook= MainStage.this.getActiveViewBook();
                         myBook.setUserView("HTMLonly");
-                        MainStage.this.OpenRedBookNow(myBook);
+                        MainStage.this.openBlockEditorNow(myBook);
                     }
                     catch (NullPointerException e) {
                         //do nothing
@@ -1588,7 +1499,6 @@ private Scene makeWorkspaceScene(Group myGroup) {
                 else if (ke.isMetaDown() && ke.getCode().getName().equals("S")) {
                     System.out.println("CMD-S pressed for save");
                     MainStage.this.writeFileOut();
-                     //currentBook.cycleBookColour();
                 }
                 if (ke.isMetaDown() && ke.getCode().getName().equals("W")) {
                     System.out.println("CMD-W pressed (will clear bookshelf)");
@@ -1598,7 +1508,6 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      System.out.println("CMD-O pressed for open");
                      Integer row = 0;
                      MainStage.this.openNewFile();
-                     //currentBook.cycleBookColour();
                 }
                 //Stage_WS.addNewBookToView();
                 if (ke.isMetaDown() && ke.getCode().getName().equals("N")) {
@@ -1607,7 +1516,7 @@ private Scene makeWorkspaceScene(Group myGroup) {
                      //then to open new link automatically for editing
                      Book myBook= MainStage.this.getActiveViewBook();
                      myBook.setUserView("metaedit");
-                     MainStage.this.OpenRedBookNow(myBook);
+                     MainStage.this.openBlockEditorNow(myBook);
                 }
                 //copy
                 if (ke.isMetaDown() && ke.getCode().getName().equals("C")) {
@@ -1640,32 +1549,24 @@ private Scene makeWorkspaceScene(Group myGroup) {
                 if (ke.getCode()==KeyCode.RIGHT) {
                   ke.consume();
                   System.out.println("Right key pressed for move right");
-                  //Book myBook= MainStage.this.getActiveViewBook();
-                  //MainStage.this.moveActiveRight(myBook);
                   MainStage.this.moveFocusCell("right");
                }
                //change focus to left
                if (ke.getCode()==KeyCode.LEFT) {
                   ke.consume();
                   System.out.println("Left key pressed for move left");
-                  //Book myBook= MainStage.this.getActiveViewBook();
-                  //MainStage.this.moveActiveLeft(myBook);
                   MainStage.this.moveFocusCell("left");
                }
                //change focus up
                if (ke.getCode()==KeyCode.UP) {
                   ke.consume();
                   System.out.println("Up key pressed");
-                  //Book myBook= MainStage.this.getActiveViewBook();
-                  //MainStage.this.moveActiveUp(myBook);
                   MainStage.this.moveFocusCell("up");
                }
                //change focus down
                if (ke.getCode()==KeyCode.DOWN) {
                   ke.consume();
                   System.out.println("Down key pressed");
-                  //Book myBook= MainStage.this.getActiveViewBook();
-                  //MainStage.this.moveActiveDown(myBook);
                   MainStage.this.moveFocusCell("down");
                }
 
@@ -1674,50 +1575,6 @@ private Scene makeWorkspaceScene(Group myGroup) {
         
         return workspaceScene;
     }
-
-public void insertRow(String input){
-    myGridSpace.insertRowActive(input);
-}
-
-public void cellShift(String input){
-    myGridSpace.cellShift(input);
-}
-
-//set active sprite.  if problem with tracker, ignore.
-public void setActiveBook(Book b) {
-   myGridSpace.singleSelection(b);
-}
-
-
-//method to put new book (that doesn't exist in Project) on stage.  
-//cf if you have an existing Book object. addBookToStage
-//This should also (in due course) take layer into account? i.e. Book's layer and Z properties.
-
-public void addNewBookToView () {
-    Book b = new Book(PressBox,DragBox,"untitled","","");
-    myProject.addBookToProject(b); //data model
-    myGridSpace.pasteBook(b); //view.  differs from Main  
-}
-
-public Book getActiveViewBook(){
-    return myGridSpace.getActiveBook();
-}
-
-public void removeActiveBook(){
-    removeBookFromProjectAndViews(getActiveViewBook());
-}
-
-public void removeBookFromProjectAndViews(Book thisBook) {
-    //TO DO: remove Node (data) ? is it cleaned up by GUI object removal?
-    myGridSpace.remove(thisBook);
-    myProject.removeBook(thisBook);
-    getStage().show(); //refresh GUI
-    
-}
-
-public void moveFocusCell(String input){
-    myGridSpace.moveFocusCell(input);
-}
 
 //max screen dimensions
 public double getBigX() {
