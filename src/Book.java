@@ -178,6 +178,10 @@ public void setOOXMLtable(ooxmlTable input){
 	}
 }
 
+public ooxmlTable getOOXMLtable(){
+	return this.myTable;
+}
+
 //Function to set GUI event handlers separate to main data
 public void setHandlers(EventHandler PressBox, EventHandler DragBox){
 	setPressBox(PressBox); //local

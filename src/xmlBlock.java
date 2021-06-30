@@ -280,7 +280,7 @@ public String getNotesText(){
 }
 
 public String getTableAsText(){
-	return this.xmlTable.getString();
+	return this.xmlTable.getXMLString(); //TO DO: getTableAsString();
 }
 
 public void initialiseFromTable(Integer tablecount){

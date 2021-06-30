@@ -149,8 +149,10 @@ public void makeBlocklist() {
 //TO DO: Can this function be enclosed in a Book object?   
 public String getHTMLfromContents(Book myBook) {
   if (myBook.getBlockType().equals("table")) {
-    String output = "<html><body><p>Test for table</p></body></html>";
-    return output;
+      ooxmlTable myTable = myBook.getOOXMLtable();
+      String output = myTable.getTableAsHTML();
+      //String output = "<html><body><p>"+text+"</p></body></html>";
+      return output;
   }
   else {
     return (getHTMLfromMDContents(myBook));

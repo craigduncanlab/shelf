@@ -108,20 +108,20 @@ public void setRegionalBlocklist() {
             ArrayList<xmlPara>myLines=myRegion.getParaGroup();
             ArrayList<xmlBlock> tblocks = makeBlocksSplitOnChoice(myLines,"OutlineLvl0");
             output.addAll(tblocks);
-            System.out.println("Region:"+region);
-            System.out.println("-------------");
-            logtblocks(tblocks);
+            //logtblocks(tblocks,region);
         }
         region++;
     }
-    System.out.println(output.toString());
-    System.out.println(output.size());
+    //System.out.println(output.toString());
+    //System.out.println(output.size());
 
     //System.exit(0);
     setBlocklist(output); //lines are coded as they are added
 }
 
-private void logtblocks(ArrayList<xmlBlock> input){
+private void logtblocks(ArrayList<xmlBlock> input, Integer region){
+    System.out.println("Region:"+region);
+    System.out.println("-------------");
     System.out.println("Logging the tblocks added:...");
     for (xmlBlock item : input){
         String plain = item.getPlainText();

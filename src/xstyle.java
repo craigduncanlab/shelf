@@ -315,7 +315,7 @@ see function convertStylesXMLtoObjects() in xmlStyles
 e.g. Heading 1, then Word doesn't independently store the outline level with this style.
 */
 public void extractOutlineLevel(String ss){
-	System.out.println("ss string:"+ss);
+	//logstylestring(ss);
 	int output=99; //default if not specified in document
 	String parameter="w:outlineLvl w:val";
 	xmlTool myP = new xmlTool();
@@ -326,4 +326,9 @@ public void extractOutlineLevel(String ss){
 	}
 	setOutlineLevel(output);
 }
+
+private void logstylestring(String ss){
+	System.out.println("ss string:"+ss);
+}
+
 }

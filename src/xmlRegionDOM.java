@@ -292,7 +292,7 @@ public void logging(){
             System.out.println("-------------");
             System.out.println(item.getType());
             if (item.getType().equals("table")){
-                System.out.println(item.getTable().getString());
+                System.out.println(item.getTable().getXMLString());
             }
             if (item.getType().equals("paragraph")){
                 ArrayList<xmlPara> myParas = item.getParaGroup();
@@ -342,15 +342,15 @@ private void getRegionsWithTables(ArrayList<ooxmlTable> tableSet) {
         Integer last = getDocString().length();
         myMarkers.add(last);
         Integer numRegions=myMarkers.size()/2;
-        System.out.println("Regions:"+numRegions);
+        //System.out.println("Regions:"+numRegions);
 
         // Now encapsulate the paragraphs in each regions, as per markers
         ArrayList<xmlRegion> myParaRegions = new ArrayList<xmlRegion>();
         for (int y=0;y<numRegions;y++){
-            System.out.println((2*y)+","+(2*y+1));
+            //System.out.println((2*y)+","+(2*y+1));
             int sp=myMarkers.get(2*y); //get start index at (2y)
             int ep=myMarkers.get((2*y)+1); //get end index at (2y+1)
-            System.out.println(sp+","+ep);
+            //System.out.println(sp+","+ep);
             ArrayList<xmlPara> myParas = extractParasWithinLimits(sp,ep);
             xmlRegion myGroup = new xmlRegion();
             myGroup.setParaGroup(myParas);
@@ -363,46 +363,12 @@ private void getRegionsWithTables(ArrayList<ooxmlTable> tableSet) {
         //return myParaRegions;
     }
   
-public void indexLogging(){
-
-        /*
-        System.out.println("-------/nSTART DUMP OF TABLE HERE /n--------");
-        System.out.println(firstTable.getString());
-        int start = firstTable.getStartIndex();
-        int end = firstTable.getEndIndex();
-
-         System.out.println("-------/nTABLE INDEXES /n--------");
-         System.out.println("Start:"+start);
-         System.out.println("End:"+end);
-        */
-        //ArrayList<xmlPara> myParas = extractParasWithinLimits(0,start); //before
-        /*
-        System.out.println("-------/nFIRST PARA INDEXES /n--------");
-         xmlPara item1=myParas.get(0);
-        int sp = item1.getStartIndex();
-        int ep = item1.getEndIndex();
-         System.out.println("Start:"+sp);
-         System.out.println("End:"+ep);
-        System.out.println("-------/nSTART DUMP OF PRIOR PARAS HERE /n--------");
-
-        for (xmlPara item : myParas) {
-            String text = item.getParaString();
-            System.out.println(text);
-            System.out.println("-------/nPARA INDEXES /n--------");
-            sp = item.getStartIndex();
-            ep = item.getEndIndex();
-            System.out.println("Start:"+sp);
-            System.out.println("End:"+ep);
-        }
-         */
-}
-
 public void logTables(){
     ArrayList<ooxmlTable> myTL = getTableList();
     for (ooxmlTable currentTable : myTL){
         System.out.println("Found table with index positions: "+currentTable.getStartIndex()+" to: "+currentTable.getEndIndex());
         System.out.println("----");
-        System.out.println(currentTable.getString());
+        System.out.println(currentTable.getXMLString());
         System.out.println("----");
     }
     System.out.println("Current number of tables:"+myTL.size());
@@ -444,7 +410,7 @@ public ArrayList<ooxmlTable> getTableIndexes(String input) {
                 // omit if this is a picture
                 //testpict="<w:pict>"
                 //if testpict not in thistext:
-                currentTable.setString(thistext); //initialise the table with text
+                currentTable.setXMLString(thistext); //initialise the table with text
                 currentTable.setStartIndex(sindex);
                 currentTable.setEndIndex(findex+endtag.length());
                 //TO DO: currentTable.setTableFeatures();
