@@ -12,11 +12,12 @@ public class xmlBlock {
 	ArrayList<xmlPara> blockParas =new ArrayList<xmlPara>();
 	int blockIndex=0;
 	int blocktype=1; //default.  in substance this is the 'fileindex' code for this line
-
+	
 	//The parameters that the 'block' might hold depend on how we split the file
 	String blockText="";
 	String notesText="";
 	String headerText="";
+	ooxmlTable xmlTable = new ooxmlTable();
 	int outlineLevel=1; //a way to classify blocks for display etc.
 	String StyleXML="";
 	String styleId=""; //corresponds to the style id in the paragraph that forms the header etc
@@ -25,6 +26,9 @@ public class xmlBlock {
 	String plaintext=""; //text in <w:t> tags
 	String splitType="OutlineLvl0"; //default
 	String bookmarkedText="";
+	String blockType="text";//default is text. text,table,code,notes.
+	String inputType="OOXML"; //OOXML,md,rmd,etc
+	
 
 //constructor
 public xmlBlock(){
@@ -35,6 +39,34 @@ public void initialiseBlockContents(){
 	makeBlockXMLfromXMLParas();
 }
 
+/* 
+set the kind of Block, based on some simple data types/data structure identities
+Arguments: text,table,code,notes.  
+
+This is for GUI reasons, and to ensure a common DOM.
+However, we can also keep track of input file type by the 'inputType' parameter.
+
+To help with reversibility/updates we keep details of original file/block separately.  
+*/
+public void setBlockType(String input){
+	this.blockType=input;
+}
+
+public String getBlockType(){
+	return this.blockType;
+}
+
+/* Getters and setters for file that was loaded to setup Book */
+
+
+public void setInputType(String input){
+	this.inputType=input;
+}
+
+public String getInputType(){
+	return this.inputType;
+}
+
 public void setHeaderText(String input){
 	this.headerText=input;
 }
@@ -43,7 +75,15 @@ public String getHeaderText(){
 	return this.headerText;
 }
 
-//fule text of style object, not the id
+public void setXMLtable(ooxmlTable input){
+	this.xmlTable = input;
+}
+
+public ooxmlTable getXMLtable(){
+	return this.xmlTable;
+}
+
+//full text of style object, not the id
 public void setStyleXML(String input){
 	this.StyleXML=input;
 }
@@ -237,6 +277,16 @@ public void setNotesText(String input) {
 public String getNotesText(){
 	makeNotesText();
 	return this.notesText;
+}
+
+public String getTableAsText(){
+	return this.xmlTable.getString();
+}
+
+public void initialiseFromTable(Integer tablecount){
+	setPlainText(getTableAsText());
+	setHeaderText("Table:"+tablecount); //to do - insert custom table header from content. Or table count.
+	//to do: get bookmarks or outline level from the paras in table.
 }
 
 }

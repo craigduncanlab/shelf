@@ -148,6 +148,18 @@ public void makeBlocklist() {
 //Convert the MD section of current Book to some HTML and update the HTML parameter  
 //TO DO: Can this function be enclosed in a Book object?   
 public String getHTMLfromContents(Book myBook) {
+  if (myBook.getBlockType().equals("table")) {
+    String output = "<html><body><p>Test for table</p></body></html>";
+    return output;
+  }
+  else {
+    return (getHTMLfromMDContents(myBook));
+  }
+}
+
+//Convert the MD section of current Book to some HTML and update the HTML parameter  
+//TO DO: Can this function be enclosed in a Book object?   
+public String getHTMLfromMDContents(Book myBook) {
     String input = myBook.getMD();
     String label = myBook.getLabel();
     String notes = myBook.getNotes();

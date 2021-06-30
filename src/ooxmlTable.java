@@ -16,6 +16,12 @@ public void setString(String input){
 	this.tableString=input;
 }
 
+/*
+Function to return table as string
+This currently returns OOXML
+TO DO: convert table to row, col objects and string/plaintext, then this can return string
+*/
+
 public String getString(){
 	return this.tableString;
 }
@@ -35,6 +41,5 @@ public void setEndIndex(int input){
 public int getEndIndex(){
 	return this.endindex;
 }
-
 
 }

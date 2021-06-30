@@ -1,4 +1,5 @@
 /*
+(c) Craig Duncan 28 June 2021
 
 A JavaFX gridspace for visualisation in 2D
 TO DO: the Pane should only display a 'Window' of content and then shift content, so that it is an infinite size and does not need to be defined.
@@ -129,16 +130,16 @@ Need clearer data/display separation
 public void addBook(Book newBook){
 	if (isBookInGrid(newBook)) {
             return; //<----do nothing: JAVAFX ADDS OBJECT. CAN'T DO TWICE (ERROR)
-        }
-     else {
-     	//data
-     	this.booksInView.add(newBook);
-     	//FX node
+  }
+  else {
+    //data
+    this.booksInView.add(newBook);
+    //FX node
 		this.gridGroup.getChildren().add(newBook);
 		//selection
 		singleSelection(newBook); //ok?
-        //graphic position
-        setXYfromRowCol(newBook);
+    //graphic position
+    setXYfromRowCol(newBook);
 	}
 }
 

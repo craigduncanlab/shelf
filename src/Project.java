@@ -76,11 +76,23 @@ public int getNumberBooks(){
 
 // SPLITTING
 
-//this doesn't perform a save - it just reworks content from xmlParas.
-//it also doesn't place books on stage; it merely updates what project describes as books.
+/*
+
+This function is called by MainStage when user changes Split setting.
+
+This is the only time the blocks forming the basis for the Books
+will be recalculated. i.e. choose blocks depending on Split setting.
+Once this is done, it recalculates the Books in the project.
+
+
+This doesn't perform a general save - it just reworks content from xmlParas.
+It also doesn't place books on stage; it merely updates what project describes as books.
+      
+*/
 
 public void updateSplitOptionBooks() {
-    
+    ArrayList<xmlBlock> myBlockList = this.openDocx.blockChoice(getSplitOption());  
+      
     if (getExt().equals("docx")) {
         ArrayList<Book> myBooks = makeBooksFromXMLBlocklist(); //differs depending on split options
         if (myBooks.size()>0) {
@@ -204,12 +216,16 @@ public String getNameNoExt(String name){
 
 //  HANDLE LOADING IN OF DIFFERENT FILE TYPES TO PROJECT
 
-public ArrayList<Book> makeBooksFromXMLBlocklist(){
-        ArrayList<xmlBlock> myBlockList = this.openDocx.blockChoice(getSplitOption());  //choose blocks depending on Split setting.
-        ArrayList<Book> myBookList = new ArrayList<Book>();
+private ArrayList<Book> makeBooksFromXMLBlocklist(){
+      //no change to 'split setting here'
+      
+      ArrayList<xmlBlock> myBlockList = this.openDocx.getBlocklist();  
+
+      ArrayList<Book> myBookList = new ArrayList<Book>();
       //starting with the blocklist, get blocks and put each one inside a 'Book' object
       int length = myBlockList.size();  // number of blocks
       System.out.println(length); //each of these numbered blocks is a string.
+      //System.exit(0);
       int rowcount=0;
       if (length>0) {
         Iterator<xmlBlock> iter = myBlockList.iterator(); 

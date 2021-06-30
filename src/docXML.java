@@ -15,16 +15,15 @@ ArrayList<String> stylesList;
 ArrayList<String> lvl0StyleNames;
 ArrayList<String> headingTextList;
 ArrayList<xmlBlock> blocklist;
-ArrayList<ooxmlTable> tablelist;
 ArrayList<Book>  booklist;	
 xmlStyles myStyles = new xmlStyles();
 ZipUtil originalZip = new ZipUtil();
+xmlRegionDOM myRegionalDoc = new xmlRegionDOM(); //to hold reconfigured OOXML with regions in it
 
 //constructor
 public docXML() {
 	lvl0StyleNames = new ArrayList<String>();
 	headingTextList = new ArrayList<String>();
-    tablelist = new ArrayList<ooxmlTable>();
 }
 
 //-- LOADER
@@ -50,14 +49,18 @@ public int openDocx(File file){
         return -1;
       }
       else {
-          myStyles.setStylesXML(this.originalZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
-          setStylesString(myStyles.getStylesXML()); //update the document version of styles.xml
-          setSummaryStylesString(myStyles.getSummaryStylesString()); //just for display
+          this.myStyles.setStylesXML(this.originalZip.getStyles()); //sets string and populates internal list/array with xstyle objects.
+          setStylesString(this.myStyles.getStylesXML()); //update the document version of styles.xml
+          setSummaryStylesString(this.myStyles.getSummaryStylesString()); //just for display
           setDocNumberingString(this.originalZip.getNumbering());
           //populate blocklist for future use
-          setInitialTables();
+          
           setInitialParalist(); 
-          setInitialBlocklist();
+          //setInitialBlocklist();
+          this.myRegionalDoc.setDocString(getDocString());
+          this.myRegionalDoc.setStylesObject(this.myStyles);
+          this.myRegionalDoc.initialise();
+          setRegionalBlocklist();
           //makeBooksFromBlocklist(); //handle this externally
           return 0;
       }
@@ -65,51 +68,11 @@ public int openDocx(File file){
 
 //--blocklist for main API
 
-/*
-
-Input: 
-
-Uses the current document.xml contents as basis for extraction.
-
-Function: Find tables in this document, and since they are higher level XML element to
-paragraphs, store both the string and the index positions in file to help
-categorise paragraph entries that are also in tables
-
-Output: stores tables in ooxmlTable objects, adds to:
-tablelist - the global array of such objects in this class
-
-*/
-
-public void setInitialTables(){
-    setTableList(getTableIndexes(getDocString()));
-    // logTables();
-}
-
-public void logTables(){
-    ArrayList<ooxmlTable> myTL = getTableList();
-    for (ooxmlTable currentTable : myTL){
-        System.out.println("Found table with index positions: "+currentTable.getStartIndex()+" to: "+currentTable.getEndIndex());
-        System.out.println("----");
-        System.out.println(currentTable.getString());
-        System.out.println("----");
-    }
-    System.out.println("Current number of tables:"+myTL.size());
-    // System.exit(0);
-}
 
 public void setInitialParalist() {
     ArrayList<xmlPara>myLines=extractParas(); //lines are coded as they are added
     setParaList(myLines);
 }
-
-public void setTableList(ArrayList <ooxmlTable> input) {
-    this.tablelist=input;
-}
-
-public ArrayList<ooxmlTable>getTableList() {
-    return this.tablelist;
-}
-
 
 public void setParaList(ArrayList <xmlPara> input) {
     this.paraList=input;
@@ -119,9 +82,72 @@ public ArrayList<xmlPara>getParaList() {
     return this.paraList;
 }
 
+/* 
+This prepared a blocklist based solely on a list of xmlParas
+Can be phased out in favour of blocklist based on regions 
+of which some will be lists of xmlParas and others will be tables
+*/
+
 public void setInitialBlocklist() {
     ArrayList<xmlPara>myLines=getParaList(); 
-    setBlocklist(makeBlocksSplitOnChoice("OutlineLvl0")); //lines are coded as they are added
+    setBlocklist(makeBlocksAllParasSplitOnChoice("OutlineLvl0")); //lines are coded as they are added
+}
+
+
+public void setRegionalBlocklist() {
+    ArrayList<xmlBlock>output = new ArrayList<xmlBlock>();
+    int region=0;
+    int tablecount=0;
+    for (xmlRegion myRegion: this.myRegionalDoc.getAllRegions()) {
+        if(myRegion.getType().equals("table")) {
+            tablecount++;
+            xmlBlock tblock = makeBlockFromTable(myRegion.getTable(),tablecount);
+            output.add(tblock);
+        }
+        if(myRegion.getType().equals("paragraph")) {
+            ArrayList<xmlPara>myLines=myRegion.getParaGroup();
+            ArrayList<xmlBlock> tblocks = makeBlocksSplitOnChoice(myLines,"OutlineLvl0");
+            output.addAll(tblocks);
+            System.out.println("Region:"+region);
+            System.out.println("-------------");
+            logtblocks(tblocks);
+        }
+        region++;
+    }
+    System.out.println(output.toString());
+    System.out.println(output.size());
+
+    //System.exit(0);
+    setBlocklist(output); //lines are coded as they are added
+}
+
+private void logtblocks(ArrayList<xmlBlock> input){
+    System.out.println("Logging the tblocks added:...");
+    for (xmlBlock item : input){
+        String plain = item.getPlainText();
+        String header = item.getHeaderText();
+        System.out.println(header);
+        System.out.println(plain);
+    }
+}
+
+//Function to prepare block from prepared ooxmlTable object
+
+public xmlBlock makeBlockFromTable(ooxmlTable input, Integer tablecount){
+    xmlBlock newBlock = new xmlBlock();
+    newBlock.setInputType("OOXML");
+    newBlock.setBlockType("table");
+    newBlock.setOutlineLevel(0);
+    newBlock.setSplitType("OutlineLvl0");//to do - pass as argument.
+    newBlock.setXMLtable(input);
+    xmlPara mypara = new xmlPara();
+    mypara.setParaString("<w:p><w pStyle w:val=\"Normal\"><w:t>Test para</w:t></w:p>");
+    ArrayList<xmlPara> myparalist = new ArrayList<xmlPara>();
+    myparalist.add(mypara);
+    newBlock.importblockParas(myparalist);
+    newBlock.initialiseBlockContents();
+    newBlock.initialiseFromTable(tablecount);
+    return newBlock;
 }
 
 //TO DO: block for first page
@@ -170,10 +196,19 @@ private ArrayList<xmlBlock> makeBlocksSplitOnOutlineLevel() {
 }
 */
 
+/*
+Only call this function externally if you want to update the blocks upon which
+the books are based.
+It will:
+1. Update teh current blocklist as per the settings
+2. Return the new output to the calling function (even if external)
+*/
+
 
 public ArrayList<xmlBlock> blockChoice(String input) {
-    //test input
-    ArrayList<xmlBlock> output = makeBlocksSplitOnChoice(input);
+    ArrayList<xmlBlock> output = makeBlocksAllParasSplitOnChoice(input);
+    
+    
     return output;
 }
 
@@ -195,13 +230,20 @@ public ArrayList<xmlBlock> getPageBreakBlocklist(){
 3. PageBreak
 
 */
-private ArrayList<xmlBlock> makeBlocksSplitOnChoice(String splitType) {
-     ArrayList<xmlPara>myLines=getParaList(); 
+private ArrayList<xmlBlock> makeBlocksAllParasSplitOnChoice(String splitType) {
+    ArrayList<xmlPara>myLines=getParaList(); 
+    ArrayList<xmlBlock> output = makeBlocksSplitOnChoice(myLines,splitType);
+    return output;
+}
+
+private ArrayList<xmlBlock> makeBlocksSplitOnChoice(ArrayList<xmlPara> inputArray,String splitType) {
+     ArrayList<xmlPara>myLines=inputArray; 
     int numLevels=1;
     ArrayList<xmlBlock>newBlocks = new ArrayList<xmlBlock>();
     xmlBlock currentblock = new xmlBlock();
     currentblock.setSplitType(splitType);
-    
+    currentblock.setInputType("OOXML");
+    currentblock.setBlockType("text");
     String headertext="";
     int cl=0;
     for (xmlPara thisPara: myLines) {
@@ -248,8 +290,13 @@ private ArrayList<xmlBlock> makeBlocksSplitOnChoice(String splitType) {
     }
     setBlocklist(newBlocks);
     //initialise the content of these new Blocks
+    int count=1;
     for (xmlBlock item : newBlocks){
         item.initialiseBlockContents();
+        if (item.getSplitType().equals("PageBreak")){
+            item.setHeaderText("Page:"+count);
+        }
+        count++;
     }
     return newBlocks;
 }
@@ -403,16 +450,6 @@ public ArrayList<Book> getBooklist() {
 
 // --- Parsers
 
-
-public ArrayList<xmlPara> extractTables(){
-    String contents = getDocString(); 
-    String starttag="<w:tbl>";
-    String endtag="</w:tbl>";
-    //ArrayList<String> result=getTagAttribInclusive(contents,starttag,endtag);
-    ArrayList<xmlPara> result=getXMLparas(contents,starttag,endtag);
-    return result;
-}
-
 //get OOXML <w:p> paras (modelled on my xmlutil.py)
 /* input:
 The original input was the entire document.xml (could be a smaller string, if needed)
@@ -489,61 +526,6 @@ public ArrayList<String> getTagAttribInclusive(String thispara,String starttag, 
     return output;
 }
 
-/*
-This will be a function to find tables, store index positions for secondary parsing
-It will then integrate the table objects into main document model 'array' of content
-
-Input : The whole document.xml string
-
-Output: Array of ooxmlTable objects, for number of tables detected.
-
-*/
-
-public ArrayList<ooxmlTable> getTableIndexes(String input) {
-    String starttag="<w:tbl>";
-    String endtag="</w:tbl>";
-    ArrayList<ooxmlTable> output= new ArrayList<ooxmlTable>();
-    ooxmlTable currentTable = new ooxmlTable();
-    int stop = input.length();
-    int newstart=0;
-    String starttagend=starttag.substring(starttag.length()-1,starttag.length()); // this will be > in all cases
-    starttag=starttag.substring(0,starttag.length()-1);// strip off closing >
-    while (newstart<=stop) {
-        currentTable = new ooxmlTable(); //to reset the reference.
-        int sindex=input.indexOf(starttag,newstart); //unlike python 'find', stop value not needed
-        if (sindex==-1) {
-            //System.out.println("Found nothing");
-            return output; // nothing found to end = None?
-        }
-        int findex=input.indexOf(endtag,sindex); //find first index of end tag
-        String test=input.substring(sindex+starttag.length(),sindex+starttag.length()+1);
-        if (test.equals(starttagend) || test.equals(" ")) {
-            if (findex!=-1){
-                String thistext=input.substring(sindex,findex+endtag.length());
-
-                // omit if this is a picture
-                //testpict="<w:pict>"
-                //if testpict not in thistext:
-                currentTable.setString(thistext); //initialise the paragraph with text
-                currentTable.setStartIndex(sindex);
-                currentTable.setEndIndex(findex+endtag.length());
-                //TO DO: currentTable.setTableFeatures();
-                //currentPara=setmyParaOutlineCode(currentPara); //update para with style information
-                output.add(currentTable); // add to the array
-                newstart=findex+endtag.length(); //len(endtag);
-            }
-            else {
-                newstart=newstart+1;
-            }
-        }
-        else {
-            newstart=newstart+1;
-        }
-    }
-    //System.exit(0);
-    return output;
-}
-
 public ArrayList<xmlPara> getXMLparas(String input,String starttag, String endtag) {
     ArrayList<xmlPara> output= new ArrayList<xmlPara>();
     xmlPara currentPara = new xmlPara();
@@ -567,6 +549,10 @@ public ArrayList<xmlPara> getXMLparas(String input,String starttag, String endta
                 //if testpict not in thistext:
                 currentPara.setParaString(thistext); //initialise the paragraph with text
                 currentPara=setmyParaOutlineCode(currentPara); //update para with style information
+                //store position for relative reference to tables etc
+                currentPara.setStartIndex(sindex);
+                currentPara.setEndIndex(findex+endtag.length());
+
                 output.add(currentPara); // add to the array
                 newstart=findex+endtag.length(); //len(endtag);
             }

@@ -424,6 +424,7 @@ private void AddProjectBooksToGridView() throws NullPointerException {
         System.exit(0);
     } 
   } //end for loop
+  setLayoutMode("wrap"); //otherwise default is row
 }
 
 public void logBooksToView(Integer num){

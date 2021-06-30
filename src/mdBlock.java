@@ -15,10 +15,40 @@ public class mdBlock {
 	String blockText="";
 	String notesText="";
 	String headerText="";
+	String blockType="text";//default is text. text,table,code,notes.
+	String inputType="md"; //OOXML,md,rmd,etc
 
 //constructor
 public mdBlock(){
 
+}
+
+/* 
+set the kind of Block, based on some simple data types/data structure identities
+Arguments: text,table,code,notes.  
+
+This is for GUI reasons, and to ensure a common DOM.
+However, we can also keep track of input file type by the 'inputType' parameter.
+
+To help with reversibility/updates we keep details of original file/block separately.  
+*/
+public void setBlockType(String input){
+	this.blockType=input;
+}
+
+public String getBlockType(){
+	return this.blockType;
+}
+
+/* Getters and setters for file that was loaded to setup Book */
+
+
+public void setInputType(String input){
+	this.inputType=input;
+}
+
+public String getInputType(){
+	return this.inputType;
 }
 
 public void setHeaderText(String input){

@@ -46,6 +46,7 @@ import java.nio.file.StandardCopyOption;
 public class Book extends StackPane {
 
 //INSTANCE PARAMETERS
+String type = "text"; //default. Options include tables, code, notes.
 String docxfilepath="";
 String urlpath = "";
 String imagepath="";
@@ -90,6 +91,9 @@ EventHandler myPressBox;
 EventHandler myDragBox;
 String displayMode="title";
 String splitType="OutlineLvl0"; //default
+ooxmlTable myTable = new ooxmlTable();
+String blockType = "text"; //default.  notes, table, code,text.  Underlying block
+String inputType = "md";
 
 //empty constructor no arguments
 public Book() {
@@ -119,6 +123,8 @@ public Book(EventHandler PressBox, EventHandler DragBox, String label, String te
 
 public Book(mdBlock input) {
 	setOOXMLtext("");
+	setBlockType(input.getBlockType());
+	setInputType(input.getInputType());
     setNotes(input.getNotesText());
     setLabel(input.getHeaderText());
     setOutlineLevel(1);
@@ -127,7 +133,10 @@ public Book(mdBlock input) {
 
 //preferred constructor now: builds book from XML block data
 public Book(xmlBlock input) {
+	setBlockType(input.getBlockType());
+	setInputType(input.getInputType());
 	setOOXMLtext(input.getBlockXMLText()); //this also calls the method that populates the text.
+	setOOXMLtable(input.getXMLtable());
 	setNotes(input.getNotesText());
 	setMD(input.getPlainText()); 
 	setLabel(input.getHeaderText());
@@ -140,17 +149,40 @@ public Book(xmlBlock input) {
 	if (getSplitType().equals("Bookmark")){ 
         setDisplayMode("bookmark"); //bookmarks default. update?
     }
-	/*
-	System.out.println(getBookmarkString());
-	System.exit(0);
-	*/
+}
+
+public void setBlockType(String input){
+	this.blockType=input;
+}
+
+public String getBlockType(){
+	return this.blockType;
+}
+
+/* Getters and setters for file that was loaded to setup Book */
+
+
+public void setInputType(String input){
+	this.inputType=input;
+}
+
+public String getInputType(){
+	return this.inputType;
+}
+
+//pick up a table object embedded in xmlBlock
+//ensure there is at least a table object, even if unusued.
+public void setOOXMLtable(ooxmlTable input){
+	if (input!=null) {
+		this.myTable = input;
+	}
 }
 
 //Function to set GUI event handlers separate to main data
 public void setHandlers(EventHandler PressBox, EventHandler DragBox){
 	setPressBox(PressBox); //local
     setDragBox(DragBox);
-    FXsetup(); //will this work?
+    FXsetup(); 
 }
 
 //general update text function
@@ -252,7 +284,7 @@ public void setUserView(String myView) {
 	this.userMetaView=myView;
 }
 
-//Adjust mirror variables in Book - to be used to updated JavaFX variables
+//Adjust mirror variables in Book - to be used to update JavaFX variables
 public void setXY(double cnx, double cny) {
 	this.myXpos=cnx;
 	this.myYpos=cny;
@@ -651,7 +683,7 @@ public Book cloneBook() {
 	clone.setLayer(this.layerNumber);
 	clone.setPressBox(this.myPressBox);
 	clone.setDragBox(this.myDragBox);
-	clone.FXsetup();
+	clone.FXsetup(); //prepares the clone for the FX environment as well.
 	return clone;
 }
 

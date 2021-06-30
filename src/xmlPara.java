@@ -23,6 +23,9 @@ public class xmlPara {
 	String bookmarkId="";
 	Boolean pageBreak=false;
 	Boolean sectionBreak=false;
+	//
+	int startindex=0;
+	int endindex=0;
 
 //constructor
 public xmlPara(){
@@ -53,6 +56,22 @@ public void setLineIndex(int input){
 
 public int getLineIndex(){
 	return this.lineIndex;
+}
+
+public void setStartIndex(int input){
+	this.startindex=input;
+}
+
+public int getStartIndex(){
+	return this.startindex;
+}
+
+public void setEndIndex(int input){
+	this.endindex=input;
+}
+
+public int getEndIndex(){
+	return this.endindex;
 }
 
 public void setBookmarkId(String input){
